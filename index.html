@@ -231,12 +231,12 @@
   <!-- 顶部 -->
   <div class="topbar">
     <div>
-      <h1>347备考看板</h1>
+      <h1 id="page-title">载入中…</h1>
       <div class="meta" id="date-meta">载入中…</div>
     </div>
     <div style="text-align:right;">
       <div class="countdown" id="countdown">--<small>天</small></div>
-      <div class="meta">初试 12/19</div>
+      <div class="meta" id="exam-label">载入中…</div>
     </div>
   </div>
   <div style="margin-bottom:12px;">
@@ -246,347 +246,356 @@
 
   <!-- 今日时间轴（动态渲染 + 交互） -->
   <div class="card">
-    <h2>今日时间轴 <span class="tag" id="tl-tag">动态</span></h2>
-    <div class="timeline" id="timeline-container">
-      <!-- JS 渲染 -->
-    </div>
+    <h2 id="timeline-title">今日时间轴 <span class="tag" id="tl-tag">动态</span></h2>
+    <div class="timeline" id="timeline-container"></div>
     <div id="replan-area"></div>
-    <div style="font-size:11px;color:#6b7280;margin-top:10px;padding-top:8px;border-top:1px solid #f3f4f6;">
-      <strong>点击 ○ 标记完成</strong> · 已过时段自动标灰 · 日课不挪 · 留白必留
-    </div>
+    <div style="font-size:11px;color:#6b7280;margin-top:10px;padding-top:8px;border-top:1px solid #f3f4f6;" id="timeline-hint"></div>
   </div>
 
   <!-- 学习汇报区 -->
   <div class="card">
-    <h2>学习汇报 <span class="tag">直接输入</span></h2>
+    <h2 id="report-title">学习汇报 <span class="tag">直接输入</span></h2>
     <textarea class="report-area" id="report-input" placeholder="例：单词120刷完，社心第1讲听到45min，政治第3讲听完，其他没动"></textarea>
     <button class="report-btn" onclick="processReport()">提交汇报并更新</button>
-    <div class="report-hint">助手收到后：①记台账 → ②算缺口 → ③按难度重排 → ④更新看板</div>
+    <div class="report-hint" id="report-hint"></div>
     <div id="report-result" style="margin-top:10px;font-size:12px;color:#374151;display:none;"></div>
   </div>
 
-  <!-- 科目三层进度 -->
-  <div class="card">
-    <h2>科目进度 <span class="tag">三层独立 · 无记录=未记录</span></h2>
+  <!-- 科目三层进度（JS 从 CONFIG 渲染） -->
+  <div class="card" id="subjects-card"></div>
 
-    <!-- 社心 -->
-    <div class="subj-card">
-      <div class="subj-name">社心<span class="st">迈尔斯第 11 版 · 方向科目 80 分</span></div>
-      <div class="layer-row">
-        <div class="layer-label">看课</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:8%;background:#d93025;"></div></div>
-        <div class="layer-pct">≈8%</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">刷题</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">背诵</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:5%;background:#f59e0b;"></div></div>
-        <div class="layer-pct">≈5%</div>
-      </div>
-      <div class="subj-source">看课：真源 9/28 台账「第 1 讲第一章部分」/ 四讲合计约 12.3h · 刷题：台账无刷题记录 · 背诵：Anki 社心 148 卡已导入，引入中</div>
-    </div>
+  <!-- 四阶段 + 关键节点（JS 从 CONFIG 渲染） -->
+  <div class="card" id="roadmap-card"></div>
 
-    <!-- 普心 -->
-    <div class="subj-card">
-      <div class="subj-name">普心 / 心理学导论<span class="st">90 分 · 背诵产出定生死</span></div>
-      <div class="layer-row">
-        <div class="layer-label">看课</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:80%;background:#1d4ed8;"></div></div>
-        <div class="layer-pct">80%</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">刷题</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">背诵</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:2%;background:#f59e0b;"></div></div>
-        <div class="layer-pct">≈2%</div>
-      </div>
-      <div class="subj-source">看课：备考规划 v3.1 §S0 验收「强化 1-13 章完，14-16 章 18% 断点」· 刷题：二轮 10/8 启动，目前无记录 · 背诵：Anki 普心 408 卡 10/1 导入，刚启动</div>
-    </div>
+  <!-- 日历维度（折叠区，JS 从 CONFIG 渲染） -->
+  <div class="card" id="calendar-card"></div>
 
-    <!-- 研究方法 -->
-    <div class="subj-card">
-      <div class="subj-name">研究方法<span class="st">实验 35 分 + 测量 25 分 + 统计 20 分</span></div>
-      <div class="layer-row">
-        <div class="layer-label">看课</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:30%;background:#059669;"></div></div>
-        <div class="layer-pct">≈30%</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">刷题</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">背诵</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:3%;background:#f59e0b;"></div></div>
-        <div class="layer-pct">≈3%</div>
-      </div>
-      <div class="subj-source">看课：备考规划「实验营回放全完；刷题课 1/2/3 未学；速成营 8 讲未看」= 约 30% · 刷题：无记录 · 背诵：Anki 研方法 204 卡 10/1 导入</div>
-    </div>
-
-    <!-- 外语 -->
-    <div class="subj-card">
-      <div class="subj-name">英语二<span class="st">100 分 · 策略保 55–60</span></div>
-      <div class="layer-row">
-        <div class="layer-label">看课</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:3%;background:#9333ea;"></div></div>
-        <div class="layer-pct">≈3%</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">刷题</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">背诵</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:10%;background:#f59e0b;"></div></div>
-        <div class="layer-pct">≈10%</div>
-      </div>
-      <div class="subj-source">看课：晶婷班 2.5%（真源无单课记录）· 刷题：阅读课 10/9 首课，尚无记录 · 背诵：墨墨 v5.0 连续 3 天达标 120/天，累计约 300 词级</div>
-    </div>
-
-    <!-- 政治 -->
-    <div class="subj-card">
-      <div class="subj-name">政治<span class="st">100 分 · 小灶班救命课</span></div>
-      <div class="layer-row">
-        <div class="layer-label">看课</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:35%;background:#ea580c;"></div></div>
-        <div class="layer-pct">≈35%</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">刷题</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:5%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct">≈5%</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">背诵</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:8%;background:#f59e0b;"></div></div>
-        <div class="layer-pct">≈8%</div>
-      </div>
-      <div class="subj-source">看课：真源「已切救命课」9/28 起；国庆 10/1–10/7 每天 2h 推进 14 讲；托管班此前约 26% → 救命课重置口径 ≈35% · 刷题：300 题分散到 10/1–10/7 次线，刚开始 · 背诵：Anki 政治马原 229 卡已导入</div>
-    </div>
-
-    <!-- 写作 -->
-    <div class="subj-card">
-      <div class="subj-name">综合写作 & 1v1<span class="st">50 分 · 方法+仿写可训练</span></div>
-      <div class="layer-row">
-        <div class="layer-label">看课</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">刷题</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="layer-row">
-        <div class="layer-label">背诵</div>
-        <div class="layer-bar-wrap"><div class="layer-bar" style="width:0%;background:#e5e7eb;"></div></div>
-        <div class="layer-pct missing">未记录</div>
-      </div>
-      <div class="subj-source">真源台账「写作未启动 · 1v1 课时全未上」——三层均未记录。写作营 4 讲已转写待命；1v1 25 节有效期待确认（10/15 前无回音按过期重排）</div>
-    </div>
-  </div>
-
-  <!-- 四阶段 + 关键节点 -->
-  <div class="card">
-    <h2>备考路线图 <span class="tag">四阶段 · 关键节点</span></h2>
-    <div class="stage-map">
-      <div class="stage-box past">
-        <div>S0 · 重启</div>
-        <div class="s-date">9/24–9/30</div>
-        <div class="s-mark">已结束</div>
-      </div>
-      <div class="stage-box now">
-        <div>S1 · 铺开</div>
-        <div class="s-date">10/1–10/31</div>
-        <div class="s-mark">◀ 现在</div>
-      </div>
-      <div class="stage-box future">
-        <div>S2 · 背诵</div>
-        <div class="s-date">11/1–11/30</div>
-        <div class="s-mark">31 天后</div>
-      </div>
-      <div class="stage-box future">
-        <div>S3 · 冲刺</div>
-        <div class="s-date">12/1–12/18</div>
-        <div class="s-mark">58 天后</div>
-      </div>
-    </div>
-    <div class="milestones">
-      <span class="mstone current" id="ms-current">10/4 当前</span>
-      <span class="mstone">10/8 普心二轮启动</span>
-      <span class="mstone">10/15 1v1 预警日</span>
-      <span class="mstone">10/31 S1 验收</span>
-      <span class="mstone">11/30 S2 验收</span>
-      <span class="mstone">12/12 最后调整</span>
-      <span class="mstone">12/19 初试</span>
-    </div>
-  </div>
-
-  <!-- 日历维度（折叠区） -->
-  <div class="card">
-    <h2>日历模板 <span class="tag">按日期类型切换 · 仅供参考</span></h2>
-
-    <details>
-      <summary>普通工作日（9:00–19:00 上班 · 可支配 4–5h）</summary>
-      <div class="fold-inner">
-        <div class="cal-template">
-          <div class="tl-block"><div class="tl-time">7:45–8:45</div><div class="tl-content"><div class="tl-task">墨墨 120</div><span class="tl-tag memory">记忆 · 低</span></div></div>
-          <div class="tl-block"><div class="tl-time">通勤</div><div class="tl-content"><div class="tl-task">Anki 复习</div><span class="tl-tag memory">记忆 · 低</span></div></div>
-          <div class="tl-block"><div class="tl-time">19:30–21:10</div><div class="tl-content"><div class="tl-task">晚间主线（社心/普心听课）</div><span class="tl-tag understand">理解 · 中</span></div></div>
-          <div class="tl-block"><div class="tl-time">21:10–22:00</div><div class="tl-content"><div class="tl-task">次线（政治/英语/研方法刷题）</div><span class="tl-tag practice">刷题 · 中高</span></div></div>
-          <div class="tl-block"><div class="tl-time">22:00–22:30</div><div class="tl-content"><div class="tl-task">Anki 清场 + 汇报</div><span class="tl-tag rest">复盘 · 低</span></div></div>
-          <div class="tl-block"><div class="tl-time">22:30–24:00</div><div class="tl-content"><div class="tl-task">留白</div><span class="tl-tag rest">留白 · 必留</span></div></div>
-        </div>
-        <div style="font-size:11px;color:#6b7280;margin-top:6px;">硬任务 ≤4.5h · 日课底线：墨墨+Anki ≈1.5h</div>
-      </div>
-    </details>
-
-    <details>
-      <summary>普通周末（不出门 · 可支配 8–10h）</summary>
-      <div class="fold-inner">
-        <div class="cal-template">
-          <div class="tl-block"><div class="tl-time">9:00–12:00</div><div class="tl-content"><div class="tl-task">周六上午硬任务区</div><div class="tl-desc">实验仿写 30min + 写作训练 60min + 主线</div><span class="tl-tag output">输出 · 高</span></div></div>
-          <div class="tl-block"><div class="tl-time">14:00–16:00</div><div class="tl-content"><div class="tl-task">复盘 + 错题 + 研方法刷题</div><span class="tl-tag practice">刷题 · 中高</span></div></div>
-          <div class="tl-block"><div class="tl-time">晚间</div><div class="tl-content"><div class="tl-task">同工作日主线节奏</div><span class="tl-tag understand">理解 · 中</span></div></div>
-          <div class="tl-block"><div class="tl-time">周日上午起</div><div class="tl-content"><div class="tl-task">留白</div><div class="tl-desc">只保日课（墨墨+Anki），不欠账就休息</div><span class="tl-tag rest">留白 · 必留</span></div></div>
-        </div>
-      </div>
-    </details>
-
-    <details open>
-      <summary>法定节假日 · 国庆（10/1–10/7 · 可支配 8–10h/天）</summary>
-      <div class="fold-inner">
-        <div class="cal-template">
-          <div class="tl-block"><div class="tl-time">9:00–12:00</div><div class="tl-content"><div class="tl-task">政治救命课 · 每天 2 讲</div><div class="tl-desc">按专题页码顺序推进；7 天覆盖 14 讲</div><span class="tl-tag understand">理解 · 中</span></div></div>
-          <div class="tl-block"><div class="tl-time">14:00–16:00</div><div class="tl-content"><div class="tl-task">300 题马原 / 社心案例 / 实验仿写</div><div class="tl-desc">轮换：政治刷题→社心案例→实验仿写</div><span class="tl-tag practice">刷题 · 中高</span></div></div>
-          <div class="tl-block"><div class="tl-time">19:30–21:10</div><div class="tl-content"><div class="tl-task">社心主线（晚间）</div><div class="tl-desc">第 3+4 讲共 292min 分摊 7 晚</div><span class="tl-tag understand">理解 · 中</span></div></div>
-          <div class="tl-block"><div class="tl-time">21:10–22:00</div><div class="tl-content"><div class="tl-task">Anki 新卡 + 薄弱回炉</div><span class="tl-tag practice">刷题 · 低</span></div></div>
-          <div class="tl-block"><div class="tl-time">22:00–22:30</div><div class="tl-content"><div class="tl-task">清场 + 汇报</div><span class="tl-tag rest">复盘 · 低</span></div></div>
-          <div class="tl-block"><div class="tl-time">22:30–24:00</div><div class="tl-content"><div class="tl-task">留白</div><span class="tl-tag rest">留白 · 必留</span></div></div>
-        </div>
-        <div style="font-size:11px;color:#6b7280;margin-top:6px;">
-          国庆硬任务 ≈6–7h/天 · 10/8 300 题收官 + 普心二轮启动 · 10/4（周日）上午政治照常（14 讲无余量），其余硬任务挪 10/3
-        </div>
-      </div>
-    </details>
-
-    <details>
-      <summary>调休日 / 特殊日（出差/请假/外出）</summary>
-      <div class="fold-inner">
-        <div style="font-size:13px;color:#374151;margin-bottom:8px;">
-          <strong>调休日</strong>：按实际状态排——如果调休后上班则按工作日模板；如果调休放假则按周末模板。<br>
-          <strong>出差/请假</strong>：用户同步后助手按当日实际重排。默认降级为"通勤模式"：Anki 清零 + 墨墨保底不断签，晚间冻结，回来直接续。
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- 难度档案折叠区 -->
-  <div class="card">
-    <h2>任务难度档案 <span class="tag">动态校正 · 历史只追加</span></h2>
-    <details>
-      <summary>查看当前难度分级（点击展开）</summary>
-      <div class="fold-inner">
-        <table class="diff-table">
-          <tr><th>任务</th><th>类型</th><th>初始</th><th>校正</th><th>启动阻力</th><th>依据</th></tr>
-          <tr><td>墨墨单词120</td><td>记忆</td><td><span class="diff-badge low">低</span></td><td><span class="diff-badge low">低</span></td><td>低</td><td>连续3天完成</td></tr>
-          <tr><td>Anki 到期复习</td><td>记忆</td><td><span class="diff-badge low">低</span></td><td><span class="diff-badge low">低</span></td><td>低</td><td>通勤碎片完成</td></tr>
-          <tr><td>社心强化课</td><td>理解</td><td><span class="diff-badge mid">中</span></td><td><span class="diff-badge mid">中</span></td><td>中</td><td>9/28点火成功，一讲跨天</td></tr>
-          <tr><td>政治救命课</td><td>理解</td><td><span class="diff-badge mid">中</span></td><td><span class="diff-badge mid">中</span></td><td>中</td><td>小灶极简课，信息密度高</td></tr>
-          <tr><td>300题马原</td><td>刷题</td><td><span class="diff-badge mid">中高</span></td><td><span class="diff-badge mid">中高</span></td><td>中</td><td>三步法设计，马原概念多</td></tr>
-          <tr><td>实验仿写</td><td>输出</td><td><span class="diff-badge high">高</span></td><td><span class="diff-badge high">高</span></td><td>高</td><td>手写完整方案，历史空白</td></tr>
-          <tr><td>写作仿写</td><td>输出</td><td><span class="diff-badge high">高</span></td><td><span class="diff-badge high">高</span></td><td>高</td><td>方法课未上，无框架</td></tr>
-        </table>
-        <div style="font-size:11px;color:#6b7280;margin-top:8px;">
-          校正规则：超时&gt;150%→升级 · 连续2次推迟→标"启动阻力高" · 连续3次按时完成→降级<br>
-          用户反馈"太难"直接标注，不等待统计
-        </div>
-      </div>
-    </details>
-  </div>
+  <!-- 难度档案折叠区（JS 从 CONFIG 渲染） -->
+  <div class="card" id="difficulty-card"></div>
 
   <!-- 汇报极简说明 -->
-  <div class="card">
-    <h2>怎么汇报 <span class="tag">直接发给助手</span></h2>
-    <div style="font-size:13px;color:#374151;line-height:1.7;">
-      大白话即可，不用填表。例子：<br>
-      <span style="color:#6b7280;">"今日汇报：单词 120 刷完，社心第 1 讲听到 45min，政治第 3 讲听完，Anki 清零。"</span><br><br>
-      助手收到后固定走四步：①记台账 → ②算缺口 → ③按难度重排 → ④更新看板。
-    </div>
-  </div>
+  <div class="card" id="howto-card"></div>
 
-  <div class="footer">
-    数据来源：考研备考真源（唯一状态文件）· 汇报后刷新<br>
-    本页已脱敏 · 禁止搜索引擎收录 · 打不开请刷新或 Ctrl+F5
-  </div>
+  <div class="footer" id="page-footer"></div>
 
 </div>
 
 <script>
-// ==================== 配置区 ====================
-const EXAM_DATE = new Date(2026, 11, 19); // 12/19
-const GUOQING = { start: new Date(2026, 9, 1), end: new Date(2026, 9, 7) };
+// ═══════════════════════════════════════════════════════════
+// 第一层：CONFIG（项目配置层）—— 换配置即换项目
+// ═══════════════════════════════════════════════════════════
+const CONFIG = {
+  // ── 项目元信息 ──
+  project: {
+    name: "347备考看板",
+    subtitle: "初试",
+    examDate: "2026-12-19",
+    footer: "数据来源：考研备考真源（唯一状态文件）· 汇报后刷新",
+    footerNote: "本页已脱敏 · 禁止搜索引擎收录 · 打不开请刷新或 Ctrl+F5",
+    commuteRange: "8:45-9:00"   // 通勤时段估算（仅用于时间轴着色/判定）
+  },
 
-// 任务难度档案（内嵌）
-const TASK_DB = {
-  "墨墨单词120":     { type:"记忆", diff:"低",   resistance:"低",   movable:false, duration:60 },
-  "Anki 到期复习":   { type:"记忆", diff:"低",   resistance:"低",   movable:false, duration:30 },
-  "政治救命课":      { type:"理解", diff:"中",   resistance:"中",   movable:true,  duration:180 },
-  "300 题马原":     { type:"刷题", diff:"中高", resistance:"中",   movable:true,  duration:120 },
-  "社心强化课":      { type:"理解", diff:"中",   resistance:"中",   movable:true,  duration:100 },
-  "Anki 新卡引入":  { type:"记忆", diff:"低",   resistance:"低",   movable:true,  duration:50 },
-  "Anki 清场":      { type:"记忆", diff:"低",   resistance:"低",   movable:false, duration:20 },
-  "今日汇报":       { type:"复盘", diff:"低",   resistance:"低",   movable:false, duration:10 },
-  "留白":           { type:"留白", diff:null,   resistance:null, movable:false, duration:90 }
+  // ── 进度维度定义 ──
+  progressLayers: [
+    { key: "watch", label: "看课", source: "课程记录" },
+    { key: "practice", label: "刷题", source: "题库记录" },
+    { key: "memorize", label: "背诵", source: "Anki 记录" }
+  ],
+
+  // ── 科目清单（347 实例数据）──
+  subjects: [
+    {
+      name: "社心",
+      subtitle: "迈尔斯第 11 版 · 方向科目 80 分",
+      layers: {
+        watch:     { pct: 8,  approx: true,  color: "#d93025", missing: false },
+        practice:  { pct: 0,  approx: false, color: "#e5e7eb", missing: true },
+        memorize:  { pct: 5,  approx: true,  color: "#f59e0b", missing: false }
+      },
+      source: "看课：真源 9/28 台账「第 1 讲第一章部分」/ 四讲合计约 12.3h · 刷题：台账无刷题记录 · 背诵：Anki 社心 148 卡已导入，引入中"
+    },
+    {
+      name: "普心 / 心理学导论",
+      subtitle: "90 分 · 背诵产出定生死",
+      layers: {
+        watch:     { pct: 80, approx: false, color: "#1d4ed8", missing: false },
+        practice:  { pct: 0,  approx: false, color: "#e5e7eb", missing: true },
+        memorize:  { pct: 2,  approx: true,  color: "#f59e0b", missing: false }
+      },
+      source: "看课：备考规划 v3.1 §S0 验收「强化 1-13 章完，14-16 章 18% 断点」· 刷题：二轮 10/8 启动，目前无记录 · 背诵：Anki 普心 408 卡 10/1 导入，刚启动"
+    },
+    {
+      name: "研究方法",
+      subtitle: "实验 35 分 + 测量 25 分 + 统计 20 分",
+      layers: {
+        watch:     { pct: 30, approx: true,  color: "#059669", missing: false },
+        practice:  { pct: 0,  approx: false, color: "#e5e7eb", missing: true },
+        memorize:  { pct: 3,  approx: true,  color: "#f59e0b", missing: false }
+      },
+      source: "看课：备考规划「实验营回放全完；刷题课 1/2/3 未学；速成营 8 讲未看」= 约 30% · 刷题：无记录 · 背诵：Anki 研方法 204 卡 10/1 导入"
+    },
+    {
+      name: "英语二",
+      subtitle: "100 分 · 策略保 55–60",
+      layers: {
+        watch:     { pct: 3,  approx: true,  color: "#9333ea", missing: false },
+        practice:  { pct: 0,  approx: false, color: "#e5e7eb", missing: true },
+        memorize:  { pct: 10, approx: true,  color: "#f59e0b", missing: false }
+      },
+      source: "看课：晶婷班 2.5%（真源无单课记录）· 刷题：阅读课 10/9 首课，尚无记录 · 背诵：墨墨 v5.0 连续 3 天达标 120/天，累计约 300 词级"
+    },
+    {
+      name: "政治",
+      subtitle: "100 分 · 小灶班救命课",
+      layers: {
+        watch:     { pct: 35, approx: true,  color: "#ea580c", missing: false },
+        practice:  { pct: 5,  approx: true,  color: "#e5e7eb", missing: false },
+        memorize:  { pct: 8,  approx: true,  color: "#f59e0b", missing: false }
+      },
+      source: "看课：真源「已切救命课」9/28 起；国庆 10/1–10/7 每天 2h 推进 14 讲；托管班此前约 26% → 救命课重置口径 ≈35% · 刷题：300 题分散到 10/1–10/7 次线，刚开始 · 背诵：Anki 政治马原 229 卡已导入"
+    },
+    {
+      name: "综合写作 & 1v1",
+      subtitle: "50 分 · 方法+仿写可训练",
+      layers: {
+        watch:     { pct: 0,  approx: false, color: "#e5e7eb", missing: true },
+        practice:  { pct: 0,  approx: false, color: "#e5e7eb", missing: true },
+        memorize:  { pct: 0,  approx: false, color: "#e5e7eb", missing: true }
+      },
+      source: "真源台账「写作未启动 · 1v1 课时全未上」——三层均未记录。写作营 4 讲已转写待命；1v1 25 节有效期待确认（10/15 前无回音按过期重排）"
+    }
+  ],
+
+  // ── 任务类型定义（通用）──
+  taskTypes: {
+    memory:     { label: "记忆类", labelShort: "记忆", cssClass: "memory", diffDefault: "低" },
+    understand: { label: "理解类", labelShort: "理解", cssClass: "understand", diffDefault: "中" },
+    practice:   { label: "刷题类", labelShort: "刷题", cssClass: "practice", diffDefault: "中高" },
+    output:     { label: "输出类", labelShort: "输出", cssClass: "output", diffDefault: "高" },
+    rest:       { label: "复盘",   labelShort: "复盘", cssClass: "rest", diffDefault: "低" }
+  },
+
+  // ── 精力曲线（通用时段定义）──
+  energyCurve: [
+    { time: "7:45-9:00",   energy: "清醒",   taskType: "memory" },
+    { time: "通勤",        energy: "碎片",   taskType: "memory" },
+    { time: "9:00-19:00",  energy: "上班",   taskType: null },
+    { time: "19:00-21:00", energy: "高峰",   taskType: "understand" },
+    { time: "21:00-22:00", energy: "次高峰", taskType: "practice" },
+    { time: "22:00-22:30", energy: "清场",   taskType: "rest" },
+    { time: "22:30-24:00", energy: "留白",   taskType: null, isBuffer: true }
+  ],
+
+  // ── 阶段划分 ──
+  stages: [
+    { key: "S0", name: "重启", dateRange: "9/24–9/30", status: "past",   mark: "已结束" },
+    { key: "S1", name: "铺开", dateRange: "10/1–10/31", status: "now",    mark: "◀ 现在" },
+    { key: "S2", name: "背诵", dateRange: "11/1–11/30", status: "future", mark: "31 天后" },
+    { key: "S3", name: "冲刺", dateRange: "12/1–12/18", status: "future", mark: "58 天后" }
+  ],
+
+  // ── 关键节点 ──
+  milestones: [
+    { date: "10/4",  label: "当前",       isCurrent: true },
+    { date: "10/8",  label: "普心二轮启动" },
+    { date: "10/15", label: "1v1 预警日" },
+    { date: "10/31", label: "S1 验收" },
+    { date: "11/30", label: "S2 验收" },
+    { date: "12/12", label: "最后调整" },
+    { date: "12/19", label: "初试" }
+  ],
+
+  // ── 日历类型定义 ──
+  dayTypes: [
+    { key: "holiday", label: "法定节假日", cssClass: "holiday", avail: "≈8–10h" },
+    { key: "weekend", label: "周末",       cssClass: "weekend", avail: "≈6–8h" },
+    { key: "workday", label: "工作日",     cssClass: "workday", avail: "≈4–5h" },
+    { key: "special", label: "特殊日",     cssClass: "special", avail: "按实际" }
+  ],
+
+  // ── 假期定义 ──
+  holidays: [
+    { name: "国庆", start: "2026-10-01", end: "2026-10-07" }
+  ],
+
+  // ── 难度等级定义（通用）──
+  difficulty: {
+    levels: {
+      low:      { label: "低",  badgeClass: "low" },
+      mid:      { label: "中",  badgeClass: "mid" },
+      "high-mid": { label: "中高", badgeClass: "mid" },
+      high:     { label: "高",  badgeClass: "high" }
+    },
+    rules: [
+      "超时>150%→升级 · 连续2次推迟→标「启动阻力高」 · 连续3次按时完成→降级",
+      "用户反馈「太难」直接标注，不等待统计"
+    ],
+    // 任务难度档案（347 实例数据）
+    tasks: [
+      { task: "墨墨单词120", type: "memory",     initial: "低",  corrected: "低",  resistance: "低", basis: "连续3天完成" },
+      { task: "Anki 到期复习", type: "memory",     initial: "低",  corrected: "低",  resistance: "低", basis: "通勤碎片完成" },
+      { task: "社心强化课",   type: "understand", initial: "中",  corrected: "中",  resistance: "中", basis: "9/28点火成功，一讲跨天" },
+      { task: "政治救命课",   type: "understand", initial: "中",  corrected: "中",  resistance: "中", basis: "小灶极简课，信息密度高" },
+      { task: "300题马原",    type: "practice",   initial: "中高", corrected: "中高", resistance: "中", basis: "三步法设计，马原概念多" },
+      { task: "实验仿写",     type: "output",     initial: "高",  corrected: "高",  resistance: "高", basis: "手写完整方案，历史空白" },
+      { task: "写作仿写",     type: "output",     initial: "高",  corrected: "高",  resistance: "高", basis: "方法课未上，无框架" }
+    ]
+  },
+
+  // ── 排布约束（通用规则）──
+  layoutRules: [
+    "高难度不堆叠：同一天不连续排两个高难度任务",
+    "高难度前置：排 19:00-21:00 精力高峰，不排 22:00 后",
+    "高难度拆解：输出类任务拆为「想 10min → 写 3 段 → 收尾」",
+    "高低交替：高难度后接低难度作为心理奖励",
+    "22:00 后禁高难：22:00 后只排低难度",
+    "连续拖延处置：同一任务连续 2 天未启动 → 提示难度被低估"
+  ],
+
+  // ── 模板计划（347 实例数据）──
+  templates: {
+    holiday: {
+      name: "法定节假日 · 国庆（10/1–10/7 · 可支配 8–10h/天）",
+      open: true,
+      tasks: [
+        { id: "momo",      time: "7:45–8:45",   task: "墨墨单词 120",            desc: "复习优先、新学自动放量；熟知踢 10–20 个",        type: "memory",     diff: "低",   movable: false },
+        { id: "anki-com",  time: "通勤",        task: "Anki 到期复习",          desc: "TTS 听题模式；再现卡优先",                      type: "memory",     diff: "低",   movable: false },
+        { id: "politics",  time: "9:00–12:00",  task: "政治救命课",              desc: "极简救命课每天 2 讲（按专题顺序）",             type: "understand", diff: "中",   movable: true },
+        { id: "300ti",     time: "14:00–16:00", task: "300 题马原",             desc: "三步法：听课→间隔做题→错题回炉",              type: "practice",   diff: "中高", movable: true },
+        { id: "shexin",    time: "19:30–21:10", task: "社心强化课",             desc: "按「第 X 讲·今晚听到 YY:YY」口径",               type: "understand", diff: "中",   movable: true },
+        { id: "anki-new",  time: "21:10–22:00", task: "Anki 新卡 + 薄弱回炉",   desc: "社心/政治马原新卡上限 15；普心暂缓到 10/8",    type: "practice",   diff: "低",   movable: true },
+        { id: "anki-clear",time: "22:00–22:20", task: "Anki 清场",             desc: "到期清零；扫一眼明日任务",                     type: "memory",     diff: "低",   movable: false },
+        { id: "report",    time: "22:20–22:30", task: "今日汇报",              desc: "发给助手：学了什么、用时、卡点",               type: "rest",       diff: "低",   movable: false },
+        { id: "blank",     time: "22:30–24:00", task: "留白",                  desc: "不排硬任务；缓冲池或休息",                     type: "rest",       diff: null, movable: false }
+      ],
+      note: "国庆硬任务 ≈6–7h/天 · 10/8 300 题收官 + 普心二轮启动 · 10/4（周日）上午政治照常（14 讲无余量），其余硬任务挪 10/3"
+    },
+    workday: {
+      name: "普通工作日（9:00–19:00 上班 · 可支配 4–5h）",
+      open: false,
+      tasks: [
+        { id: "momo",       time: "7:45–8:45",   task: "墨墨单词 120",           desc: "", type: "memory",     diff: "低",   movable: false },
+        { id: "anki-com",   time: "通勤",        task: "Anki 到期复习",          desc: "", type: "memory",     diff: "低",   movable: false },
+        { id: "main",       time: "19:30–21:10", task: "晚间主线（社心/普心）",   desc: "", type: "understand", diff: "中",   movable: true },
+        { id: "sub",        time: "21:10–22:00", task: "次线（政治/英语/研方法）", desc: "", type: "practice",   diff: "中高", movable: true },
+        { id: "anki-clear", time: "22:00–22:30", task: "Anki 清场 + 汇报",       desc: "", type: "rest",       diff: "低",   movable: false },
+        { id: "blank",      time: "22:30–24:00", task: "留白",                   desc: "", type: "rest",       diff: null, movable: false }
+      ],
+      note: "硬任务 ≤4.5h · 日课底线：墨墨+Anki ≈1.5h"
+    },
+    weekend: {
+      name: "普通周末（不出门 · 可支配 8–10h）",
+      open: false,
+      tasks: [
+        { id: "morning",   time: "9:00–12:00",  task: "周六上午硬任务区",       desc: "实验仿写 30min + 写作训练 60min + 主线", type: "output",     diff: "高",   movable: true },
+        { id: "afternoon", time: "14:00–16:00", task: "复盘 + 错题 + 研方法刷题", desc: "", type: "practice",   diff: "中高", movable: true },
+        { id: "evening",   time: "晚间",        task: "同工作日主线节奏",       desc: "", type: "understand", diff: "中",   movable: true },
+        { id: "sunday",    time: "周日上午起",  task: "留白",                   desc: "只保日课（墨墨+Anki），不欠账就休息",     type: "rest",       diff: null, movable: false }
+      ]
+    }
+  },
+
+  // ── 汇报关键词映射（347 实例）──
+  reportKeywords: {
+    "单词": "momo", "墨墨": "momo",
+    "Anki": "anki", "anki": "anki",
+    "政治": "politics", "救命课": "politics",
+    "社心": "shexin", "社会": "shexin",
+    "300题": "300ti", "刷题": "300ti",
+    "写作": "writing",
+    "英语": "english", "阅读": "english",
+    "普心": "puxin"
+  },
+
+  // ── UI 文本 ──
+  ui: {
+    title: "347备考看板",
+    countdownLabel: "天",
+    examLabel: "初试",
+    todayTimelineTitle: "今日时间轴",
+    todayTimelineTag: "动态",
+    progressTitle: "科目进度",
+    progressTag: "三层独立 · 无记录=未记录",
+    roadmapTitle: "备考路线图",
+    roadmapTag: "四阶段 · 关键节点",
+    calendarTitle: "日历模板",
+    calendarTag: "按日期类型切换 · 仅供参考",
+    diffTitle: "任务难度档案",
+    diffTag: "动态校正 · 历史只追加",
+    diffSummary: "查看当前难度分级（点击展开）",
+    diffColTask: "任务",
+    diffColType: "类型",
+    diffColInitial: "初始",
+    diffColCorrected: "校正",
+    diffColResistance: "启动阻力",
+    diffColBasis: "依据",
+    reportTitle: "学习汇报",
+    reportTag: "直接输入",
+    reportBtn: "提交汇报并更新",
+    reportHint: "助手收到后：①记台账 → ②算缺口 → ③按难度重排 → ④更新看板",
+    howToReportTitle: "怎么汇报",
+    howToReportTag: "直接发给助手",
+    specialDayNote: "：用户同步后助手按当日实际重排。默认降级为「通勤模式」：学习工具清零 + 保底不断签，晚间冻结，回来直接续。",
+    timelineHint: "点击 ○ 标记完成 · 已过时段自动标灰 · 日课不挪 · 留白必留",
+    reportExample: "今日汇报：单词 120 刷完，社心第 1 讲听到 45min，政治第 3 讲听完，Anki 清零。"
+  }
 };
 
-// 国庆模板（10/1-10/7）
-const PLAN_GUOQING = [
-  { id:"momo",      time:"7:45–8:45",  task:"墨墨单词 120",           desc:"复习优先、新学自动放量；熟知踢 10–20 个",       tag:"memory",    diff:"低" },
-  { id:"anki-com",  time:"通勤",       task:"Anki 到期复习",          desc:"TTS 听题模式；再现卡优先",                     tag:"memory",    diff:"低" },
-  { id:"politics",  time:"9:00–12:00", task:"政治救命课",              desc:"极简救命课每天 2 讲（按专题顺序）",             tag:"understand",diff:"中" },
-  { id:"300ti",     time:"14:00–16:00",task:"300 题马原",            desc:"三步法：听课→间隔做题→错题回炉",              tag:"practice",  diff:"中高" },
-  { id:"shexin",    time:"19:30–21:10",task:"社心强化课",            desc:"按“第 X 讲·今晚听到 YY:YY”口径",               tag:"understand",diff:"中" },
-  { id:"anki-new",  time:"21:10–22:00",task:"Anki 新卡 + 薄弱回炉",  desc:"社心/政治马原新卡上限 15；普心暂缓到 10/8",    tag:"practice",  diff:"低" },
-  { id:"anki-clear",time:"22:00–22:20",task:"Anki 清场",             desc:"到期清零；扫一眼明日任务",                     tag:"memory",    diff:"低" },
-  { id:"report",    time:"22:20–22:30",task:"今日汇报",              desc:"发给助手：学了什么、用时、卡点",               tag:"rest",      diff:"低" },
-  { id:"blank",     time:"22:30–24:00",task:"留白",                  desc:"不排硬任务；缓冲池或休息",                     tag:"rest",      diff:null }
-];
+// ═══════════════════════════════════════════════════════════
+// 第二层：引擎（通用逻辑层）—— 只读 CONFIG，不硬编码项目数据
+// ═══════════════════════════════════════════════════════════
 
-// 工作日模板
-const PLAN_WORKDAY = [
-  { id:"momo",      time:"7:45–8:45",  task:"墨墨单词 120",           desc:"", tag:"memory",    diff:"低" },
-  { id:"anki-com",  time:"通勤",       task:"Anki 到期复习",          desc:"", tag:"memory",    diff:"低" },
-  { id:"main",      time:"19:30–21:10",task:"晚间主线（社心/普心）",  desc:"", tag:"understand",diff:"中" },
-  { id:"sub",       time:"21:10–22:00",task:"次线（政治/英语/研方法）",desc:"", tag:"practice",  diff:"中高" },
-  { id:"anki-clear",time:"22:00–22:30",task:"Anki 清场 + 汇报",       desc:"", tag:"rest",      diff:"低" },
-  { id:"blank",     time:"22:30–24:00",task:"留白",                   desc:"", tag:"rest",      diff:null }
-];
+// 日期解析（通用）
+function parseConfigDate(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
 
-// ==================== 状态管理 ====================
+const EXAM_DATE = parseConfigDate(CONFIG.project.examDate);
+
+// 从 CONFIG 构建任务数据库
+function buildTaskDB() {
+  const db = {};
+  Object.values(CONFIG.templates).forEach(tpl => {
+    tpl.tasks.forEach(t => {
+      if (!db[t.task]) {
+        const diffTask = CONFIG.difficulty.tasks.find(dt => dt.task === t.task);
+        db[t.task] = {
+          type: t.type,
+          diff: t.diff,
+          resistance: diffTask ? diffTask.resistance : "中",
+          movable: t.movable !== false,
+          duration: 60
+        };
+      }
+    });
+  });
+  return db;
+}
+
+const TASK_DB = buildTaskDB();
+
+// 模板引用（通用：按日期类型读取 CONFIG.templates）
+function getTemplate(dayTypeKey) {
+  if (dayTypeKey === "holiday") return CONFIG.templates.holiday;
+  if (dayTypeKey === "weekend") return CONFIG.templates.weekend;
+  return CONFIG.templates.workday;
+}
+
+// 状态管理（通用）
 let completedTasks = new Set();
 let skippedTasks = new Set();
 let currentPlan = [];
 let isReplanned = false;
 
-// ==================== 工具函数 ====================
+// ==================== 工具函数（通用）====================
 function daysBetween(a, b) {
-  const ms = 24*60*60*1000;
+  const ms = 24 * 60 * 60 * 1000;
   return Math.round((b - a) / ms);
 }
 
 function parseTimeRange(str) {
-  if (str === "通勤") return { h1:8, m1:45, h2:9, m2:0 };
+  if (str === "通勤") return parseTimeRange(CONFIG.project.commuteRange);
   const parts = str.split(/[–\-]/);
   if (parts.length !== 2) return null;
   const [h1, m1] = parts[0].trim().split(":").map(Number);
@@ -594,16 +603,14 @@ function parseTimeRange(str) {
   return { h1, m1, h2, m2 };
 }
 
-function timeToMinutes(h, m) {
-  return h * 60 + m;
-}
+function timeToMinutes(h, m) { return h * 60 + m; }
 
 function getBlockMinutes(block) {
   const t = parseTimeRange(block.time);
   if (!t) return 60;
   let end = timeToMinutes(t.h2, t.m2);
   let start = timeToMinutes(t.h1, t.m1);
-  if (end < start) end += 24*60;
+  if (end < start) end += 24 * 60;
   return end - start;
 }
 
@@ -624,18 +631,181 @@ function isBlockCurrent(block, nowH, nowM) {
   return now >= start && now <= end;
 }
 
+// 日期类型判定（通用：遍历 CONFIG.holidays）
 function getDayType(date) {
-  const y = date.getFullYear(), m = date.getMonth()+1, d = date.getDate();
+  const y = date.getFullYear(), m = date.getMonth() + 1, d = date.getDate();
   const w = date.getDay();
-  // 国庆
-  if (y===2026 && m===10 && d>=1 && d<=7) return { type:"holiday", label:"法定节假日 · 国庆 Day "+d, avail:"≈8–10h" };
-  // 周末
-  if (w===0 || w===6) return { type:"weekend", label:"周末", avail:"≈6–8h" };
-  // 工作日（默认）
-  return { type:"workday", label:"工作日", avail:"≈4–5h" };
+  // 假期判定
+  for (const h of CONFIG.holidays) {
+    const [sy, sm, sd] = h.start.split("-").map(Number);
+    const [ey, em, ed] = h.end.split("-").map(Number);
+    const start = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
+    const cur = new Date(y, m - 1, d);
+    if (cur >= start && cur <= end) {
+      const dayNum = Math.round((cur - start) / (24 * 60 * 60 * 1000)) + 1;
+      const ht = CONFIG.dayTypes.find(d => d.key === "holiday");
+      return { type: "holiday", label: h.name + " Day " + dayNum, avail: ht ? ht.avail : "≈8–10h" };
+    }
+  }
+  // 周末 / 工作日（标签与可支配时长统一从 CONFIG.dayTypes 读取）
+  const dtMap = {};
+  CONFIG.dayTypes.forEach(d => { dtMap[d.key] = d; });
+  if (w === 0 || w === 6) return { type: "weekend", label: dtMap.weekend.label, avail: dtMap.weekend.avail };
+  return { type: "workday", label: dtMap.workday.label, avail: dtMap.workday.avail };
 }
 
-// ==================== 渲染 ====================
+// ==================== 渲染器（从 CONFIG 读取）====================
+
+function renderSubjects() {
+  const container = document.getElementById("subjects-card");
+  if (!container) return;
+  let html = '<h2>' + CONFIG.ui.progressTitle + ' <span class="tag">' + CONFIG.ui.progressTag + '</span></h2>';
+  CONFIG.subjects.forEach(subj => {
+    html += '<div class="subj-card">';
+    html += '<div class="subj-name">' + subj.name + '<span class="st">' + subj.subtitle + '</span></div>';
+    CONFIG.progressLayers.forEach(layer => {
+      const layerData = subj.layers[layer.key];
+      const pctText = layerData.missing ? "未记录" : (layerData.approx ? "≈" + layerData.pct + "%" : layerData.pct + "%");
+      const barWidth = layerData.missing ? 0 : layerData.pct;
+      const barColor = layerData.color;
+      const missingClass = layerData.missing ? " missing" : "";
+      html += '<div class="layer-row">';
+      html += '<div class="layer-label">' + layer.label + '</div>';
+      html += '<div class="layer-bar-wrap"><div class="layer-bar" style="width:' + barWidth + '%;background:' + barColor + ';"></div></div>';
+      html += '<div class="layer-pct' + missingClass + '">' + pctText + '</div>';
+      html += '</div>';
+    });
+    html += '<div class="subj-source">' + subj.source + '</div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function renderRoadmap() {
+  const container = document.getElementById("roadmap-card");
+  if (!container) return;
+  let html = '<h2>' + CONFIG.ui.roadmapTitle + ' <span class="tag">' + CONFIG.ui.roadmapTag + '</span></h2>';
+  html += '<div class="stage-map">';
+  CONFIG.stages.forEach(stage => {
+    html += '<div class="stage-box ' + stage.status + '">';
+    html += '<div>' + stage.key + ' · ' + stage.name + '</div>';
+    html += '<div class="s-date">' + stage.dateRange + '</div>';
+    html += '<div class="s-mark">' + stage.mark + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div class="milestones">';
+  CONFIG.milestones.forEach(ms => {
+    const cls = ms.isCurrent ? 'mstone current' : 'mstone';
+    html += '<span class="' + cls + '">' + ms.date + ' ' + ms.label + '</span>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderCalendar() {
+  const container = document.getElementById("calendar-card");
+  if (!container) return;
+  let html = '<h2>' + CONFIG.ui.calendarTitle + ' <span class="tag">' + CONFIG.ui.calendarTag + '</span></h2>';
+
+  Object.values(CONFIG.templates).forEach(tpl => {
+    html += '<details' + (tpl.open ? ' open' : '') + '>';
+    html += '<summary>' + tpl.name + '</summary>';
+    html += '<div class="fold-inner">';
+    html += '<div class="cal-template">';
+    tpl.tasks.forEach(t => {
+      const typeInfo = CONFIG.taskTypes[t.type] || { label: t.type, cssClass: t.type };
+      let diffTag = '';
+      if (t.diff === "低") diffTag = '<span class="tl-tag diff-low">低</span>';
+      else if (t.diff === "中") diffTag = '<span class="tl-tag diff-mid">中</span>';
+      else if (t.diff === "中高") diffTag = '<span class="tl-tag diff-mid">中高</span>';
+      else if (t.diff === "高") diffTag = '<span class="tl-tag diff-high">高</span>';
+      html += '<div class="tl-block">';
+      html += '<div class="tl-time">' + t.time + '</div>';
+      html += '<div class="tl-content">';
+      html += '<div class="tl-task">' + t.task + '</div>';
+      if (t.desc) html += '<div class="tl-desc">' + t.desc + '</div>';
+      html += '<span class="tl-tag ' + typeInfo.cssClass + '">' + typeInfo.labelShort + '</span>';
+      html += diffTag;
+      html += '</div></div>';
+    });
+    html += '</div>';
+    if (tpl.note) {
+      html += '<div style="font-size:11px;color:#6b7280;margin-top:6px;">' + tpl.note + '</div>';
+    }
+    html += '</div></details>';
+  });
+
+  // 调休/特殊日（通用说明）
+  html += '<details>';
+  html += '<summary>调休日 / 特殊日（出差/请假/外出）</summary>';
+  html += '<div class="fold-inner">';
+  html += '<div style="font-size:13px;color:#374151;margin-bottom:8px;">';
+  html += '<strong>调休日</strong>：按实际状态排——如果调休后上班则按工作日模板；如果调休放假则按周末模板。<br>';
+  html += '<strong>出差/请假</strong>' + CONFIG.ui.specialDayNote;
+  html += '</div></div></details>';
+
+  container.innerHTML = html;
+}
+
+function renderDifficulty() {
+  const container = document.getElementById("difficulty-card");
+  if (!container) return;
+  let html = '<h2>' + CONFIG.ui.diffTitle + ' <span class="tag">' + CONFIG.ui.diffTag + '</span></h2>';
+  html += '<details>';
+  html += '<summary>' + CONFIG.ui.diffSummary + '</summary>';
+  html += '<div class="fold-inner">';
+  html += '<table class="diff-table">';
+  html += '<tr>';
+  html += '<th>' + CONFIG.ui.diffColTask + '</th>';
+  html += '<th>' + CONFIG.ui.diffColType + '</th>';
+  html += '<th>' + CONFIG.ui.diffColInitial + '</th>';
+  html += '<th>' + CONFIG.ui.diffColCorrected + '</th>';
+  html += '<th>' + CONFIG.ui.diffColResistance + '</th>';
+  html += '<th>' + CONFIG.ui.diffColBasis + '</th>';
+  html += '</tr>';
+  CONFIG.difficulty.tasks.forEach(t => {
+    const typeInfo = CONFIG.taskTypes[t.type] || { labelShort: t.type };
+    const initialLvl = CONFIG.difficulty.levels[t.initial] || { badgeClass: "" };
+    const correctedLvl = CONFIG.difficulty.levels[t.corrected] || { badgeClass: "" };
+    html += '<tr>';
+    html += '<td>' + t.task + '</td>';
+    html += '<td>' + typeInfo.labelShort + '</td>';
+    html += '<td><span class="diff-badge ' + initialLvl.badgeClass + '">' + t.initial + '</span></td>';
+    html += '<td><span class="diff-badge ' + correctedLvl.badgeClass + '">' + t.corrected + '</span></td>';
+    html += '<td>' + t.resistance + '</td>';
+    html += '<td>' + t.basis + '</td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  html += '<div style="font-size:11px;color:#6b7280;margin-top:8px;">';
+  CONFIG.difficulty.rules.forEach(rule => {
+    html += rule + '<br>';
+  });
+  html += '</div>';
+  html += '</div></details>';
+  container.innerHTML = html;
+}
+
+function renderHowToReport() {
+  const container = document.getElementById("howto-card");
+  if (!container) return;
+  let html = '<h2>' + CONFIG.ui.howToReportTitle + ' <span class="tag">' + CONFIG.ui.howToReportTag + '</span></h2>';
+  html += '<div style="font-size:13px;color:#374151;line-height:1.7;">';
+  html += '大白话即可，不用填表。例子：<br>';
+  html += '<span style="color:#6b7280;">"' + CONFIG.ui.reportExample + '"</span><br><br>';
+  html += '助手收到后固定走四步：①记台账 → ②算缺口 → ③按难度重排 → ④更新看板。';
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderFooter() {
+  const container = document.getElementById("page-footer");
+  if (!container) return;
+  container.innerHTML = CONFIG.project.footer + '<br>' + CONFIG.project.footerNote;
+}
+
 function renderTimeline() {
   const container = document.getElementById("timeline-container");
   const now = new Date();
@@ -644,19 +814,17 @@ function renderTimeline() {
   const dayInfo = getDayType(now);
 
   // 选择模板
-  let plan;
-  if (dayInfo.type === "holiday") {
-    plan = JSON.parse(JSON.stringify(PLAN_GUOQING));
-  } else {
-    plan = JSON.parse(JSON.stringify(PLAN_WORKDAY));
-  }
+  const tpl = getTemplate(dayInfo.type);
+  let plan = JSON.parse(JSON.stringify(tpl.tasks));
   currentPlan = plan;
 
   // 更新顶部信息
-  const dateStr = now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-"+now.getDate().toString().padStart(2,"0");
-  const weekDays = ["周日","周一","周二","周三","周四","周五","周六"];
+  const dateStr = now.getFullYear() + "-" + (now.getMonth() + 1).toString().padStart(2, "0") + "-" + now.getDate().toString().padStart(2, "0");
+  const weekDays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
   document.getElementById("date-meta").textContent = dateStr + " · " + weekDays[now.getDay()] + " · 动态重排";
-  document.getElementById("countdown").innerHTML = daysBetween(now, EXAM_DATE) + "<small>天</small>";
+  document.getElementById("countdown").innerHTML = daysBetween(now, EXAM_DATE) + "<small>" + CONFIG.ui.countdownLabel + "</small>";
+  document.getElementById("page-title").textContent = CONFIG.project.name;
+  document.getElementById("exam-label").textContent = CONFIG.project.subtitle + " " + CONFIG.project.examDate.slice(5).replace("-", "/");
 
   const badge = document.getElementById("daytype-badge");
   badge.textContent = dayInfo.label;
@@ -665,7 +833,7 @@ function renderTimeline() {
 
   // 渲染时间轴
   let html = "";
-  plan.forEach((block, idx) => {
+  plan.forEach((block) => {
     const past = isBlockPast(block, nowH, nowM);
     const current = isBlockCurrent(block, nowH, nowM);
     const done = completedTasks.has(block.id);
@@ -682,6 +850,7 @@ function renderTimeline() {
     else if (block.diff === "中高") diffTag = '<span class="tl-tag diff-mid">中高</span>';
     else if (block.diff === "高") diffTag = '<span class="tl-tag diff-high">高</span>';
 
+    const typeInfo = CONFIG.taskTypes[block.type] || { label: block.type, cssClass: block.type };
     let statusIcon = done ? "✓" : (skipped ? "⊘" : (past && !done && !skipped ? "·" : "○"));
     let btnCls = "btn-done" + (done ? " completed" : "");
 
@@ -690,17 +859,11 @@ function renderTimeline() {
     html += '<div class="tl-content">';
     html += '<div class="tl-task">' + block.task + (done ? " ✅" : "") + (skipped ? " ⊘ 已跳过" : "") + '</div>';
     if (block.desc) html += '<div class="tl-desc">' + block.desc + '</div>';
-    html += '<span class="tl-tag ' + block.tag + '">';
-    if (block.tag === "memory") html += "记忆类";
-    else if (block.tag === "understand") html += "理解类";
-    else if (block.tag === "practice") html += "刷题类";
-    else if (block.tag === "output") html += "输出类";
-    else if (block.tag === "rest") html += block.diff ? "复盘" : "留白";
-    html += '</span>';
+    html += '<span class="tl-tag ' + typeInfo.cssClass + '">' + typeInfo.label + '</span>';
     html += diffTag;
     html += '</div>';
     html += '<div class="tl-actions">';
-    if (block.id !== "blank") {
+    if (block.diff != null) {   // 无难度等级（留白/缓冲）块不可操作，语义见 CONFIG.templates
       html += '<button class="' + btnCls + '" onclick="toggleDone(\'' + block.id + '\')" title="标记完成">' + statusIcon + '</button>';
       if (!done && !skipped && !past) {
         html += '<button class="btn-skip" onclick="skipTask(\'' + block.id + '\')" title="跳过/顺延">顺延</button>';
@@ -711,32 +874,21 @@ function renderTimeline() {
   });
 
   container.innerHTML = html;
-
-  // 重排提示
   updateReplanBanner();
 }
 
 function toggleDone(id) {
-  if (completedTasks.has(id)) {
-    completedTasks.delete(id);
-  } else {
-    completedTasks.add(id);
-    skippedTasks.delete(id);
-  }
+  if (completedTasks.has(id)) completedTasks.delete(id);
+  else { completedTasks.add(id); skippedTasks.delete(id); }
   renderTimeline();
 }
 
 function skipTask(id) {
-  if (skippedTasks.has(id)) {
-    skippedTasks.delete(id);
-  } else {
-    skippedTasks.add(id);
-    completedTasks.delete(id);
-  }
+  if (skippedTasks.has(id)) skippedTasks.delete(id);
+  else { skippedTasks.add(id); completedTasks.delete(id); }
   renderTimeline();
 }
 
-// ==================== 重排逻辑 ====================
 function updateReplanBanner() {
   const area = document.getElementById("replan-area");
   const now = new Date();
@@ -744,7 +896,6 @@ function updateReplanBanner() {
   const nowM = now.getMinutes();
   const nowMin = timeToMinutes(nowH, nowM);
 
-  // 统计
   let done = 0, skip = 0, pending = 0;
   let pendingHigh = [];
   currentPlan.forEach(b => {
@@ -756,7 +907,7 @@ function updateReplanBanner() {
     }
   });
 
-  // 若已到 22:00 后且有高难度未完成
+  // 22:00 后高难度告警
   if (nowMin >= timeToMinutes(22, 0) && pendingHigh.length > 0 && !isReplanned) {
     let html = '<div class="replan-banner">';
     html += '<div class="replan-title">⚠️ 高难度任务建议顺延</div>';
@@ -772,13 +923,11 @@ function updateReplanBanner() {
     return;
   }
 
-  // 若已手动重排过
   if (isReplanned) {
     area.innerHTML = '<div style="font-size:12px;color:#059669;margin-top:8px;">✅ 已按难度重排，当前为优化后计划</div>';
     return;
   }
 
-  // 默认：显示统计
   if (done > 0 || skip > 0) {
     let html = '<div style="font-size:12px;color:#6b7280;margin-top:8px;">';
     html += "已完成 " + done + " 项 · 已跳 " + skip + " 项 · 待做 " + pending + " 项";
@@ -791,35 +940,16 @@ function updateReplanBanner() {
 }
 
 function doReplan() {
-  const now = new Date();
-  const nowH = now.getHours();
-  const nowM = now.getMinutes();
-  const nowMin = timeToMinutes(nowH, nowM);
-
-  // 日课不挪
-  const fixed = ["momo", "anki-com", "anki-clear", "report", "blank"];
-
-  // 分离：固定任务 + 可移动任务
-  let fixedBlocks = [];
+  // 日课不挪：模板任务自带 movable 属性（CONFIG.templates），引擎不持有固定 ID
   let movableBlocks = [];
-
   currentPlan.forEach(b => {
-    if (fixed.includes(b.id) || !TASK_DB[b.task]?.movable) {
-      fixedBlocks.push(b);
-    } else {
-      // 已完成或已跳过的不重排
-      if (!completedTasks.has(b.id) && !skippedTasks.has(b.id)) {
-        movableBlocks.push(b);
-      }
+    if (b.movable !== false && TASK_DB[b.task]?.movable) {
+      if (!completedTasks.has(b.id) && !skippedTasks.has(b.id)) movableBlocks.push(b);
     }
   });
 
-  // 按难度排序：高 → 中 → 低
   const diffOrder = { "高": 3, "中高": 2, "中": 1, "低": 0 };
   movableBlocks.sort((a, b) => (diffOrder[b.diff] || 0) - (diffOrder[a.diff] || 0));
-
-  // 简单重排：把高难度往前塞到剩余高峰时段
-  // 实际实现较复杂，这里做简化版本：只标记已重排 + 显示新顺序
   isReplanned = true;
 
   let html = '<div class="replan-banner">';
@@ -834,15 +964,12 @@ function doReplan() {
     html += '<li><strong>' + b.task + '</strong>（' + b.diff + '）' + reason + '</li>';
   });
   html += '</ul>';
-  if (movableBlocks.length === 0) {
-    html += '<div style="margin-top:4px;">无剩余可移动任务，日课与留白保留。</div>';
-  }
+  if (movableBlocks.length === 0) html += '<div style="margin-top:4px;">无剩余可移动任务，日课与留白保留。</div>';
   html += '</div>';
 
   document.getElementById("replan-area").innerHTML = html;
 }
 
-// ==================== 汇报处理 ====================
 function processReport() {
   const input = document.getElementById("report-input");
   const result = document.getElementById("report-result");
@@ -855,20 +982,8 @@ function processReport() {
     return;
   }
 
-  // 简单解析关键词
-  const keywords = {
-    "单词": "momo", "墨墨": "momo",
-    "Anki": "anki", "anki": "anki",
-    "政治": "politics", "救命课": "politics",
-    "社心": "shexin", "社会": "shexin",
-    "300题": "300ti", "刷题": "300ti",
-    "写作": "writing",
-    "英语": "english", "阅读": "english",
-    "普心": "puxin"
-  };
-
   let found = [];
-  for (let k in keywords) {
+  for (let k in CONFIG.reportKeywords) {
     if (text.includes(k)) found.push(k);
   }
 
@@ -882,9 +997,20 @@ function processReport() {
 }
 
 // ==================== 初始化 ====================
+document.getElementById("timeline-title").innerHTML = CONFIG.ui.todayTimelineTitle + ' <span class="tag">' + CONFIG.ui.todayTimelineTag + '</span>';
+document.getElementById("timeline-hint").innerHTML = '<strong>' + CONFIG.ui.timelineHint + '</strong>';
+document.getElementById("report-title").innerHTML = CONFIG.ui.reportTitle + ' <span class="tag">' + CONFIG.ui.reportTag + '</span>';
+document.getElementById("report-hint").textContent = CONFIG.ui.reportHint;
+document.querySelector(".report-btn").textContent = CONFIG.ui.reportBtn;
+
+renderSubjects();
+renderRoadmap();
+renderCalendar();
+renderDifficulty();
+renderHowToReport();
+renderFooter();
 renderTimeline();
-// 每分钟刷新一次当前时间高亮
-setInterval(renderTimeline, 60*1000);
+setInterval(renderTimeline, 60 * 1000);
 </script>
 
 </body>
