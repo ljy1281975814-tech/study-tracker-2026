@@ -409,7 +409,7 @@
     if (days < 0) days = 0;
     // 今日速览区（保留「天」字后缀）
     var topEl = document.getElementById('countdown');
-    if (topEl) topEl.innerHTML = days + ' <small style="font-size:16px;opacity:.8;">天</small>';
+    if (topEl) topEl.innerHTML = days + '';
     // 卡片区（纯数字，标签在外）
     var cardEl = document.getElementById('countdown-card');
     if (cardEl) cardEl.textContent = days;
