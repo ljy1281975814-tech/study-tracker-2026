@@ -5,10 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>347备考仪表盘</title>
   <!--
-    【状态 · 2026-10-05 实际重排版】本地为唯一源，自动同步至 GitHub Pages。
+    【状态 · 2026-10-06 00:38 重产】本地为唯一源，自动同步至 GitHub Pages。
     线上入口：https://ljy1281975814-tech.github.io/study-tracker-2026/
     同步节奏：每次汇报后自动触发（单向：本地 → 线上）。
     由助手执行 _deploy_sync.sh 同步；失败会回执，不静默吞错。
+    重产日志（单一写者=347心理学考研备考辅导对话，可追溯）：
+    - 2026-10-06 00:07：用户 00:05 发 10/5 墨墨终值截图（140 词）触发人工重产，回填终值。
+      注：当日为非工作日轨，23:30 工作日自动化本就不跑，21:30/22:00 非工作日轨见真实行静默——本次非自动化误触发。
+    - 2026-10-06 00:38：用户指令——补「今日时间块」模块（真源 §P1 每日作息 v3 双轨钟点，
+      节假日钟点为用户 10/6 00:34 指令补充并已回写真源）+ 快照时间戳同步 + 部署断链修复。
   -->
   <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -95,6 +100,21 @@
   .rl { font-size: 13px; background: #fef2f2; border-radius: 8px; padding: 8px 12px; }
   .rl b { color: #d93025; }
 
+  /* 今日时间块 */
+  .tb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .tb-grid { grid-template-columns: 1fr; } }
+  .tb { border-radius: 10px; padding: 12px 14px; background: #f8f9fa; border: 1.5px solid transparent; }
+  .tb.active { background: #fef2f2; border-color: #d93025; }
+  .tb .tb-head { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .tb .tb-head .tb-tag { font-size: 11px; font-weight: 400; color: #6b7280; }
+  .tb.active .tb-head, .tb.active .tb-head .tb-tag { color: #d93025; }
+  .tb table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tb td { padding: 5px 0; border-bottom: 1px dashed #e5e7eb; vertical-align: top; line-height: 1.45; }
+  .tb tr:last-child td { border-bottom: none; }
+  .tb td.t-time { white-space: nowrap; font-weight: 700; color: #374151; width: 96px; padding-right: 8px; }
+  .tb.active td.t-time { color: #b91c1c; }
+  .tb td .t-sub { color: #9ca3af; font-size: 11px; }
+
   /* 汇报流程 */
   .flow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 640px) { .flow { grid-template-columns: 1fr; } }
@@ -114,14 +134,14 @@
   <div class="header">
     <h1>347 备考仪表盘</h1>
     <span class="sub">北师大 MAP · 心理与行为大数据方向</span>
-    <span class="upt">快照时间：2026-10-05 · 实际重排版 · 由知行维护</span>
+    <span class="upt">快照时间：2026-10-06 00:38 · v3 主线块制 · 由知行维护（单一写者，重产日志见页首注释）</span>
   </div>
 
   <!-- ===== 今日速览（首屏唯一入口） ===== -->
   <div class="panel" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; border: none;">
     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
       <div>
-        <div style="font-size: 11px; opacity: .7; margin-bottom: 4px;">2026-10-05 · 周日 · 实际重排版 · P1 起步期 Day 1</div>
+        <div style="font-size: 11px; opacity: .7; margin-bottom: 4px;">2026-10-05 · 周一（国庆假期）· v3 主线块制 · P1 起步期 Day 1</div>
         <div style="font-size: 28px; font-weight: 700;">距初试 <span id="countdown" style="color: #fbbf24;">75</span> 天</div>
       </div>
       <div style="text-align: right;">
@@ -135,22 +155,22 @@
         <div style="display: flex; gap: 8px; align-items: flex-start;">
           <span style="font-size: 20px;">🔤</span>
           <div>
-            <div style="font-weight: 600; font-size: 14px;">墨墨 120 + Anki 清零（日课保底）</div>
-            <div style="font-size: 12px; opacity: .7;">早 7:45 起刷；通勤 Anki；晚 22:00 清场。日课不断签 = 不算塌方</div>
+            <div style="font-weight: 600; font-size: 14px;">墨墨 140 词刷完（终值）✅ 新学放量 40</div>
+            <div style="font-size: 12px; opacity: .7;">[实·截图×2] 101→140：39 待学睡前全补完；70min/30秒/词；熟知 3，明天回到 10+</div>
           </div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: flex-start;">
-          <span style="font-size: 20px;">📋</span>
+        <div style="display: flex; gap: 8px; align-items flex-start;">
+          <span style="font-size: 20px;">⚠️</span>
           <div>
-            <div style="font-weight: 600; font-size: 14px;">22:20 汇报 + 回答 4 个起点问题</div>
-            <div style="font-size: 12px; opacity: .7;">社心听到哪 / 普心听到哪 / 政治是否开课 / 实验营看过没——没学也照实报</div>
+            <div style="font-weight: 600; font-size: 14px;">主线 Day 1 零推进（D6 计数 1/2）</div>
+            <div style="font-size: 12px; opacity: .7;">政治上午块/社心下午块未跑（优化系统）；明天再零推进 → 后天主线自动降 60min</div>
           </div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: flex-start;">
+        <div style="display: flex; gap: 8px; align-items flex-start;">
           <span style="font-size: 20px;">📖</span>
           <div>
-            <div style="font-weight: 600; font-size: 14px;">主线：社心续接第1讲 + 政治救命课从零起步</div>
-            <div style="font-size: 12px; opacity: .7;">社心每晚100min（1.3x按分钟切分）；政治上午块2讲/天 + 300题三步法</div>
+            <div style="font-weight: 600; font-size: 14px;">明日 10/6（假期）三块：上午政治第 1-2 讲点火</div>
+            <div style="font-size: 12px; opacity: .7;">下午社心 100min+300 题（专题一）；晚间 Anki 清零+墨墨补尾。政治本周剩 4 个可排日、上限 8 讲，零容错</div>
           </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: flex-start;">
@@ -165,7 +185,39 @@
     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; opacity: .8;">
       <span>📍 来源：实际基线重排版（2026-10-05）· 按接近零起步，不假设旧计划已完成</span>
       <span>⏰ 数据截止：每次汇报后刷新</span>
+      <span>🕐 10/6 00:07 重产 = 用户 00:05 墨墨终值截图汇报触发（人工·单一写者）；当日非工作日轨，23:30 自动化本就不跑，非误触发</span>
       <span>💡 打不开此页 → 刷新或Ctrl+F5</span>
+    </div>
+  </div>
+
+  <!-- 今日时间块（真源 §P1 每日作息 v3 双轨钟点） -->
+  <div class="panel">
+    <h2>今日时间块 <span class="tag">真源 §P1 每日作息 v3 · 今天 10/6 周二（国庆假期）→ 走节假日轨</span></h2>
+    <div class="tb-grid">
+      <div class="tb active">
+        <div class="tb-head">节假日轨（含周末）<span class="tb-tag">◀ 今天走这条</span></div>
+        <table>
+          <tr><td class="t-time">09:00–09:30</td><td>起床 + 墨墨保签 <span class="t-sub">（最低配置）</span></td></tr>
+          <tr><td class="t-time">10:00–12:00</td><td><b>上午块：政治救命课 2 讲</b> <span class="t-sub">政治只走上午块，工作日不排</span></td></tr>
+          <tr><td class="t-time">14:00–17:00</td><td><b>下午块：社心 100min</b> + 政治 300 题</td></tr>
+          <tr><td class="t-time">19:30–21:15</td><td><b>晚间块：Anki 清零</b> + 研究方法每日一题 <span class="t-sub">10/12 起 5 题/天</span></td></tr>
+          <tr><td class="t-time">21:30</td><td>简报（非工作日轨自动化 · 推邮箱）</td></tr>
+          <tr><td class="t-time">22:00</td><td>台账补记（非工作日轨自动化）</td></tr>
+        </table>
+      </div>
+      <div class="tb">
+        <div class="tb-head">工作日轨（10/8 起）<span class="tb-tag">备用对照</span></div>
+        <table>
+          <tr><td class="t-time">晨间 90min</td><td>墨墨 120 词（60min）+ Anki（30min）</td></tr>
+          <tr><td class="t-time">通勤 ≈30min</td><td>背诵音频 1.5x <span class="t-sub">（当期=社心 40 期）</span></td></tr>
+          <tr><td class="t-time">19:15</td><td>到家</td></tr>
+          <tr><td class="t-time">20:00–21:00</td><td><b>主线块①：社心强化课</b> <span class="t-sub">1.3x 按分钟切分</span></td></tr>
+          <tr><td class="t-time">21:10–22:10</td><td><b>主线块②：社心续 40min + 题位 20min</b> <span class="t-sub">题位=政治 300 题；10/12 起轮换研方法每日一题 5 题</span></td></tr>
+          <tr><td class="t-time">22:10–22:30</td><td>Anki 睡前扫（到期清零）</td></tr>
+          <tr><td class="t-time">22:30–23:00</td><td>汇报 + 明日任务确认</td></tr>
+          <tr><td class="t-time">23:00–23:30</td><td>弹性（补欠账或休息）；23:30 简报+补记合并（工作日轨自动化）</td></tr>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -215,28 +267,28 @@
 
   <!-- 今日任务 -->
   <div class="panel">
-    <h2>今日任务 <span class="tag">10/5 周日 · P1 起步期 Day 1 · 实际起点已确认</span></h2>
+    <h2>今日任务 <span class="tag">10/5 周一（国庆假期）· P1 起步期 Day 1 · 实际进度已回填 21:57</span></h2>
     <div class="today-grid">
       <div>
-        <div class="task must">
-          <div class="icon">🔤</div>
+        <div class="task done-task">
+          <div class="icon">✅</div>
           <div>
-            <div class="t-title">日课保底：墨墨 120 + Anki 清零</div>
-            <div class="t-desc">早 7:45-8:45 墨墨；通勤 Anki；晚 22:00 清场。日课不断签——单日最低配置 = 不算塌方</div>
+            <div class="t-title">墨墨 140 词刷完（终值）✅ 新学放量 40</div>
+            <div class="t-desc">[实·截图×2] 21:56 先刷 101，睡前把 39 待学全补完；认识56/模糊36/忘记48，70min；新学 40 是欠账清空的好信号</div>
+          </div>
+        </div>
+        <div class="task done-task">
+          <div class="icon">✅</div>
+          <div>
+            <div class="t-title">21:56 汇报已完成，台账已记 [实]</div>
+            <div class="t-desc">今天走非工作日轨：22:00 补记任务见真实行自动静默；23:30 工作日任务本就不跑</div>
           </div>
         </div>
         <div class="task must">
-          <div class="icon">📋</div>
+          <div class="icon">⚠️</div>
           <div>
-            <div class="t-title">22:20 汇报实际进度（按新排产执行）</div>
-            <div class="t-desc">起点已确认，按实际排产执行；每晚汇报格式：科目 + 完成内容 + 听到哪/做到哪。没学 = 也报，不美化</div>
-          </div>
-        </div>
-        <div class="task opt">
-          <div class="icon">📖</div>
-          <div>
-            <div class="t-title">主线：社心续接第1讲剩余部分 + 政治救命课第1-2讲</div>
-            <div class="t-desc">社心按分钟切分（每晚100min，1.3x）；政治上午块2讲/天；均已从零起步，不假设旧进度</div>
+            <div class="t-title">主线 Day 1 零推进（D6 计数 1/2）——社心 0 / 政治 0</div>
+            <div class="t-desc">白天在优化系统；明天再零推进 → 后天主线自动降 60min + 只听最短一段</div>
           </div>
         </div>
         <div class="task done-task">
@@ -248,12 +300,12 @@
         </div>
       </div>
       <div class="tomorrow">
-        <div class="t-title">明日预告（10/6 周一 · P1 起步期 Day 2）</div>
+        <div class="t-title">明日预告（10/6 周二 · 国庆假期 · P1 起步期 Day 2）</div>
         <ul>
-          <li>日课保底：墨墨 120 + Anki 清零</li>
-          <li>主线：社心续接第1讲剩余部分（100min）或 政治救命课第1-2讲（上午块）</li>
-          <li>22:20 汇报实际进度 → 知行更新台账+仪表盘</li>
-          <li>明日按实际进度微调：每晚"第X讲·今晚听到YY:YY"格式下发</li>
+          <li>上午块：政治救命课第 1-2 讲（专题一·唯物论）——政治点火，第一优先</li>
+          <li>下午块：社心 100min（第 1 讲剩余，听到第二、三章）+ 300 题专题一 20min</li>
+          <li>晚间块：Anki 清零 + 墨墨补 39 待学（约 15min）</li>
+          <li>22:30 前汇报；23:00 后不许再碰系统</li>
         </ul>
       </div>
     </div>
@@ -277,7 +329,7 @@
         <span class="name">社会心理学（迈尔斯·方向科目 80 分）<span class="st">Anki 148 卡已备 · 第1讲第一章部分已听（9/28）</span></span>
         <span class="pct">~8%</span>
       </div>
-      <div class="bar"><i style="width:1%; background:#d93025;"></i></div>
+      <div class="bar"><i style="width:8%; background:#d93025;"></i></div>
       <div class="next">下一动作：每晚 100min 续接第1讲剩余部分 → 第2讲起跑；背诵音频通勤1.5x</div>
     </div>
 
@@ -295,7 +347,7 @@
         <span class="name">普心 / 心理学导论（公共科目主力）<span class="st">1–13章已学完 · 14–16章未学 · Anki 408 卡已备</span></span>
         <span class="pct">~81%</span>
       </div>
-      <div class="bar"><i style="width:1%; background:#1d4ed8;"></i></div>
+      <div class="bar"><i style="width:81%; background:#1d4ed8;"></i></div>
       <div class="next">下一动作：P1不排新课；P2（10/26起）14–16章补缺（3h）+ 20道主观题检验；Anki补8条真缺口</div>
     </div>
 
@@ -304,7 +356,7 @@
         <span class="name">研究方法（统计 / 测量 / 实验）<span class="st">实验集训营已看完 · 研究方法营统计专题1 · 统计2剩22%</span></span>
         <span class="pct">~40%</span>
       </div>
-      <div class="bar"><i style="width:1%; background:#059669;"></i></div>
+      <div class="bar"><i style="width:40%; background:#059669;"></i></div>
       <div class="next">下一动作：P2起每周1套《实验必刷题》；统计2补缺（10/12–10/18讲义即可）；每日一题5题/天</div>
     </div>
 
@@ -332,7 +384,7 @@
       </li>
       <li>
         <div class="box"></div>
-        <div><span class="w-main">政治救命课启动：本周 ≥4 讲（每天上午 2 讲，含 300 题三步法）</span><br><span class="w-note">从零起步（待确认起点）；14 讲目标 10/25 前收口</span></div>
+        <div><span class="w-main">政治救命课启动：本周 ≥8 讲（节假日上午块 2 讲/天，工作日不排）</span><br><span class="w-note">剩 4 个可排日（10/6-7 假期 + 10/10-11 周末），上限 8 讲、零容错；300 题在主线块②题位同步</span></div>
       </li>
       <li>
         <div class="box"></div>
@@ -396,7 +448,7 @@
   </div>
 
   <div class="footer">
-    数据唯一来源：《考研备考真源.md》（本目录）· 每晚 21:30 自动化简报 · 本页请勿手改，由知行在每次汇报后重新生成
+    数据唯一来源：《考研备考真源.md》（本目录）· 双轨监督：工作日 23:30 合并简报+补记 / 非工作日 21:30 简报+22:00 补记（均推 QQ 邮箱）· 本页请勿手改，由知行在每次汇报后重新生成 · 重产日志见页首 HTML 注释（单一写者可追溯）
   </div>
 </div>
 
