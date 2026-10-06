@@ -181,12 +181,12 @@
     <!-- 今日唯一主线（收敛自原四卡片） -->
     <div style="background: rgba(255,255,255,.1); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;">
       <div style="font-size: 12px; opacity: .7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px;">今天主线</div>
-      <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">🔥 政治点火日：上午救命课第 1–2 讲启动 · 下午社心 100min 续接 · 晚间 Anki 清零</div>
+      <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">📋 事务日降级：上午暂缓（回南沙取教材）· 晚间补政治第1讲 + 墨墨保签 + Anki 清零</div>
     </div>
     <!-- 双时间戳 + 触发说明（新鲜度机制） -->
     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; opacity: .8;">
-      <span>📍 数据截止：10/5 23:56 · 墨墨 140 词终值 + 主线零推进（D6 计数 1/2）</span>
-      <span>🕐 生成时间：2026-10-06 13:02 · 用户一句话触发</span>
+      <span>📍 数据截止：10/6 14:03 · 事务日降级（回南沙取教材，预计晚间补课）</span>
+      <span>🕐 生成时间：2026-10-06 14:03 · 用户一句话触发</span>
       <span>⚡ 触发方式：用户对话指令触发（暂不开定时）</span>
       <span>💡 打不开此页 → 刷新或Ctrl+F5</span>
     </div>
@@ -232,47 +232,45 @@
       <span class="tm-status pending">未开始</span>
     </div>
 
-    <div class="tm-block active">
+    <div class="tm-block" style="background:#f3f4f6; opacity:.75;">
       <div class="tm-time">☀️ 10:00–12:00 · 上午块</div>
-      <div class="tm-task">政治救命课 · 第 1–2 讲</div>
+      <div class="tm-task" style="text-decoration:line-through; color:#9ca3af;">政治救命课 · 第 1–2 讲</div>
       <div class="tm-chips">
-        <span class="tm-chip highlight">2 讲</span>
-        <span class="tm-chip">约 120min</span>
-        <span class="tm-chip">专题一·唯物论</span>
-        <span class="tm-chip highlight">零起点</span>
+        <span class="tm-chip" style="background:#fee2e2; color:#991b1b;">暂缓</span>
+        <span class="tm-chip">行程变更</span>
+        <span class="tm-chip">回南沙取教材</span>
       </div>
-      <div class="tm-reason">依据：10/5 主线零推进（D6 计数 1/2）；本周可排日仅 4 天、上限 8 讲、零容错；今天必须点火</div>
-      <span class="tm-status pending">未开始</span>
-    </div>
-
-    <div class="tm-block active">
-      <div class="tm-time">🌤️ 14:00–17:00 · 下午块</div>
-      <div class="tm-task">社心强化课续接 + 政治 300 题</div>
-      <div class="tm-chips">
-        <span class="tm-chip highlight">100min</span>
-        <span class="tm-chip">第 1 讲剩余部分</span>
-        <span class="tm-chip">300 题·专题一</span>
-        <span class="tm-chip">20min 题位</span>
-      </div>
-      <div class="tm-reason">依据：社心第 1 讲第一章部分已听（9/28），今日续接；P1 目标本周收口 4 讲；题位同步上午内容</div>
-      <span class="tm-status pending">未开始</span>
+      <div class="tm-reason">依据：回南沙取政治300题+教材，预计晚间取回补课；今日按事务日降级处理</div>
+      <span class="tm-status pending" style="background:#fee2e2; color:#991b1b;">暂缓</span>
     </div>
 
     <div class="tm-block">
-      <div class="tm-time">🌙 19:30–21:15 · 晚间块</div>
-      <div class="tm-task">Anki 四科到期清零 + 墨墨补尾</div>
+      <div class="tm-time">🌤️ 14:00–17:00 · 下午块</div>
+      <div class="tm-task">事务缓冲 / 教材整理</div>
       <div class="tm-chips">
-        <span class="tm-chip">到期清零</span>
-        <span class="tm-chip">约 40–60min</span>
-        <span class="tm-chip highlight">红线②</span>
+        <span class="tm-chip">事务日</span>
+        <span class="tm-chip">取回教材后整理</span>
       </div>
-      <div class="tm-reason">依据：红线②最低配置；989 卡四科正序版，优先处理到期卡片；墨墨补 39 待学（约 15min）</div>
+      <div class="tm-reason">依据：上午回南沙取教材，预计午间/下午返回；下午整理政治300题+教材，为晚间补课做准备</div>
+      <span class="tm-status pending">未开始</span>
+    </div>
+
+    <div class="tm-block active">
+      <div class="tm-time">🌙 19:30–21:15 · 晚间块</div>
+      <div class="tm-task">补政治第1讲 + 墨墨保签 + Anki 清零</div>
+      <div class="tm-chips">
+        <span class="tm-chip highlight">补课</span>
+        <span class="tm-chip">≥30min 即算推进</span>
+        <span class="tm-chip">墨墨保签</span>
+        <span class="tm-chip">红线②</span>
+      </div>
+      <div class="tm-reason">依据：事务日降级安排；晚间补上午暂缓的政治第1讲，能补则补（30min也算主线推进）；墨墨保签+Anki清零为最低配置</div>
       <span class="tm-status pending">未开始</span>
     </div>
 
     <!-- 明日预告（并入模块底部一行） -->
     <div style="padding: 10px 20px; background: #f0f9ff; border-top: 1px solid #bae6fd; font-size: 12px; color: #0369a1;">
-      📅 明天 10/7（假期·节假日轨）：政治第 3–4 讲续推 + 社心第 1 讲收尾→第 2 讲开跑
+      📅 明天 10/7：09:30–11:00 政治压缩块 1 讲 → 11:00 家庭聚餐出门 → 聚餐回来后社心 100min + 300 题专题一
     </div>
   </div>
 
