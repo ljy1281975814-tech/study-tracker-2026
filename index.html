@@ -5,22 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>347备考仪表盘</title>
   <!--
-    【状态 · 2026-10-07 00:18 重产 v5 定稿口径】本地为唯一源，自动同步至 GitHub Pages。
+    【状态 · 2026-10-07 03:00 重产 · 信息架构 v2 首版】本地为唯一源，自动同步至 GitHub Pages。
     线上入口：https://ljy1281975814-tech.github.io/study-tracker-2026/
     同步节奏：用户一句话触发（暂不开定时），单向：本地 → 线上。
     由助手执行 _deploy_sync.sh 同步；失败会回执，不静默吞错。
-    重产日志（单一写者=347呈现层承接对话，可追溯）：
+    重产日志（可追溯）：
     - 2026-10-06 00:07：用户 00:05 发 10/5 墨墨终值截图（140 词）触发人工重产，回填终值。
     - 2026-10-06 00:38：用户指令——补「今日时间块」模块 + 快照时间戳同步 + 部署断链修复。
-    - 2026-10-06 13:02：用户指令——整页去重 + 新鲜度机制（hero 四卡片收敛 / 删除旧「今日任务」
-      section / 明日预告并入模块底部 / 双时间戳 / 用户一句话触发 / 单一事实源）。
-    - 2026-10-06 14:03：用户指令——①上午块改"暂缓"+降级安排 ②10/7聚餐/补课同步
-      ③数据截止=10/6 14:03 ④生成时间=本次实际时刻 ⑤加权完成度：待真源"科目三层进度表"就位。
-    - 2026-10-07 00:19：v5 定稿口径重产（0002 工作包）——①整体加权 21.4%→24.8%（Σ12420÷500）
-      ②普心看课 100%（全16章一轮）并注明"一遍接触≠掌握" ③社心课别维度（强化课 x/4讲[看] /
-      基础课 y/11章[听]，分列不计和） ④新增闭环状态模块（学/背/测/修四阶） ⑤新增答题规范模块
-      （三步法） ⑥目标分解（政治65-70/英语60-65/专业课215-225；不淘汰线276；目标347）
-      ⑦生成时间=实际生成时刻 ⑧不显示驾驶时长/无来源数字/8个并列模块。
+    - 2026-10-06 13:02：用户指令——整页去重 + 新鲜度机制。
+    - 2026-10-06 14:03：用户指令——上午块暂缓 + 10/7 聚餐/补课同步 + 双时间戳。
+    - 2026-10-07 00:19：v5 定稿口径重产（0002 工作包）。
+    - 2026-10-07 03:00：投递单 A 批一次重产（信息架构 v2 首版）——①三层架构（决策层/执行层/参考层折叠）
+      +模块准入三问 ②假期轨删 07:45 块、10/7 走聚餐日轨 ③同类聚合（政治课+300题同块；社心课后紧跟默写）
+      ④Anki 按到期量估时（公式 10–15s/卡，非固定 20min）⑤墨墨 150 试跑口径（加词≤20/50min 硬顶）
+      ⑥任务四段式（对象/达标/预计时长）⑦通勤音频改「辅助·对齐看板」删一切效果考核+推荐收听
+      ⑧主观题输出卡（时间配比/批改入口/规范5条）⑨Anki 怎么用速查卡（989 卡映射+零使用标注）
+      ⑩缓冲余量+出差保底三件+目标↔当前↔缺口对照+底部改台账守夜/信箱巡检口径。
+      旧版归档：_报告工作区\归档_仪表盘_v5口径_20261007.html。
+      依据件：主交接线_规格_347仪表盘信息架构v2 + 修正_107排产 + 修正_任务具体化规范 + 规格_Anki使用规范
+      + 定稿_通勤音频机制v3 + 修正_预算重算与出差缓冲 + 修正_写作路径与批改闭环。
   -->
   <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -43,18 +46,31 @@
   .card .note { font-size: 12px; color: #6b7280; margin-top: 4px; }
 
   .panel { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
-  .panel h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .panel h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .panel h2 .tag { font-size: 11px; font-weight: 400; color: #6b7280; background: #f3f4f6; border-radius: 99px; padding: 2px 10px; }
 
-  /* 阶段时间轴 */
-  .stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .stage { border-radius: 10px; padding: 10px 12px; background: #f8f9fa; border: 1.5px solid transparent; }
-  .stage .s-name { font-size: 13px; font-weight: 700; }
-  .stage .s-date { font-size: 11px; color: #9ca3af; }
-  .stage.now { background: #fef2f2; border-color: #d93025; }
-  .stage.now .s-name { color: #d93025; }
-  .stage .s-mark { font-size: 11px; margin-top: 2px; color: #d93025; font-weight: 700; }
-  @media (max-width: 640px) { .stages { grid-template-columns: 1fr; } }
+  .layer-tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; border-radius: 6px; padding: 2px 8px; margin: 18px 0 10px; }
+  .layer-1 { background: #d93025; }
+  .layer-2 { background: #1d4ed8; }
+  .layer-3 { background: #6b7280; }
+
+  /* 今日任务四段式 */
+  .today-module { padding: 0; overflow: hidden; }
+  .tm-header { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; padding: 16px 20px; }
+  .tm-date { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .tm-date .track-tag { font-size: 11px; font-weight: 400; color: #fbbf24; margin-left: 8px; }
+  .tm-mainline { font-size: 15px; font-weight: 700; color: #fbbf24; }
+  .tm-block { padding: 12px 20px; border-bottom: 1px solid #f3f4f6; }
+  .tm-block:last-child { border-bottom: none; }
+  .tm-block.yield { background: #fafafa; }
+  .tm-time { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 4px; }
+  .tm-task { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 4px; line-height: 1.4; }
+  .tm-spec { font-size: 12px; color: #374151; line-height: 1.6; }
+  .tm-spec b { color: #1f2937; }
+  .tm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tm-chip { font-size: 11px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 99px; padding: 2px 9px; }
+  .tm-chip.highlight { background: #fef3c7; color: #92400e; }
+  @media (max-width: 640px) { .tm-header { padding: 12px 16px; } .tm-block { padding: 12px 16px; } }
 
   /* 科目进度条 */
   .subj { margin-bottom: 14px; }
@@ -65,23 +81,13 @@
   .subj .pct { font-weight: 700; color: #374151; }
   .bar { height: 10px; background: #f0f1f3; border-radius: 99px; overflow: hidden; }
   .bar i { display: block; height: 100%; border-radius: 99px; }
-  .subj .next { font-size: 12px; color: #6b7280; margin-top: 4px; }
-
-  /* 今日任务 */
-  .today-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
-  @media (max-width: 640px) { .today-grid { grid-template-columns: 1fr; } }
-  .task { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; }
-  .task.must { background: #fef2f2; }
-  .task.opt { background: #f8f9fa; }
-  .task .icon { font-size: 18px; }
-  .task .t-title { font-size: 14px; font-weight: 600; }
-  .task .t-desc { font-size: 12px; color: #6b7280; }
 
   /* 周任务清单 */
   .week { list-style: none; }
   .week li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
   .week li:last-child { border-bottom: none; }
   .week .box { flex-shrink: 0; width: 18px; height: 18px; border: 1.5px solid #d1d5db; border-radius: 4px; margin-top: 3px; }
+  .week li.done .box { background: #d1fae5; border-color: #059669; }
   .week .w-main { font-weight: 600; }
   .week .w-note { font-size: 12px; color: #9ca3af; }
 
@@ -91,57 +97,26 @@
   .d-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; }
   .d-card .d-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
   .d-card .d-adv { font-size: 12px; color: #92400e; }
-  .d-card .d-adv b { color: #b45309; }
 
-  /* 红线 */
-  .redlines { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px; }
-  .rl { font-size: 13px; background: #fef2f2; border-radius: 8px; padding: 8px 12px; }
-  .rl b { color: #d93025; }
+  /* 通用表 */
+  .g-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .g-table th { text-align: left; font-size: 12px; color: #9ca3af; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+  .g-table td { padding: 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  .g-table tr:last-child td { border-bottom: none; }
 
-  /* 今日模块 v2 */
-  .today-module { padding: 0; overflow: hidden; }
-  .tm-header { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; padding: 16px 20px; }
-  .tm-date { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-  .tm-date .track-tag { font-size: 11px; font-weight: 400; color: #fbbf24; margin-left: 8px; }
-  .tm-mainline { font-size: 15px; font-weight: 700; color: #fbbf24; }
-  .tm-block { padding: 14px 20px; border-bottom: 1px solid #f3f4f6; }
-  .tm-block:last-child { border-bottom: none; }
-  .tm-time { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; }
-  .tm-task { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 6px; line-height: 1.4; }
-  .tm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
-  .tm-chip { font-size: 12px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 99px; padding: 3px 10px; }
-  .tm-chip.highlight { background: #fef3c7; color: #92400e; }
-  .tm-reason { font-size: 11px; color: #6b7280; line-height: 1.5; }
-  @media (max-width: 640px) { .tm-header { padding: 12px 16px; } .tm-block { padding: 12px 16px; } }
+  .note-box { font-size: 12px; color: #6b7280; background: #f3f4f6; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+  .warn-box { font-size: 13px; color: #7f1d1d; background: #fef2f2; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
 
-  /* 闭环状态（学/背/测/修） */
-  .loop-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .loop-table th { text-align: left; font-size: 12px; color: #9ca3af; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
-  .loop-table td { padding: 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
-  .loop-table tr:last-child td { border-bottom: none; }
-  .loop-step { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
-  .loop-step.done { background: #d1fae5; color: #065f46; }
-  .loop-step.now { background: #fef3c7; color: #92400e; }
-  .loop-step.wait { background: #f3f4f6; color: #9ca3af; }
-  .loop-cell { font-size: 12px; color: #6b7280; }
+  /* 折叠参考层 */
+  details.ref { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+  details.ref summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 700; list-style: none; display: flex; align-items: center; gap: 8px; }
+  details.ref summary::-webkit-details-marker { display: none; }
+  details.ref summary::after { content: "▸"; margin-left: auto; color: #9ca3af; }
+  details.ref[open] summary::after { content: "▾"; }
+  details.ref .ref-body { padding: 0 20px 16px; font-size: 13px; }
+  details.ref summary .cal { font-size: 11px; font-weight: 400; color: #9ca3af; }
 
-  /* 答题规范 */
-  .answer-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  @media (max-width: 640px) { .answer-steps { grid-template-columns: 1fr; } }
-  .a-step { background: #f8f9fa; border-radius: 10px; padding: 12px 14px; }
-  .a-step .a-num { font-size: 11px; font-weight: 700; color: #d93025; margin-bottom: 4px; }
-  .a-step .a-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-  .a-step .a-desc { font-size: 12px; color: #6b7280; }
-
-  /* 目标分解 */
-  .goal-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px; }
-  .goal-table th { text-align: left; font-size: 12px; color: #9ca3af; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
-  .goal-table td { padding: 8px; border-bottom: 1px solid #f3f4f6; }
-  .goal-table tr:last-child td { border-bottom: none; }
-  .goal-table .goal-val { font-weight: 700; color: #d93025; }
-  .goal-note { font-size: 12px; color: #6b7280; background: #f3f4f6; border-radius: 8px; padding: 10px 12px; }
-
-  .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 24px; }
+  .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 24px; line-height: 1.8; }
 </style>
 </head>
 <body>
@@ -150,440 +125,343 @@
   <div class="header">
     <h1>347 备考仪表盘</h1>
     <span class="sub">北师大 MAP · 心理与行为大数据方向</span>
-    <span class="upt">v5 定稿口径（排序引擎版）· P1 起步期 · 由知行维护（单一写者，重产日志见页首注释）</span>
+    <span class="upt">信息架构 v2 · 三层（决策/执行/参考）· 数据唯一来源《考研备考真源.md》</span>
   </div>
 
-  <!-- ===== 首屏 Hero（唯一主线 + 双时间戳） ===== -->
+  <!-- ================= 第 1 层 · 决策层（首屏） ================= -->
+  <div class="layer-tag layer-1">第 1 层 · 决策层：今天做什么 / 到什么程度 / 哪里卡住</div>
+
+  <!-- B. 状态一句话 + Hero -->
   <div class="panel" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; border: none;">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
-      <div>
-        <div style="font-size: 11px; opacity: .7; margin-bottom: 4px;">2026-10-07 · 周三（国庆假期）· v5 定稿口径 · P1 起步期 Day 2</div>
-        <div style="font-size: 28px; font-weight: 700;">距初试 <span id="countdown" style="color: #fbbf24;">73</span> 天</div>
-      </div>
-      <div style="text-align: right;">
-        <div style="font-size: 13px; font-weight: 600; color: #fbbf24;">当前阶段</div>
-        <div style="font-size: 14px; opacity: .9;">P1 筑基 · 第 2 天</div>
-      </div>
+    <div style="font-size: 11px; opacity: .7; margin-bottom: 4px;">2026-10-07 · 周三（国庆假期 · 聚餐日）</div>
+    <div style="font-size: 26px; font-weight: 700; margin-bottom: 10px;">距初试 <span id="countdown" style="color: #fbbf24;">73</span> 天</div>
+    <div style="background: rgba(255,255,255,.1); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px;">
+      <b>状态一句话：</b>P1 筑基 Day 2｜主线：社心第 1 讲收尾 + 政治第 1 讲启动｜今日聚餐日：只保「最低配置 + 主线 1 件事」｜整体加权 ≈24.8%｜缓冲余量 ≈46%
     </div>
-    <!-- 今天主线 -->
-    <div style="background: rgba(255,255,255,.1); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;">
-      <div style="font-size: 12px; opacity: .7; margin-bottom: 8px; letter-spacing: .5px;">今天主线</div>
-      <div style="font-size: 16px; font-weight: 700; color: #fbbf24;">🍽 聚餐日：上午政治压缩块 1 讲 → 11:00 家庭聚餐 → 归来后社心 100min + 300 题专题一 + Anki 清零</div>
-    </div>
-    <!-- 双时间戳 -->
     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; opacity: .8;">
-      <span>📍 数据截止：10/6 23:30（v5 定稿口径）</span>
-      <span>🕐 生成时间：2026-10-07 00:19 · 用户指令触发</span>
-      <span>⚡ 触发方式：用户对话指令触发（暂不开定时）</span>
-      <span>💡 打不开此页 → 刷新或Ctrl+F5</span>
+      <span>📍 数据截止：10/6 晚台账（v5 口径）</span>
+      <span>🕐 生成时间：2026-10-07 03:00 · 投递单 A 批整页重产</span>
+      <span>💡 打不开此页 → 刷新或 Ctrl+F5</span>
     </div>
   </div>
 
-  <!-- 今日模块 v2（10/7 聚餐日轨 · 依据：10/6 版本"明日预告" + v5 排产骨架） -->
+  <!-- A. 今天做什么（任务卡四段式：对象/达标/预计） -->
   <div class="panel today-module">
     <div class="tm-header">
-      <div class="tm-date">📅 今天 · 10/7 周三（国庆假期）<span class="track-tag">聚餐日轨</span></div>
-      <div class="tm-mainline">今日安排一览</div>
+      <div class="tm-date">📅 今天 · 10/7 周三（国庆假期）<span class="track-tag">节假日轨 · 聚餐日降载版（无 07:45 块）</span></div>
+      <div class="tm-mainline">今天做什么（每项：对象 → 达标 → 预计时长）</div>
     </div>
 
-    <div class="tm-block active">
-      <div class="tm-time">🌅 07:45–08:45 · 晨间块</div>
-      <div class="tm-task">普心二轮：一页纸回顾 + 闭卷默写 3–5 张</div>
-      <div class="tm-chips">
-        <span class="tm-chip highlight">P0 每天</span>
-        <span class="tm-chip">提取练习</span>
-        <span class="tm-chip highlight">一遍接触≠掌握</span>
+    <div class="tm-block">
+      <div class="tm-time">🌅 09:00–09:30 · H 整块</div>
+      <div class="tm-task">起床 ＋ 墨墨保签（150 试跑）</div>
+      <div class="tm-spec">
+        <b>对象：</b>墨墨学习量 <b>150</b>（新学由墨墨排，<b>每天加词 ≤20</b>）<br>
+        <b>达标：</b>刷完清零 且 <b>≤50min</b>（到点即停，剩余顺延）＋ 保签<br>
+        <b>预计：</b>≤50min（实测模型：新学 ≈75s/词、复习 ≈20s/词）
       </div>
-      <div class="tm-reason">依据：v5 排产骨架——早晨黄金期给新高价值 + 提取练习；408 卡 10/8 导入，今日先用一页纸回顾+默写</div>
+      <div class="tm-chips"><span class="tm-chip highlight">最低配置·红线②</span><span class="tm-chip highlight">试跑中 10/7–10/9</span><span class="tm-chip">10/10 实测校正后定稿</span></div>
     </div>
 
     <div class="tm-block">
-      <div class="tm-time">🚌 通勤 / 碎片 · 墨墨保签</div>
-      <div class="tm-task">墨墨 120 词（保签）</div>
-      <div class="tm-chips"><span class="tm-chip highlight">最低配置</span><span class="tm-chip">红线②</span></div>
-      <div class="tm-reason">依据：红线②最低配置 = 墨墨保签 + Anki 清零；通勤时段只复习保签</div>
-    </div>
-
-    <div class="tm-block">
-      <div class="tm-time">☀️ 09:30–11:00 · 上午压缩块</div>
-      <div class="tm-task">政治救命课压缩 1 讲（聚餐前置）</div>
-      <div class="tm-chips">
-        <span class="tm-chip">聚餐日调整</span>
-        <span class="tm-chip">碎片可承载</span>
+      <div class="tm-time">☀️ 09:30–11:00 · H 整块（聚餐前置压缩块）</div>
+      <div class="tm-task">政治救命课 第 1 讲 ＋ 300 题专题一（同域连做）</div>
+      <div class="tm-spec">
+        <b>对象：</b>救命课<b>第 1 讲（马原）</b> ＋ 300 题<b>专题一 第 1–5 题（单选）</b><br>
+        <b>达标：</b>题对 <b>≥4/5</b>，错题标注回炉<br>
+        <b>预计：</b>80min（课 60min ＋ 题 20min）
       </div>
-      <div class="tm-reason">依据：10/6 版本「明日预告」——10/7 聚餐日，政治压缩 1 讲提到 11:00 出门前完成；政治救命课 14 讲，记忆型可碎片承载</div>
+      <div class="tm-chips"><span class="tm-chip">P1 每周</span><span class="tm-chip highlight">同类聚合：课+题同块</span><span class="tm-chip">本周保底 6 讲冲 7（第 1/6）</span></div>
     </div>
 
-    <div class="tm-block">
-      <div class="tm-time">🍽 11:00– · 家庭聚餐</div>
+    <div class="tm-block yield">
+      <div class="tm-time">🍽 11:00– · 事务</div>
       <div class="tm-task">家庭聚餐（事务，不计学习）</div>
-      <div class="tm-chips"><span class="tm-chip">先行安排</span></div>
-      <div class="tm-reason">依据：10/6 版本「明日预告」确定 11:00 家庭聚餐出门；聚餐为事务日，不排学习</div>
+      <div class="tm-spec">聚餐日降载：只保「最低配置 + 主线 1 件事」，其余显式标注"可让"。</div>
     </div>
 
     <div class="tm-block">
-      <div class="tm-time">🌤️ 归来后 · 下午块</div>
-      <div class="tm-task">社心强化课 100min（第 1 讲收尾 → 第 2 讲开跑）</div>
-      <div class="tm-chips">
-        <span class="tm-chip highlight">P0 每天</span>
-        <span class="tm-chip">整块输入</span>
+      <div class="tm-time">🌤️ 归来 · 下午块 · H 整块</div>
+      <div class="tm-task">社心强化课 100min → 课后立刻闭卷默写</div>
+      <div class="tm-spec">
+        <b>对象：</b>强化课<b>第 1 讲收尾 → 第 2 讲开跑</b>（视频 45min×2 ＋ 讲义标记 15min）<br>
+        <b>达标：</b>课后<b>立刻闭卷默写 3–5 张社心卡</b>，要点齐 ≥多数（无闭环不算完成）<br>
+        <b>预计：</b>100min（课 75min ＋ 默写 25min）
       </div>
-      <div class="tm-reason">依据：10/6 版本「明日预告」——聚餐归来后社心 100min；v5 P0 社心新课输入（零基础），晚间整块给高认知负荷</div>
+      <div class="tm-chips"><span class="tm-chip highlight">P0 每天</span><span class="tm-chip highlight">同类聚合：课后紧跟默写</span><span class="tm-chip">红线① 主线</span></div>
     </div>
 
     <div class="tm-block">
-      <div class="tm-time">🌤️ 归来后 · 300 题专题一</div>
-      <div class="tm-task">政治 300 题 · 专题一（20min）</div>
-      <div class="tm-chips"><span class="tm-chip">P1 每周</span><span class="tm-chip">以题带点</span></div>
-      <div class="tm-reason">依据：10/6 版本「明日预告」——归来后社心 100min + 300 题专题一；v5 P1 政治救命课+300 题（碎片）</div>
-    </div>
-
-    <div class="tm-block">
-      <div class="tm-time">🌙 晚间收尾 · 21:00–</div>
-      <div class="tm-task">Anki 到期清零 + 当日闭卷默写收尾</div>
-      <div class="tm-chips">
-        <span class="tm-chip highlight">最低配置</span>
-        <span class="tm-chip">红线②</span>
-        <span class="tm-chip">睡眠巩固</span>
+      <div class="tm-time">🌙 晚间块 · H 整块</div>
+      <div class="tm-task">Anki 到期清零 ＋ 新卡引入（按量实估）</div>
+      <div class="tm-spec">
+        <b>对象：</b>当日到期卡 <b>N 张</b>（今日 N=0：989 卡全部新卡·零使用）＋ 新引入 <b>20–30 张</b>（社心/政治当日所学对应章）<br>
+        <b>达标：</b>到期清零 ＋ <b>抽 5 张记通过率 ≥80%</b><br>
+        <b>预计：</b>到期 <b>N×10–15s</b>（如 150 张≈30min；估时 >40min 拆晨间/晚间两块）＋ 新卡 ≈5–8min；<b>今日 ≈5–8min</b>（408 卡 10/8 导入后按公式实估）
       </div>
-      <div class="tm-reason">依据：v5 排产骨架 21:00–21:20 Anki 清零（睡眠巩固）；社心课后立刻闭卷默写 3–5 张</div>
+      <div class="tm-chips"><span class="tm-chip highlight">最低配置·红线②</span><span class="tm-chip">时长按量实估（非固定 20min）</span><span class="tm-chip">先清到期再加新卡</span></div>
+    </div>
+
+    <div class="tm-block yield">
+      <div class="tm-time">🧩 弹性层 · 聚餐日可让</div>
+      <div class="tm-task">写作营方法课预告 / 补课（可让）</div>
+      <div class="tm-spec"><b>对象：</b>写作营《写作题方法讲解》（P1 内排 1 节）｜<b>达标：</b>看完并记 3 条模板要点｜<b>预计：</b>≈70min——<b>聚餐日可让，不追责</b>。</div>
+      <div class="tm-chips"><span class="tm-chip">弹性层</span><span class="tm-chip">未上方法课前不自行仿写</span></div>
     </div>
   </div>
 
-  <!-- 大数字总览 -->
+  <!-- C. 要你拍板 -->
+  <div class="panel">
+    <h2>⚠️ 要你拍板（2 件）<span class="tag">只列真需要你的 · 拍完即删</span></h2>
+    <div class="decision">
+      <div class="d-card">
+        <div class="d-title">① 问学管 1v1（已挂 9 天）</div>
+        <div class="d-adv">25 节全未上，有效期不明。<b>为什么急：</b>10/15 前无回音按"课时已过期"重排。<b>建议：</b>今天发微信问"课时有效期到什么时候？约课是否单独安排？"</div>
+      </div>
+      <div class="d-card">
+        <div class="d-title">② 晶婷 3500 / 阿范题启用时间</div>
+        <div class="d-adv">3500 口径已定（核心高频 1800–2000，手册只速览不进墨墨）；<b>待确认</b>阿范题等是否启用——未确认前不排入计划。<b>建议：</b>本周汇报顺嘴确认。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 第 2 层 · 执行层 ================= -->
+  <div class="layer-tag layer-2">第 2 层 · 执行层：做到什么程度</div>
+
+  <!-- E. 今日达标看板 -->
   <div class="cards">
-      <div class="card">
-        <div class="label">距初试（约 12/19）</div>
-        <div class="value" id="countdown-card">73</div>
-        <div class="note">以教育部正式公告为准 · 10/7 起算</div>
-      </div>
-    <div class="card plain">
-      <div class="label">当前阶段</div>
-      <div class="value">P1 筑基 · 第 2 天</div>
-      <div class="note">10/6 – 10/25 · P1 收口社心 4 讲</div>
+    <div class="card">
+      <div class="label">墨墨（试跑口径）</div>
+      <div class="value">150<small> 词/天</small></div>
+      <div class="note">加词 ≤20/天 · 50min 硬顶 · 试跑 10/7–10/9</div>
     </div>
     <div class="card plain">
-      <div class="label">目标分数</div>
-      <div class="value">347</div>
-      <div class="note">不淘汰线 276 · 目标区间 347–360（定稿口径）</div>
+      <div class="label">Anki（按到期量估时）</div>
+      <div class="value" style="font-size: 20px;">到期 0 → ≈5–8min</div>
+      <div class="note">989 卡全部新卡（零使用）· 新引入 20–30 张/天 · 公式：到期×10–15s</div>
     </div>
     <div class="card plain">
-      <div class="label">当前主线</div>
-      <div class="value" style="font-size:20px;">普心二轮 + 社心新课</div>
-      <div class="note">早晨普心（已学→巩固）· 晚间社心（新学）；408 卡 10/8 导入</div>
+      <div class="label">闭卷输出（D6 每天必有）</div>
+      <div class="value" style="font-size: 20px;">社心课后默写 3–5 张</div>
+      <div class="note">无输出不算完成 · 要点齐 ≥多数</div>
+    </div>
+    <div class="card plain">
+      <div class="label">缓冲余量（73 天）</div>
+      <div class="value" style="font-size: 20px;">≈107h（46%）</div>
+      <div class="note">可用 ≈234h vs 整块需求 ≈127h · 含出差预留 12 天 · 只用于吸收波动不加任务</div>
     </div>
   </div>
 
-  <!-- 驾驶音频收益（不展示驾驶时长 · 规格：主交接线_规格_347驾驶音频收益量化_v1.md） -->
+  <!-- D. 三层进度表（分列，不显示单一 100%） -->
   <div class="panel">
-    <h2>🎧 驾驶音频收益 <span class="tag">收益以抽查证明、不以时长计 · 不展示驾驶时长</span></h2>
-    <div class="cards" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
-      <div class="card">
-        <div class="label">音频覆盖度</div>
-        <div class="value" style="color: #6b7280;">—</div>
-        <div class="note">已听期数 / 当期应听期数</div>
-      </div>
-      <div class="card">
-        <div class="label">抽查通过率（近14天）</div>
-        <div class="value" style="font-size: 20px; color: #9ca3af;">暂无抽查记录</div>
-        <div class="note">非驾驶时段 3–5 题/卡抽查</div>
-      </div>
-      <div class="card">
-        <div class="label">累计省下整块时间</div>
-        <div class="value">0<small> min</small></div>
-        <div class="note">抽查≥80% 的讲次可打折</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 三阶段地图 -->
-  <div class="panel">
-    <h2>剩余 73 天三阶段（v5 排产）<span class="tag">当前位置：P1 筑基 Day 2（10/6 起算）</span></h2>
-    <div class="stages">
-      <div class="stage now">
-        <div class="s-name">P1 筑基（10/6–10/25）</div>
-        <div class="s-date">普心二轮 + 社心新课 + 政治启动</div>
-        <div class="s-mark">◀ 现在</div>
-      </div>
-      <div class="stage">
-        <div class="s-name">P2 铺开（10/26–11/20）</div>
-        <div class="s-date">研方法刷题 + 写作模板 + 实验仿写 + 英语阅读</div>
-      </div>
-      <div class="stage">
-        <div class="s-name">P3 冲刺（11/21–12/19）</div>
-        <div class="s-date">模考 + 错题回炉 + 主观题背诵</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 科目三层进度（加权完成度 v5 口径 · 真源/速览直读 · 2026-10-06 23:30） -->
-  <div class="panel">
-    <h2>整体加权完成度 <span style="font-size: 22px; color: #d93025;">24.8%</span> <span class="tag">加权口径 v1 · Σ权重含全部 6 科（含未启动科目稀释）</span></h2>
-    <div style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">
-      口径：层内等权 · missing 层剔出分母并显示「未记录」· 估算值带「≈」· 整体 = Σ(本科完成度×权重)÷Σ权重
+    <h2>科目三层进度 <span class="tag">看课/刷题/背诵三层分列 · 科目不显示单一百分比 · 加权口径 v1</span></h2>
+    <div style="font-size: 12px; color: #6b7280; margin-bottom: 14px;">
+      口径：层内等权 · 未记录层剔分母不估 0 · 估算带「≈」 · 综合列=已记录层均值（未记录层计 0 的保守口径，仅参考）
     </div>
 
     <div class="subj">
-      <div class="row1">
-        <span class="name">社心（80 分）<span class="st">方向科目 · 强化课第 1 讲部分 + 基础课一二章已听</span></span>
-        <span class="pct">≈ 7%</span>
-      </div>
-      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+      <div class="row1"><span class="name">社心（80 分）<span class="st">方向科目 · 第 1 讲进行中</span></span><span class="pct">≈ 4%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
         <span>看课 ≈8%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈5%</span>
       </div>
-      <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">
-        📊 课别维度（分列不计和）：强化课 <b>部分/4 讲</b>[看]（第 1 讲进行中）｜基础课 <b>2/11 章</b>[听]（第一章 52.7min + 第二章精讲上 70min）
-      </div>
-      <div class="bar"><i style="width:7%; background:#d93025;"></i></div>
+      <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">📊 课别（分列不计和）：强化课 <b>部分/4 讲</b>[看] ｜ 基础课 <b>≈1.5/11 章</b>[听]（10/6 晚 122.7min）</div>
+      <div class="bar"><i style="width:4%; background:#d93025;"></i></div>
     </div>
 
     <div class="subj">
-      <div class="row1">
-        <span class="name">普心（90 分）<span class="st">公共主力 · 全 16 章一轮已过</span></span>
-        <span class="pct">100%</span>
+      <div class="row1"><span class="name">普心（90 分）<span class="st">一轮已过（背诵未启）</span></span><span class="pct">≈ 33%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 100%（全 16 章一轮·2–3 个月前）</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录（408 卡 10/8 导入）</span></span>
       </div>
-      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
-        <span>看课 100%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录</span></span>
-      </div>
-      <div style="font-size: 12px; color: #b45309; margin-bottom: 6px;">
-        ⚠️ 一遍接触 ≠ 掌握：看课 100%（强化课+讲义，2–3 个月前，无跳过）＝一轮已过，已进入二轮巩固，不能视为掌握
-      </div>
-      <div class="bar"><i style="width:100%; background:#1d4ed8;"></i></div>
+      <div style="font-size: 12px; color: #b45309; margin-bottom: 6px;">⚠️ 看课 100%＝「一轮已过」≠掌握：二轮（408 卡＋闭卷默写）才是提分主力；综合 ≈33% 为保守口径</div>
+      <div class="bar"><i style="width:33%; background:#1d4ed8;"></i></div>
     </div>
 
     <div class="subj">
-      <div class="row1">
-        <span class="name">研方法（80 分）<span class="st">实验集训营完 · 统计专题 1</span></span>
-        <span class="pct">≈ 22%</span>
+      <div class="row1"><span class="name">研方法（80 分）<span class="st">实验集训营完 · 统计专题 1</span></span><span class="pct">≈ 14%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 ≈40%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录（每日一题 10/12 起）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
       </div>
-      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
-        <span>看课 ≈40%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
-      </div>
-      <div class="bar"><i style="width:22%; background:#059669;"></i></div>
+      <div class="bar"><i style="width:14%; background:#059669;"></i></div>
     </div>
 
     <div class="subj">
-      <div class="row1">
-        <span class="name">英语二（100 分）<span class="st">墨墨 496 词入库 [实] · 唯一持续项</span></span>
-        <span class="pct">≈ 9%</span>
-      </div>
-      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
-        <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈9%</span>
+      <div class="row1"><span class="name">英语二（100 分）<span class="st">墨墨 496 词入库 [实] · 唯一持续项</span></span><span class="pct">≈ 9%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录（阅读计时 10/15 起）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈9%</span>
       </div>
       <div class="bar"><i style="width:9%; background:#9333ea;"></i></div>
     </div>
 
     <div class="subj">
-      <div class="row1">
-        <span class="name">政治（100 分）<span class="st">救命课未启动 · 从零起步</span></span>
-        <span class="pct">≈ 2%</span>
+      <div class="row1"><span class="name">政治（100 分）<span class="st">今日第 1 讲启动</span></span><span class="pct">≈ 1%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 0%（救命课未启动·有依据非估算）</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
       </div>
-      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
-        <span>看课 0%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
-      </div>
-      <div class="bar"><i style="width:2%; background:#ea580c;"></i></div>
+      <div class="bar"><i style="width:1%; background:#ea580c;"></i></div>
     </div>
 
     <div class="subj">
-      <div class="row1">
-        <span class="name">综合写作（50 分）<span class="st">未启动 · 方法论笔记已定稿</span></span>
-        <span class="pct">0%</span>
-      </div>
-      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+      <div class="row1"><span class="name">综合写作（50 分）<span class="st">未启动 · 写作营待排</span></span><span class="pct">0%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
         <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录</span></span>
       </div>
       <div class="bar"><i style="width:1%; background:#6b7280;"></i></div>
     </div>
 
-    <div style="background: #f3f4f6; border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 12px; color: #374151;">
-      <b>算式：</b>(7×80 + 100×90 + 22×80 + 9×100 + 2×100 + 0×50) ÷ 500 = 12,420 ÷ 500 ≈ <b>24.8%</b><br>
-      <span style="color: #6b7280;">v5 更正（2026-10-06 23:30）：普心看课 81% → 100%（16/16 章一轮已过）→ 本科完成度 81% → 100%；旧值 21.4%（10710÷500）</span>
+    <div class="note-box"><b>整体加权 ≈24.8%</b>＝(7×80＋100×90＋22×80＋9×100＋2×100＋0×50)÷500（加权口径 v1：未记录剔分母，Σ权重含全部 6 科）；上方各科「综合」为保守口径（未记录层计 0），两套口径并存、各自标注。</div>
+  </div>
+
+  <!-- F. 记忆闭环·可操作版 -->
+  <div class="panel">
+    <h2>🔁 记忆闭环 <span class="tag">每科：当前阶段 + 下一步动作 + 触发条件</span></h2>
+    <table class="g-table">
+      <tr><th>科目</th><th>当前阶段</th><th>下一步动作</th><th>触发条件</th></tr>
+      <tr><td><b>普心</b></td><td>背 · 启动中</td><td>10/8 导入 408 卡 → 晨间抽 5 张再现卡闭卷默写（≥4/5 要点齐）</td><td>卡导入完成</td></tr>
+      <tr><td><b>社心</b></td><td>学 · 第 1 讲</td><td>今日第 1 讲收尾 → 课后默写 3–5 张 → 第 2 讲开跑</td><td>本讲闭环完成</td></tr>
+      <tr><td><b>研方法</b></td><td>学 → 刷题化</td><td>10/12 每日一题启动（与 Anki 同批做）</td><td>到 10/12</td></tr>
+      <tr><td><b>政治</b></td><td>学 · 第 1 讲（今日启动）</td><td>第 1 讲＋专题一 1–5 题 → 错题回炉；2 周听完 14 讲</td><td>听课完成</td></tr>
+      <tr><td><b>英语</b></td><td>背 · 墨墨 150 试跑</td><td>10/7–10/9 试跑（150/加词≤20/50min 硬顶）→ 10/10 实测校正定稿</td><td>3 天数据齐</td></tr>
+      <tr><td><b>写作</b></td><td>未启动</td><td>写作营方法课排入 P1（未上课前不自行仿写）</td><td>排产落定</td></tr>
+    </table>
+    <div class="note-box">判定链统一收口主线：Anki 核心卡通过率 ＋ 闭卷默写 ＋ 300 题/每日一题；纪律：宁可 1 讲带闭环，不要 3 讲无闭环。</div>
+  </div>
+
+  <!-- 主观题输出卡 -->
+  <div class="panel">
+    <h2>✍️ 主观题输出 <span class="tag">今日 1 题 · 计时 · 写完用官方 prompt 自批</span></h2>
+    <table class="g-table">
+      <tr><th>项目</th><th>内容</th></tr>
+      <tr><td><b>今日题目</b></td><td>社心简答 1 道（15 分档·对应今日所学章）——今日已由「课后默写 3–5 张」承载；<b>周末</b>加论述/综合 1 道（25–35 分档，40min）</td></tr>
+      <tr><td><b>时间配比</b></td><td>10 分题 <b>10–12min</b> ｜ 25 分题 <b>18–20min</b> ｜ 30 分题 <b>20–25min</b></td></tr>
+      <tr><td><b>批改入口</b></td><td><code>347备考\主观题_AI批改提示词_晴天官方.md</code>——备齐 5 样（题目原文／题型+题分／参考答案带采分点／我的作答／自报用时）发 AI 或发知行 → 出批改报告</td></tr>
+      <tr><td><b>规范 5 条</b></td><td>①时间控制 ②结构清晰 ③题型框架完整 ④连接词过渡 ⑤排版卷面（<b>每条 1 分</b>；评分双轨＝内容分＋规范分）</td></tr>
+      <tr><td><b>批改报告 4 要素</b></td><td>①内容分（对照采分点）②规范分（5 条）③错误类型（知识缺口/框架缺失/时间超/卷面）④下一步补哪里</td></tr>
+    </table>
+    <div class="note-box">⚠️ <b>综合写作 50 分不用该提示词</b>——走《综合写作_方法论笔记_定稿.md》＋写作营路径（方法课→作业①→讲解①→…）。晴天 10 月【主观题答题营】开讲后自动收割使用技巧。</div>
+  </div>
+
+  <!-- 通勤音频（辅助·对齐看板）+ 推荐收听 -->
+  <div class="panel">
+    <h2>🎧 通勤音频（辅助 · 对齐看板）<span class="tag">不考核效果，重点在主线</span></h2>
+    <table class="g-table">
+      <tr><th>今日推荐听什么</th><th>对应主线</th><th>预计时长</th><th>已听/对齐状态</th></tr>
+      <tr><td>社心基础课 第二章 精讲（下）音轨（若已发布；否则重听精讲上）</td><td>社心第 1–2 章（本周主线）</td><td>≈60min</td><td>昨日已听 122.7min（第一二章·精讲上）｜<b>对齐 ✓</b></td></tr>
+      <tr><td>社心背诵音频 第 1–2 期（条目化·今日所学考点）</td><td>社心第 1 讲考点</td><td>≈15min</td><td>未听｜待听</td></tr>
+    </table>
+    <div class="note-box">
+      ①通勤/驾驶音频＝<b>辅助</b>：只要求「与规划对齐」，<b>不考核效果</b>（不抽查、不设通过率门槛、不折算有效时长）——目的＝多一次接触机会；②判定「对齐」＝听的章节 ∈ 本周主线章节；未对齐不算错，只作为明日推荐输入；③明日通勤可用 ≈60min，候选凑满即止（≤3 条）；④小程序选择题＝<b>可选练习</b>（题量依考纲与真题频率分布，各章不均，数道至数十道），不作检验工具；⑤L 驾驶三约束：不看屏／不计学习量／路况复杂暂停。
     </div>
   </div>
 
-  <!-- 闭环状态模块（学/背/测/修 四阶） -->
+  <!-- Anki 怎么用（速查卡） -->
   <div class="panel">
-    <h2>🔁 记忆闭环状态 <span class="tag">学 → 背 → 测 → 修 · v5 四阶循环</span></h2>
-    <table class="loop-table">
-      <tr><th>科目</th><th>学（输入）</th><th>背（复习）</th><th>测（测试）</th><th>修（修正）</th><th>当前所处</th></tr>
-      <tr>
-        <td><b>普心</b></td>
-        <td><span class="loop-step done">✓ 16 章一轮完</span></td>
-        <td><span class="loop-step wait">408 卡 10/8 导入启动</span></td>
-        <td><span class="loop-step wait">二轮闭卷默写中</span></td>
-        <td><span class="loop-step wait">D4 错题修正</span></td>
-        <td><span class="loop-step now">背 · 启动中</span></td>
-      </tr>
-      <tr>
-        <td><b>社心</b></td>
-        <td><span class="loop-step now">第 1 讲进行中</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step now">学 · 第 1 讲</span></td>
-      </tr>
-      <tr>
-        <td><b>研方法</b></td>
-        <td><span class="loop-step done">集训营+统计专题 1</span></td>
-        <td><span class="loop-step wait">≈3%</span></td>
-        <td><span class="loop-step wait">每日一题 10/12 起</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step now">学 → 刷题化</span></td>
-      </tr>
-      <tr>
-        <td><b>政治</b></td>
-        <td><span class="loop-step wait">救命课未启动</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step wait">未启动</span></td>
-      </tr>
-      <tr>
-        <td><b>英语</b></td>
-        <td><span class="loop-step wait">阅读 10/15 后</span></td>
-        <td><span class="loop-step now">墨墨 ≈9% 持续中</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step wait">未开始</span></td>
-        <td><span class="loop-step now">背 · 唯一持续项</span></td>
-      </tr>
-      <tr>
-        <td><b>写作</b></td>
-        <td><span class="loop-step wait">未启动</span></td>
-        <td><span class="loop-step wait">未启动</span></td>
-        <td><span class="loop-step wait">未启动</span></td>
-        <td><span class="loop-step wait">未启动</span></td>
-        <td><span class="loop-step wait">未启动</span></td>
-      </tr>
+    <h2>🃏 Anki 怎么用 <span class="tag">一页速查 · 989 卡 = 4 科再现 660 ＋ 再认 240 ＋ 应用 89</span></h2>
+    <table class="g-table">
+      <tr><th>牌组</th><th>卡数</th><th>考法</th><th>怎么答（逐卡动作）</th></tr>
+      <tr><td>02_普心 289｜04_政治 148｜03_研究方法 119｜01_社心 104</td><td><b>660</b></td><td>再现</td><td><b>闭卷在纸上写出</b>答案要点（定义＋分点）；不能只在心里想（心里想＝假会）；要点齐算过</td></tr>
+      <tr><td>05_再认（跨科池）</td><td><b>240</b></td><td>再认</td><td><b>认得即过</b>：看正面想起大意或能选出即可，不必逐字写；碎片/通勤刷</td></tr>
+      <tr><td>06_周末练手池</td><td><b>89</b></td><td>应用</td><td>说/写出「规则＋一个案例」（如某效应→举场景例子）；周末集中与仿写同块</td></tr>
     </table>
-    <div class="loop-cell" style="margin-top: 8px;">依据：v5 记忆闭环——学完第 X 章 → D1 背 → D2 测 → D4 修 → D7 固 → D15 检；纪律：宁可 1 讲带闭环，不要 3 讲无闭环。</div>
-  </div>
-
-  <!-- 答题规范模块（三步法） -->
-  <div class="panel">
-    <h2>✍️ 答题规范 <span class="tag">月会吸收 · 硬规则</span></h2>
-    <div class="answer-steps">
-      <div class="a-step">
-        <div class="a-num">STEP 1</div>
-        <div class="a-title">名词解释</div>
-        <div class="a-desc">先下定义，关键词要准——这是踩分点的第一来源</div>
-      </div>
-      <div class="a-step">
-        <div class="a-num">STEP 2</div>
-        <div class="a-title">主体内容</div>
-        <div class="a-desc">按要点展开；关键词要准 + 白话展开也要背（考场快速填充）</div>
-      </div>
-      <div class="a-step">
-        <div class="a-num">STEP 3</div>
-        <div class="a-title">结尾补充</div>
-        <div class="a-desc">论述题补充内容字数占分——不能只写踩分点；手写复盘练手速（题量大）</div>
-      </div>
+    <div class="note-box">
+      <b>每日 SOP：</b>①打开看首页「到期」数字 → ②<b>先清到期再加新卡</b>（反了会欠账滚雪球）→ ③新卡 20–30 张/天（≈5–8min）→ ④分 2–3 次做：晨间 / 晚间结算 / 睡前 → ⑤达标＝到期清零＋抽 5 张 ≥80% → ⑥欠账 >50 张当天不加新卡。<br>
+      <b>⚠️ 现状标注：989 卡全部新卡（截至 2026-10-07 零使用）</b>——10/8 普心 408 卡导入正式启动；科目配合：普心→晨间 H 块｜社心→随强化课同步｜研方法→10/12 起｜政治→随救命课。卡面均绑定音频秒数（可"开车听音频→到家刷同一张卡"）。车上只听不刷（L 三约束）。
     </div>
   </div>
 
-  <!-- 目标分解模块 -->
+  <!-- G. 本周剩余 -->
   <div class="panel">
-    <h2>🎯 目标分解 <span class="tag">总分 500 · 定稿口径</span></h2>
-    <table class="goal-table">
-      <tr><th>科目</th><th>满分</th><th>单科线</th><th>目标</th><th>说明</th></tr>
-      <tr><td>政治</td><td>100</td><td>48</td><td class="goal-val">65–70</td><td>救命课 14 讲 + 300 题（碎片可承载）</td></tr>
-      <tr><td>外语（英语二）</td><td>100</td><td>48</td><td class="goal-val">60–65</td><td>墨墨 496 词持续 + 阅读计时 10/15 起</td></tr>
-      <tr><td>专业课 347</td><td>300</td><td>180</td><td class="goal-val">215–225</td><td>单选 32–36／简答 62–68／论述 45–50／写作 32–36／案例 30–34</td></tr>
-      <tr><td><b>总分</b></td><td><b>500</b></td><td><b>276</b></td><td class="goal-val"><b>347</b></td><td>目标区间 347–360（定稿口径）；不淘汰线 276</td></tr>
-    </table>
-    <div class="goal-note">⚠️ 算术红线：若政治+外语只到单科线（96 分）→ 专业课需 83.7%（不可能）→ <b>三科必须同时提分</b>。</div>
-  </div>
-
-  <!-- 本周任务 -->
-  <div class="panel">
-    <h2>本周任务 · P1 起步周 <span class="tag">10/6 – 10/12 · 按 v5 排序引擎重排</span></h2>
+    <h2>本周剩余 · P1 起步周 <span class="tag">10/6 – 10/11 · v5 排序引擎</span></h2>
     <ul class="week">
-      <li>
-        <div class="box"></div>
-        <div><span class="w-main">P0 每天：普心二轮（408 卡 + 闭卷默写 3–5 张）+ 社心新课输入 + Anki 清零 + 墨墨保签</span><br><span class="w-note">普心 90 分+社心 80 分 = 170/300 专业分最大头（轴1）＋普心性价比最高/社心空间最大（轴2）</span></div>
-      </li>
-      <li>
-        <div class="box"></div>
-        <div><span class="w-main">社心强化课：P1 收口 4 讲（本周围绕第 1–2 讲推进）</span><br><span class="w-note">晚间整块 45–60min + 讲义标记 15min；宁可 1 讲带闭环，不要 3 讲无闭环</span></div>
-      </li>
-      <li>
-        <div class="box"></div>
-        <div><span class="w-main">政治救命课启动：聚餐日 1 讲 + 300 题专题跟进</span><br><span class="w-note">P1 政治 300 题 5 道轮换（21:20–21:40）；碎片/通勤承载</span></div>
-      </li>
-      <li>
-        <div class="box"></div>
-        <div><span class="w-main">台账真实记录：每天汇报，如实记录（没学 = 也记）</span><br><span class="w-note">本周重点是建立"汇报→台账→仪表盘"真实数据流，而非赶进度</span></div>
-      </li>
-      <li>
-        <div class="box"></div>
-        <div><span class="w-main">研招网报名准备（10/16–10/27 正式报名，本周顺手做）</span><br><span class="w-note">学信网登录检查 + 学历校验材料；非全日制必选「定向就业」</span></div>
-      </li>
+      <li class="done"><div class="box"></div><div><span class="w-main">P0 每天：墨墨保签 ✅10/6｜社心输入 ✅10/6（基础课 122.7min）｜Anki 清零｜普心二轮（10/8 卡导入后启动）</span><br><span class="w-note">普心 90＋社心 80＝170/300 专业分最大头</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">政治救命课保底 6 讲冲 7：今日第 1 讲（09:30–11:00）＋ 10/10–11 下午块各 2</span><br><span class="w-note">10/6 晚实际投向社心，缺口 1 讲转 10/7 晚机动；2 周听完 14 讲（每天碎片）</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">社心强化课第 1 讲收尾＋第 2 讲开跑（P1 收口 4 讲）</span><br><span class="w-note">晚间整块；宁可 1 讲带闭环，不要 3 讲无闭环</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">研方法每日一题 10/12 起｜实验仿写 10/12 起（P1W2）</span><br><span class="w-note">本周不启动，到点开跑</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">英语阅读计时＋真题 1 套 10/15 起（本周先碰真题 1 套感受风格）</span><br><span class="w-note">P2 预告；墨墨 150 试跑 10/10 校正定稿</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">行政：预报名窗口 10/8–10/13（非全日制必选「定向就业」）</span><br><span class="w-note">账号/学历校验已办（见底部报名小卡）；正式报名 10/16–27</span></div></li>
     </ul>
   </div>
 
-  <!-- 待拍板 -->
+  <!-- 目标↔当前↔缺口对照 -->
   <div class="panel">
-    <h2>等你拍板 / 待执行（2 件）<span class="tag">拍完即删 · 不急可攒着</span></h2>
-    <div class="decision">
-      <div class="d-card">
-        <div class="d-title">① 问学管（一句话）</div>
-        <div class="d-adv">"我的 1v1 共 25 节，课时有效期到什么时候？约课时间是否单独安排、不占自学时间？"——答案发我，我来调嵌入表</div>
-      </div>
-      <div class="d-card">
-        <div class="d-title">② 研招网报名（10 月，错过无补救）</div>
-        <div class="d-adv">预报名预计 10/8-13，正式报名预计 10/16-27；本周先查本省网报公告 + 备学历校验材料。知行已设提醒</div>
-      </div>
-    </div>
+    <h2>🎯 目标 ↔ 当前 ↔ 缺口 <span class="tag">满分结构 vs 目标得分两列口径 · 当前按三层表保守推算</span></h2>
+    <table class="g-table">
+      <tr><th>科目</th><th>满分（结构）</th><th>目标得分</th><th>当前（保守推算）</th><th>缺口与行动</th></tr>
+      <tr><td>政治</td><td>100</td><td><b>65–70</b></td><td>≈1 分（≈1%）</td><td>≈64–69 → 救命课 14 讲 2 周听完＋300 题（碎片承载）</td></tr>
+      <tr><td>英语二</td><td>100</td><td><b>60–65</b></td><td>≈9 分（≈9%）</td><td>≈51–56 → 墨墨 150 持续＋阅读计时＋真题 10/15 起</td></tr>
+      <tr><td>专业课 347</td><td>300（单选 40／简答 90／论述 70／写作 50／案例 50）</td><td><b>215–225</b>（32–36／62–68／45–50／32–36／30–34）</td><td>≈45 分（社心≈3＋普心≈30＋研方法≈11＋写作 0）</td><td>≈170–180 → 普心二轮＋社心 4 讲闭环＋研方法刷题化＋写作营路径</td></tr>
+      <tr><td><b>总分</b></td><td><b>500</b></td><td><b>347–360</b>（不淘汰线 276）</td><td>≈55 分</td><td>≈292–305 → 三科同时提分</td></tr>
+    </table>
+    <div class="warn-box">⚠️ <b>算术红线：</b>若政治＋外语只到单科线（96 分）→ 专业课需 83.7%（不可能）→ <b>三科必须同时提分</b>。当前列＝三层表保守推算（未记录层计 0），仅供参考，随台账实测更新。</div>
   </div>
 
-  <!-- 红线 -->
+  <!-- 出差保底三件 -->
   <div class="panel">
-    <h2>五条红线 <span class="tag">违反即纠偏</span></h2>
-    <div class="redlines">
-      <div class="rl"><b>① 社心主线不可被挤占</b>——晚间整块绝对优先；连续 2 天零推进次日降为 60min+只听不选讲</div>
-      <div class="rl"><b>② 最低配置不断更</b>——墨墨保签 + Anki 到期清零 = 不算塌方；断更一周 = 塌方</div>
-      <div class="rl"><b>③ 1v1 不做重复劳动</b>——只做录播做不了的事</div>
-      <div class="rl"><b>④ 以题带点不通读</b>——禁止"重新过一遍教材"</div>
-      <div class="rl"><b>⑤ 台账只记真实</b>——不美化、不脑补</div>
-    </div>
+    <h2>🧳 出差保底三件 <span class="tag">出差日可用 0.5–1h · 全部手机可做不需整块</span></h2>
+    <table class="g-table">
+      <tr><th>#</th><th>事项</th><th>说明</th></tr>
+      <tr><td>1</td><td><b>墨墨保签</b>（150 学习量）</td><td>手机 APP；红线②最低配置之一</td></tr>
+      <tr><td>2</td><td><b>Anki 到期清零</b></td><td>手机端；可只清到期、不加新卡</td></tr>
+      <tr><td>3</td><td><b>音频输入</b>（社心基础课/背诵音频/政治救命课音轨）</td><td>提前离线下载；通勤/差旅路上听（L 档三约束）</td></tr>
+    </table>
+    <div class="note-box">出差期间「墨墨保签＋Anki 清零」即不算塌方（红线②口径保持）；加分可选：口述输出（对题目口述录音→回来发知行批改），保住"输出"不中断。</div>
   </div>
 
-  <!-- 汇报流程 -->
-  <div class="panel">
-    <h2>怎么汇报学习情况 <span class="tag">直接发给知行，不用在本页填</span></h2>
-    <div class="today-grid" style="grid-template-columns:1fr 1fr;">
-      <div class="template-box" style="background: #f8f9fa; border: 1px dashed #d1d5db; border-radius: 10px; padding: 12px 14px; font-size: 13px; white-space: pre-wrap; color: #374151;"><span style="font-weight: 700; color: #1f2937; display:block; margin-bottom:6px;">随手这么发一条就行（大白话亦可）：</span>今日汇报
-10/7
-- 单词：墨墨 120 刷完
-- 政治：救命课第 X 讲 / 300 题专题一
-- 社心：第 X 讲听到 YY:YY
-- 普心：默写 X 张</div>
-      <div>
-        <ul class="week" style="list-style:none;">
-          <li style="display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:13px;"><span style="flex-shrink:0; width:20px; height:20px; background:#d93025; color:#fff; border-radius:50%; text-align:center; line-height:20px; font-size:11px; font-weight:700;">1</span><div><b>知行记台账</b>——只记真实数据，如实进真源文件</div></li>
-          <li style="display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:13px;"><span style="flex-shrink:0; width:20px; height:20px; background:#d93025; color:#fff; border-radius:50%; text-align:center; line-height:20px; font-size:11px; font-weight:700;">2</span><div><b>对比分析</b>——对照本周任务，算缺口和趋势</div></li>
-          <li style="display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:13px;"><span style="flex-shrink:0; width:20px; height:20px; background:#d93025; color:#fff; border-radius:50%; text-align:center; line-height:20px; font-size:11px; font-weight:700;">3</span><div><b>调整计划</b>——明晚任务按实际重新排（默认生效，可否决）</div></li>
-          <li style="display:flex; gap:10px; padding:8px 0; font-size:13px;"><span style="flex-shrink:0; width:20px; height:20px; background:#d93025; color:#fff; border-radius:50%; text-align:center; line-height:20px; font-size:11px; font-weight:700;">4</span><div><b>更新本页</b>——用户发指令触发重产，进度条和今日任务随之刷新（暂不开定时）</div></li>
-        </ul>
-      </div>
+  <!-- ================= 第 3 层 · 参考层（折叠，不占每日视野） ================= -->
+  <div class="layer-tag layer-3">第 3 层 · 参考层：静态规则（折叠 · 看 1 次就够）</div>
+
+  <details class="ref">
+    <summary>✍️ 答题规范（三步法＋月会硬规则）<span class="cal">校准日期 2026-10-07</span></summary>
+    <div class="ref-body">
+      ①<b>三步法</b>＝名词解释（先下定义，关键词要准）→ 主体内容（按要点展开，白话展开也要背）→ 结尾补充（论述补充字数占分，不只写踩分点）；②关键词要准＋白话展开也要背；③手写复盘练手速（默写计时，题量大）。<b>主页一句提醒：主观题＝定义→要点→补充。</b>
     </div>
-  </div>
+  </details>
+
+  <details class="ref">
+    <summary>🔴 五条红线<span class="cal">校准日期 2026-10-07（②已带当前量微调）</span></summary>
+    <div class="ref-body">
+      ①<b>社心主线不可被挤占</b>——晚间固定层绝对优先；连续 2 天零推进→次日降为 60min＋只听不选讲。<br>
+      ②<b>最低配置不断更</b>——墨墨保签（<b>150 试跑口径</b>）＋Anki 到期清零（<b>按到期量实估</b>）＝不算塌方；断更一周＝塌方。<br>
+      ③<b>1v1 不做重复劳动</b>——只做录播做不了的事。<br>
+      ④<b>以题带点不通读</b>——禁止"重新过一遍教材"。<br>
+      ⑤<b>台账只记真实</b>——不美化不脑补；同日只一行权威记录。
+    </div>
+  </details>
+
+  <details class="ref">
+    <summary>📮 怎么汇报学习情况（新口径）<span class="cal">校准日期 2026-10-07</span></summary>
+    <div class="ref-body">
+      <b>随手发一条大白话即可</b>（如：单词墨墨 150 刷完／政治救命课第 X 讲／社心第 X 讲听到 YY:YY／默写 X 张）。<br>
+      知行固定四步：①记台账（只记真实）→ ②对比分析（对照本周任务）→ ③调整计划（明日 ≤3 条，默认生效可否决）→ ④呈现层取数。<br>
+      <b>监督（不发邮件）</b>：台账守夜（每天 22:30，只做台账）＋ 信箱巡检（08:00/20:00）；简报与点名邮件 10/7 起已取消。<br>
+      <b>报名小卡（只读）</b>：找回密码＋绑长期手机号＝<b>已办</b>（用户 2026-10-07 确认）｜考生信息＋学历学籍校验＝<b>已办</b>（用户 2026-10-07 确认）｜预报名 <b>10/8–10/13</b>（待提交窗口·必选定向就业）｜正式报名 10/16–27｜网上确认 11 月上旬。
+    </div>
+  </details>
+
+  <details class="ref">
+    <summary>🗺 剩余 73 天三阶段（v5 排产）<span class="cal">当前 P1 筑基 Day 2</span></summary>
+    <div class="ref-body">
+      <b>P1 筑基（10/6–10/25·19 天）</b>：普心二轮＋社心新课＋政治启动（◀ 现在）<br>
+      <b>P2 铺开（10/26–11/20）</b>：研方法刷题＋写作营作业②③＋实验仿写＋英语阅读<br>
+      <b>P3 冲刺（11/21–12/19）</b>：模考＋错题回炉＋主观题背诵
+    </div>
+  </details>
 
   <div class="footer">
-    数据唯一来源：《考研备考真源.md》（本目录）+ v5 定稿口径（主交接线_定稿_347规划v5_排序引擎版_v1.md，2026-10-06 23:30）· 双轨监督：工作日 23:30 合并简报+补记 / 非工作日 21:30 简报+22:00 补记（均推 QQ 邮箱）· 本页请勿手改，由用户指令触发重产（暂不开定时）· 重产日志见页首 HTML 注释（单一写者可追溯）
+    数据唯一来源：《考研备考真源.md》（本目录）· 信息架构 v2（模块准入三问：每天要看吗／驱动什么决策／数据从哪来）<br>
+    监督：台账守夜（每天 22:30·不发邮件）＋ 信箱巡检（08:00/20:00）· 简报与点名邮件 2026-10-07 起已取消<br>
+    本页请勿手改，由用户指令触发重产（暂不开定时）· 重产日志见页首 HTML 注释 · 旧版归档 _报告工作区\归档_仪表盘_v5口径_20261007.html
   </div>
 </div>
 
 <script>
-  // 倒计时实时计算（初试按近年规律估 12/19，以教育部公告为准）
   (function () {
-    var exam = new Date(2026, 11, 19); // 月份从0开始，12月=11
+    var exam = new Date(2026, 11, 19);
     var now = new Date();
     var days = Math.ceil((exam - now) / 86400000);
     if (days < 0) days = 0;
     var topEl = document.getElementById('countdown');
     if (topEl) topEl.innerHTML = days + '';
-    var cardEl = document.getElementById('countdown-card');
-    if (cardEl) cardEl.textContent = days;
   })();
 </script>
 </body>
