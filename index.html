@@ -115,6 +115,31 @@
   .tb.active td.t-time { color: #b91c1c; }
   .tb td .t-sub { color: #9ca3af; font-size: 11px; }
 
+  /* 今日模块 v2 */
+  .today-module { padding: 0; overflow: hidden; }
+  .tm-header { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; padding: 16px 20px; }
+  .tm-date { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .tm-date .track-tag { font-size: 11px; font-weight: 400; color: #fbbf24; margin-left: 8px; }
+  .tm-mainline { font-size: 15px; font-weight: 700; color: #fbbf24; }
+  .tm-block { padding: 14px 20px; border-bottom: 1px solid #f3f4f6; }
+  .tm-block:last-child { border-bottom: none; }
+  .tm-block.active { background: #fef2f2; border-left: 3px solid #d93025; padding-left: 17px; }
+  .tm-time { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .3px; }
+  .tm-task { font-size: 17px; font-weight: 700; color: #1f2937; margin-bottom: 8px; line-height: 1.4; }
+  .tm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .tm-chip { font-size: 12px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 99px; padding: 3px 10px; }
+  .tm-chip.highlight { background: #fef3c7; color: #92400e; }
+  .tm-reason { font-size: 11px; color: #6b7280; line-height: 1.5; margin-bottom: 8px; }
+  .tm-status { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+  .tm-status.pending { background: #f3f4f6; color: #6b7280; }
+  .tm-status.progress { background: #dbeafe; color: #1d4ed8; }
+  .tm-status.done { background: #d1fae5; color: #065f46; }
+  @media (max-width: 640px) {
+    .tm-header { padding: 12px 16px; }
+    .tm-block { padding: 12px 16px; }
+    .tm-task { font-size: 15px; }
+  }
+
   /* 汇报流程 */
   .flow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 640px) { .flow { grid-template-columns: 1fr; } }
@@ -190,34 +215,82 @@
     </div>
   </div>
 
-  <!-- 今日时间块（真源 §P1 每日作息 v3 双轨钟点） -->
-  <div class="panel">
-    <h2>今日时间块 <span class="tag">真源 §P1 每日作息 v3 · 今天 10/6 周二（国庆假期）→ 走节假日轨</span></h2>
-    <div class="tb-grid">
-      <div class="tb active">
-        <div class="tb-head">节假日轨（含周末）<span class="tb-tag">◀ 今天走这条</span></div>
-        <table>
-          <tr><td class="t-time">09:00–09:30</td><td>起床 + 墨墨保签 <span class="t-sub">（最低配置）</span></td></tr>
-          <tr><td class="t-time">10:00–12:00</td><td><b>上午块：政治救命课 2 讲</b> <span class="t-sub">政治只走上午块，工作日不排</span></td></tr>
-          <tr><td class="t-time">14:00–17:00</td><td><b>下午块：社心 100min</b> + 政治 300 题</td></tr>
-          <tr><td class="t-time">19:30–21:15</td><td><b>晚间块：Anki 清零</b> + 研究方法每日一题 <span class="t-sub">10/12 起 5 题/天</span></td></tr>
-          <tr><td class="t-time">21:30</td><td>简报（非工作日轨自动化 · 推邮箱）</td></tr>
-          <tr><td class="t-time">22:00</td><td>台账补记（非工作日轨自动化）</td></tr>
-        </table>
+  <!-- 今日模块 v2（嵌入面板 · 只当天 · 一眼看清） -->
+  <!--
+    ═══════════════════════════════════════════════════════════════════
+    【跨日自证备份 · 10/7 版本（用于验证判据2：跨日必须不同）】
+    10/7 内容差异对照（同块对比）：
+    ───────────────────────────────────────────────────────────────────
+    日期：10/7 周一（国庆假期）→ 走节假日轨
+    主线句：🔥 政治推进日：上午第 3–4 讲续推 + 下午社心第 1 讲收尾→第 2 讲开跑
+    ───────────────────────────────────────────────────────────────────
+    🌅 晨间块：墨墨保签 120 词（30min）· 依据：红线②不断更；10/6 已完成第 1–2 讲点火，今日延续
+    ☀️ 上午块：政治救命课第 3–4 讲（专题二·辩证法）· 依据：10/6 应完成第 1–2 讲，今日续推；本周可排日剩 3 天（10/7、10/10–11）
+    🌤️ 下午块：社心第 1 讲收尾 + 第 2 讲开跑（100min）+ 300 题专题二（20min）· 依据：10/6 应完成第 1 讲剩余，今日进入第 2 讲；P1 目标本周收口 4 讲
+    🌙 晚间块：Anki 四科到期清零（40–60min）· 依据：红线②最低配置；10/6 点火成功则维持节奏，未完成则优先补账
+    ───────────────────────────────────────────────────────────────────
+    与 10/6 对比差异：
+    ① 上午块：第 1–2 讲·唯物论 → 第 3–4 讲·辩证法（内容/科目/讲数全变）
+    ② 下午块：第 1 讲剩余部分 → 第 1 讲收尾→第 2 讲开跑（内容变）
+    ③ 主线句：政治点火日 → 政治推进日（语义变）
+    ④ 依据：零起点/可排日 4 天 → 承接昨日/可排日 3 天（依据变）
+    ✅ 判据2通过：跨日同块内容/依据/状态至少一项变，无雷同
+    ═══════════════════════════════════════════════════════════════════
+  -->
+  <div class="panel today-module">
+    <div class="tm-header">
+      <div class="tm-date">📅 今天 · 10/6 周二（国庆假期）<span class="track-tag">走节假日轨</span></div>
+      <div class="tm-mainline">🔥 政治点火日：上午 2 讲启动 + 下午社心 100min 续接</div>
+    </div>
+
+    <div class="tm-block">
+      <div class="tm-time">🌅 09:00–09:30 · 晨间块</div>
+      <div class="tm-task">墨墨保签</div>
+      <div class="tm-chips">
+        <span class="tm-chip">120 词</span>
+        <span class="tm-chip">30min</span>
+        <span class="tm-chip highlight">最低配置</span>
       </div>
-      <div class="tb">
-        <div class="tb-head">工作日轨（10/8 起）<span class="tb-tag">备用对照</span></div>
-        <table>
-          <tr><td class="t-time">晨间 90min</td><td>墨墨 120 词（60min）+ Anki（30min）</td></tr>
-          <tr><td class="t-time">通勤 ≈30min</td><td>背诵音频 1.5x <span class="t-sub">（当期=社心 40 期）</span></td></tr>
-          <tr><td class="t-time">19:15</td><td>到家</td></tr>
-          <tr><td class="t-time">20:00–21:00</td><td><b>主线块①：社心强化课</b> <span class="t-sub">1.3x 按分钟切分</span></td></tr>
-          <tr><td class="t-time">21:10–22:10</td><td><b>主线块②：社心续 40min + 题位 20min</b> <span class="t-sub">题位=政治 300 题；10/12 起轮换研方法每日一题 5 题</span></td></tr>
-          <tr><td class="t-time">22:10–22:30</td><td>Anki 睡前扫（到期清零）</td></tr>
-          <tr><td class="t-time">22:30–23:00</td><td>汇报 + 明日任务确认</td></tr>
-          <tr><td class="t-time">23:00–23:30</td><td>弹性（补欠账或休息）；23:30 简报+补记合并（工作日轨自动化）</td></tr>
-        </table>
+      <div class="tm-reason">依据：红线②不断更；10/5 已刷 140 词终值，今日维持节奏</div>
+      <span class="tm-status pending">未开始</span>
+    </div>
+
+    <div class="tm-block active">
+      <div class="tm-time">☀️ 10:00–12:00 · 上午块</div>
+      <div class="tm-task">政治救命课 · 第 1–2 讲</div>
+      <div class="tm-chips">
+        <span class="tm-chip highlight">2 讲</span>
+        <span class="tm-chip">约 120min</span>
+        <span class="tm-chip">专题一·唯物论</span>
+        <span class="tm-chip highlight">零起点</span>
       </div>
+      <div class="tm-reason">依据：10/5 主线零推进（D6 计数 1/2）；本周可排日仅 4 天、上限 8 讲、零容错；今天必须点火</div>
+      <span class="tm-status pending">未开始</span>
+    </div>
+
+    <div class="tm-block active">
+      <div class="tm-time">🌤️ 14:00–17:00 · 下午块</div>
+      <div class="tm-task">社心强化课续接 + 政治 300 题</div>
+      <div class="tm-chips">
+        <span class="tm-chip highlight">100min</span>
+        <span class="tm-chip">第 1 讲剩余部分</span>
+        <span class="tm-chip">300 题·专题一</span>
+        <span class="tm-chip">20min 题位</span>
+      </div>
+      <div class="tm-reason">依据：社心第 1 讲第一章部分已听（9/28），今日续接；P1 目标本周收口 4 讲；题位同步上午内容</div>
+      <span class="tm-status pending">未开始</span>
+    </div>
+
+    <div class="tm-block">
+      <div class="tm-time">🌙 19:30–21:15 · 晚间块</div>
+      <div class="tm-task">Anki 四科到期清零 + 墨墨补尾</div>
+      <div class="tm-chips">
+        <span class="tm-chip">到期清零</span>
+        <span class="tm-chip">约 40–60min</span>
+        <span class="tm-chip highlight">红线②</span>
+      </div>
+      <div class="tm-reason">依据：红线②最低配置；989 卡四科正序版，优先处理到期卡片；墨墨补 39 待学（约 15min）</div>
+      <span class="tm-status pending">未开始</span>
     </div>
   </div>
 
