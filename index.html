@@ -5,19 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>347备考仪表盘</title>
   <!--
-    【状态 · 2026-10-06 00:38 重产】本地为唯一源，自动同步至 GitHub Pages。
+    【状态 · 2026-10-06 14:03 重产】本地为唯一源，自动同步至 GitHub Pages。
     线上入口：https://ljy1281975814-tech.github.io/study-tracker-2026/
-    同步节奏：每次汇报后自动触发（单向：本地 → 线上）。
+    同步节奏：用户一句话触发（暂不开定时），单向：本地 → 线上。
     由助手执行 _deploy_sync.sh 同步；失败会回执，不静默吞错。
-    重产日志（单一写者=347心理学考研备考辅导对话，可追溯）：
+    重产日志（单一写者=347呈现层承接对话，可追溯）：
     - 2026-10-06 00:07：用户 00:05 发 10/5 墨墨终值截图（140 词）触发人工重产，回填终值。
-      注：当日为非工作日轨，23:30 工作日自动化本就不跑，21:30/22:00 非工作日轨见真实行静默——本次非自动化误触发。
-    - 2026-10-06 00:38：用户指令——补「今日时间块」模块（真源 §P1 每日作息 v3 双轨钟点，
-      节假日钟点为用户 10/6 00:34 指令补充并已回写真源）+ 快照时间戳同步 + 部署断链修复。
-    - 2026-10-06 13:02：用户指令——整页去重 + 新鲜度机制：①hero 四卡片收敛为一句主线
-      ②删除旧「今日任务」section（与新模块重复）③旧「明日预告」并入模块底部一行
-      ④双时间戳（数据截止=10/5 23:56 墨墨终值 / 生成时间=13:02）⑤触发说明（用户一句话触发）
-      ⑥单一事实源：所有今日内容只从真源派生，禁手写。
+    - 2026-10-06 00:38：用户指令——补「今日时间块」模块 + 快照时间戳同步 + 部署断链修复。
+    - 2026-10-06 13:02：用户指令——整页去重 + 新鲜度机制（hero 四卡片收敛 / 删除旧「今日任务」
+      section / 明日预告并入模块底部 / 双时间戳 / 用户一句话触发 / 单一事实源）。
+    - 2026-10-06 14:03：用户指令——①上午块改"暂缓"+降级安排 ②10/7聚餐/补课同步
+      ③数据截止=10/6 14:03 ④生成时间=本次实际时刻 ⑤加权完成度：待真源"科目三层进度表"就位。
   -->
   <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -163,7 +161,7 @@
   <div class="header">
     <h1>347 备考仪表盘</h1>
     <span class="sub">北师大 MAP · 心理与行为大数据方向</span>
-    <span class="upt">快照时间：2026-10-06 13:02 · v3 主线块制 · 由知行维护（单一写者，重产日志见页首注释）</span>
+    <span class="upt">快照时间：2026-10-06 14:25 · v3 主线块制 · 由知行维护（单一写者，重产日志见页首注释）</span>
   </div>
 
   <!-- ===== 首屏 Hero（唯一主线 + 双时间戳 + 触发说明） ===== -->
@@ -318,62 +316,82 @@
     </div>
   </div>
 
-  <!-- 科目进度 -->
+  <!-- 科目三层进度（加权完成度 v1 · 真源直读 · 2026-10-06） -->
   <div class="panel">
-    <h2>科目进度 <span class="tag">实际基线 · 10/5 起点已确认</span></h2>
-
-    <div class="subj">
-      <div class="row1">
-        <span class="name">英语二（单词已启动 · 唯一实动项）<span class="st">496 词入库 [实]；≥10天222/≥30天101/≥60天53/≥90天38</span></span>
-        <span class="pct">~16%</span>
-      </div>
-      <div class="bar"><i style="width:16%; background:#9333ea;"></i></div>
-      <div class="next">下一动作：墨墨 120/天维持；阅读/真题 10/15 后视 347 进度启动；<b>唯一已验证的持续执行项</b></div>
+    <h2>整体加权完成度 <span style="font-size: 22px; color: #d93025;">≈ 21%</span> <span class="tag">加权口径 v1 · Σ权重含全部 6 科（含未启动科目稀释）</span></h2>
+    <div style="font-size: 12px; color: #6b7280; margin-bottom: 16px;">
+      口径：层内等权 · missing 层剔出分母并显示「未记录」· 估算值带「≈」· 整体 = Σ(本科完成度×权重)÷Σ权重
     </div>
 
     <div class="subj">
       <div class="row1">
-        <span class="name">社会心理学（迈尔斯·方向科目 80 分）<span class="st">Anki 148 卡已备 · 第1讲第一章部分已听（9/28）</span></span>
-        <span class="pct">~8%</span>
+        <span class="name">社心（80 分）<span class="st">方向科目 · 第1讲第一章部分已听</span></span>
+        <span class="pct">≈ 7%</span>
       </div>
-      <div class="bar"><i style="width:8%; background:#d93025;"></i></div>
-      <div class="next">下一动作：每晚 100min 续接第1讲剩余部分 → 第2讲起跑；背诵音频通勤1.5x</div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+        <span>看课 ≈8%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈5%</span>
+      </div>
+      <div class="bar"><i style="width:7%; background:#d93025;"></i></div>
     </div>
 
     <div class="subj">
       <div class="row1">
-        <span class="name">政治<span class="st">救命课14讲资料已备 · 马原229卡已备 · 课未启动</span></span>
-        <span class="pct">≈0%</span>
+        <span class="name">普心（90 分）<span class="st">公共主力 · 1–13章已学完</span></span>
+        <span class="pct">81%</span>
       </div>
-      <div class="bar"><i style="width:1%; background:#ea580c;"></i></div>
-      <div class="next">下一动作：上午块2讲/天启动；10/25前收口14讲；300题三步法同步</div>
-    </div>
-
-    <div class="subj">
-      <div class="row1">
-        <span class="name">普心 / 心理学导论（公共科目主力）<span class="st">1–13章已学完 · 14–16章未学 · Anki 408 卡已备</span></span>
-        <span class="pct">~81%</span>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+        <span>看课 81%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录</span></span>
       </div>
       <div class="bar"><i style="width:81%; background:#1d4ed8;"></i></div>
-      <div class="next">下一动作：P1不排新课；P2（10/26起）14–16章补缺（3h）+ 20道主观题检验；Anki补8条真缺口</div>
     </div>
 
     <div class="subj">
       <div class="row1">
-        <span class="name">研究方法（统计 / 测量 / 实验）<span class="st">实验集训营已看完 · 研究方法营统计专题1 · 统计2剩22%</span></span>
-        <span class="pct">~40%</span>
+        <span class="name">研方法（80 分）<span class="st">实验集训营完 · 统计专题1</span></span>
+        <span class="pct">≈ 22%</span>
       </div>
-      <div class="bar"><i style="width:40%; background:#059669;"></i></div>
-      <div class="next">下一动作：P2起每周1套《实验必刷题》；统计2补缺（10/12–10/18讲义即可）；每日一题5题/天</div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+        <span>看课 ≈40%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
+      </div>
+      <div class="bar"><i style="width:22%; background:#059669;"></i></div>
     </div>
 
     <div class="subj">
       <div class="row1">
-        <span class="name">综合写作（50 分）& 1v1（25 节全未上）<span class="st">方法论笔记已定稿 · 写作营未启动 · 1v1 未约</span></span>
-        <span class="pct">≈0%</span>
+        <span class="name">英语二（100 分）<span class="st">墨墨 496 词入库 [实] · 唯一持续项</span></span>
+        <span class="pct">≈ 9%</span>
+      </div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+        <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈9%</span>
+      </div>
+      <div class="bar"><i style="width:9%; background:#9333ea;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1">
+        <span class="name">政治（100 分）<span class="st">救命课未启动 · 从零起步</span></span>
+        <span class="pct">≈ 2%</span>
+      </div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+        <span>看课 0%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
+      </div>
+      <div class="bar"><i style="width:2%; background:#ea580c;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1">
+        <span class="name">综合写作（50 分）<span class="st">未启动 · 方法论笔记已定稿</span></span>
+        <span class="pct">0%</span>
+      </div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 6px;">
+        <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录</span></span>
       </div>
       <div class="bar"><i style="width:1%; background:#6b7280;"></i></div>
-      <div class="next">下一动作：11月初启动方法课1节 + 笔记精读；仿写3篇（AI批改）；1v1问学管有效期</div>
+    </div>
+
+    <div style="background: #f3f4f6; border-radius: 8px; padding: 12px 14px; margin-top: 14px; font-size: 12px; color: #374151;">
+      <b>算式：</b>(7×80 + 81×90 + 22×80 + 9×100 + 2×100 + 0×50) ÷ 500 = 10,710 ÷ 500 ≈ <b>21.4%</b><br>
+      <span style="color: #6b7280;">旧值 17%（efeca5e·10/4 快照）→ 键名 bug 修复（英语二权重 50→100）+ 政治按实际重排口径重置 + 普心背诵修正为「未记录」剔出分母</span>
     </div>
   </div>
 
