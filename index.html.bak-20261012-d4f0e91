@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>347备考仪表盘</title>
+  <!--
+    【状态 · 2026-10-07 03:00 重产 · 信息架构 v2 首版】本地为唯一源，自动同步至 GitHub Pages。
+    线上入口：https://ljy1281975814-tech.github.io/study-tracker-2026/
+    同步节奏：用户一句话触发（暂不开定时），单向：本地 → 线上。
+    由助手执行 _deploy_sync.sh 同步；失败会回执，不静默吞错。
+    重产日志（可追溯）：
+    - 2026-10-06 00:07：用户 00:05 发 10/5 墨墨终值截图（140 词）触发人工重产，回填终值。
+    - 2026-10-06 00:38：用户指令——补「今日时间块」模块 + 快照时间戳同步 + 部署断链修复。
+    - 2026-10-06 13:02：用户指令——整页去重 + 新鲜度机制。
+    - 2026-10-06 14:03：用户指令——上午块暂缓 + 10/7 聚餐/补课同步 + 双时间戳。
+    - 2026-10-07 00:19：v5 定稿口径重产（0002 工作包）。
+    - 2026-10-07 03:00：投递单 A 批一次重产（信息架构 v2 首版）——①三层架构（决策层/执行层/参考层折叠）
+      +模块准入三问 ②假期轨删 07:45 块、10/7 走聚餐日轨 ③同类聚合（政治课+300题同块；社心课后紧跟默写）
+      ④Anki 按到期量估时（公式 10–15s/卡，非固定 20min）⑤墨墨 150 试跑口径（加词≤20/50min 硬顶）
+      ⑥任务四段式（对象/达标/预计时长）⑦通勤音频改「辅助·对齐看板」删一切效果考核+推荐收听
+      ⑧主观题输出卡（时间配比/批改入口/规范5条）⑨Anki 怎么用速查卡（989 卡映射+零使用标注）
+      ⑩缓冲余量+出差保底三件+目标↔当前↔缺口对照+底部改台账守夜/信箱巡检口径。
+      旧版归档：_报告工作区\归档_仪表盘_v5口径_20261007.html。
+      依据件：主交接线_规格_347仪表盘信息架构v2 + 修正_107排产 + 修正_任务具体化规范 + 规格_Anki使用规范
+      + 定稿_通勤音频机制v3 + 修正_预算重算与出差缓冲 + 修正_写作路径与批改闭环。
+    - 2026-10-07 20:00：投递单 09:30 版（工作包②④⑤⑧⑨）重产——任务卡材料栏+材料徽标（D8）、政治精确讲名
+      （开课导航+第 1 讲 专题一唯物论①）、Anki 任务改"点哪个子牌组"（82 子牌组已按课表排好·零分类）、
+      Anki 学法分科表（政治=辨析级不默写）、拍板区更新（300 题打印/英语二真题/阿范题钉位）、通勤音频体量大校准。
+      依据件：清单_政治材料电子版路径_v1 + 清单_材料可及性总表_v1 + 映射_课程与材料需求_v1
+      + 交付_Anki按课表重排结果_v1 + 0020_写者分工与校准。
+    - 2026-10-08 08:00：信箱投递单⑪⑬重产——切工作日轨（07:45–08:45 晨间块回归：普心二轮启动 02_普心::C01）；
+      300 题文件名更正为「马原300题题目+解析（不用打印）.pdf」（投递单⑪·此前误登记的文件名作废）；
+      Anki 父牌组防呆（父牌组新卡上限=0，只点当天子牌组）；政治第 1 讲转弹性层（10/7 压缩块未执行·顺延不追责）；
+      300 题做题待拍板区②（D9 材料门禁：纸质未取回+PDF 不可写）；行政：预报名窗口 10/8–10/13 今日开启。
+      依据件：投递单（10/7 22:30 版·工作包⑪⑬）+ 考研备考真源 §3.1/§3.4/§十。
+    - 2026-10-08 20:00：信箱投递单⑭⑮重产——300 题口径更正（用户 10/7 22:20 拍板"不打印先看电子版"→💻可读可做·做题写答题本），
+      今日弹性层恢复 300 题（看框架→听讲解→做题同块）；英语真题更正为课程内已齐（早年 02–09 精讲＋含真题版讲义），
+      拍板区 4→2 件（300 题打印/英语真题缺口均销项）。
+      依据件：投递单（10/8 08:50 版·工作包⑭⑮）。
+    - 2026-10-08 23:59：投递单⑱⑲重产——①数据截止 10/7→10/8（真源已有 10/8 墨墨 150 真实台账行）
+      ②墨墨口径更正：150 维持/新学≤20/全天碎片累计≈1.5–2h（实测 47s/词）/「硬顶」=单次连续≤50min
+      （非全天上限）/待学未清=正常不清零（⑱"70 词"方案已作废·远低于考试要求）③状态一句话反映今日实际
+      （墨墨✅；政治/社心/Anki 待确认）。依据件：投递单（10/8 20:50 版·工作包⑱⑲）。
+    - 2026-10-09 00:35：投递单⑰㉒外审整改记录——页面数据不变（数据截止仍为 10/8），本次仅同步工程侧整改：
+      ①建 _产物索引.md（A1）②真源/内化规则/产品原型失效引用全部改实测路径（A5）③D4 占位 2 处标注闭环
+      ④旧 automation 残留目录归档（现行=DB automation_runs＋logs/）⑤备考规划×2 标 superseded
+      ⑥真源规划索引区合并瘦身（233→230 行，投递单四版合一登记⑯–㉓）。
+      依据件：投递单（10/8 20:50 版·工作包⑰⑳㉒）。
+    - 2026-10-09 02:45：投递单㉖㉗㉘㉙㉚㉛㉜落地——①社心任务卡挂检验题三档三时点（当天 L1／次日 L2／第 3–5 天 L3）
+      ②新增「检验题三档·配套题单索引」固定模块（26 份题单：社心 11＋普心 15，按章做题；题型画像防错配；
+      研方法改指小红本 200 题不挂外部题单㉙）③提取练习卡加"昨日章题单 L2"选项
+      ④347 题型结构更正为北师 2026 回忆版实测（㉜：单选 20×2／公共简答 4＋方向简答 2／综合写作 50 属公共／方向科目单独命题）。
+      依据件：投递单（10/9 00:55 版·工作包㉖–㉜）＋主交接线_模块_347题型映射与出题规范_v1。
+    - 2026-10-09 04:55：投件㉝㉞落地——①方向科目口径钉死（无选择题·简答2×15＋案例1×50＝80分·案例必跨章＋设计方案第二问·
+      方向简答统一句式"分析……的原因，并举例说明"·至少3点言之有理）②新增「进度_当前」区块（用户自报单点：
+      社心第1–2章已看→跨章题上界＝1–2章）③跨章前置规则上页（只用已学章·未学章标"需先学完第X章"·L3双版本）
+      ④社心第5章题单改双版（单章版＋跨章真题版命中2026真题奶茶店）⑤4章/9章补真题型方向简答（五-28/五-29）
+      ⑥25份题单末页加「本章跨章题前置章节」栏⑦阶段模拟卷列入P2排产（一轮结束触发）。
+      依据件：投件㉝㉞（10/9 01:10/01:12）＋附录B（北师方向科目）＋附录C（进度与分值配比）。
+    - 2026-10-09 15:35：H0070 页面重产（真源 13:18 收口同步）——①「今天」切 10/9 周五工作日轨（社心第 2 讲开跑·
+      墨墨试跑 Day3·通勤回周五=Anki TTS·检验题第 1–2 章三档时点对齐）②拍板区改 2 件（问学管 1v1＋政治救命课
+      实际起点 §五④），阿范题销项卡删除、留痕 note-box（10/9 01:25 拍板）③数据截止注明「真源更新于 10/9·台账
+      数据截止 10/8」（10/9 尚无真实台账行，按 H0070 §四.2 口径）。
+      依据件：H0070（10/9 13:31）＋考研备考真源.md（10/9 13:18 版·§五收口 230 行）。
+    - 2026-10-09 17:50：H0074 重产（H0070 验收通过＋数据截止更新）——①数据截止 10/8 台账→10/9 台账（真源 10/9 政治真实行
+      16:06 口述并入）；②政治第 1 讲上页：三层表看课 0%→4%（1/24 讲·选项a 实测=第 1 讲）、弹性层改第 2 讲＋专题一 300 题、
+      拍板区②销项（2→1 件留痕）；③H0076 做题复盘模块化上页（检验题模块加 M1–M5 流水线：A–E 归因·三档标记·分册错题本）。
+      依据件：H0074（10/9 16:22）＋H0076（10/9 16:55）＋考研备考真源.md（10/9 17:45 版·230 行）。
+    - 2026-10-10 00:10：H0104+H0103 编辑——预报名 ✅已完成（10/9）＋报名核对 8 项卡＋守夜改 00:15 对账昨日（补登记，
+      部署 d5f2fc3）。
+    - 2026-10-10 18:5x：H0130 重产——①「今天」切 10/10 周六节假日轨（上午社心第 2 讲+普心二轮整块／下午政治
+      第 2 讲+专题一 300 题+保命班前测 25 题／晚间 Anki+提取练习 L2）②墨墨 150 试跑→已定稿（10/10 校正：
+      68/150/150 词·58/118/102min·≈41–52s/词·忘记率 9–20%）③研方法=实统测保命班接管刷题主线（自节奏用课·
+      前测 25 题 10/11 前·10/12 首节实验专题一）④时间口径上页（24:00 前完成即达标不记塌方）⑤数据截止
+      10/9 台账（真源更新于 10/10 17:32）⑥英语墨墨入库 496→500 词。P1 Day 4→Day 5。
+      依据件：H0130（10/10 14:51）＋H0131（10/10 16:50）＋投递单（10/10 18:20 版）＋考研备考真源.md（10/10 17:32 版）。
+    - 2026-10-11 00:15：守夜滞后自检触发重产（H0133 通道·首触发）——真源 mtime 10/10 22:36（22:40 §十 英语
+      纸质材料 6 册实拍登记行内重写，页面无直接显示字段受影响）> 页面 18:54。本次仅同步：①数据截止
+      10/9 台账→10/10 台账（00:15 补记·无记录）②真源更新时间 17:32→22:36。守 H0104 先例：不切日、
+      不排产（10/11 计划由 347 备考对话事件驱动另产）。
+    - 2026-10-11 15:40：用户指令五件事批次重产——①「今天」切 10/11 周日节假日轨（下午块=政治第 2 讲+专题一 300 题
+      重做记三类题号+保命班前测 25 题【今日截止】；晚间加「拉墨墨」API 结算）②做题复盘手机工具上线（quiz-review-347：
+      逐题四态标记→生成复盘卡发知行→归因入错题本，入口上页检验题模块）③墨墨加 API 自动拉取口径（momo-study-sync
+      技能 10/10 建成·与截图 100% 吻合）④答题营 10/21 19:00 开营（主观题输出卡+状态一句话）⑤1v1 第 1 课上线
+      （钉钉回放·拍板区①改"有效期随课顺口问"）⑥英语词汇书分流销项（词根 3500 速览主用／例句 5500 查用）。
+      依据件：考研备考真源.md（10/11 15:25 版·230 行）＋用户 10/11 五件事指令。
+    - 2026-10-12 00:15：守夜滞后自检触发重产（H0133 通道·第 2 次触发）——真源 mtime 10/11 23:43（做题工具
+      v2.1 上线·当夜补英语：四科 1189 题＋进度门槛＋自评三档；阅读 OCR 不折腾拍板）> 页面 21:03。本次同步：
+      ①数据截止 10/10 台账→10/11 台账（00:15 补记·无记录）②真源更新时间 15:25→23:43 ③检验题模块
+      v2.1 待补→已上线（四科 1189 题＋进度门槛解锁）。守 H0104 先例：不切日、不排产（10/12 计划由 347
+      备考对话事件驱动另产）。
+  -->
+  <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background: #f5f6f8; color: #2b2f36; line-height: 1.6; padding: 24px 16px 48px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  .header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+  .header h1 { font-size: 26px; font-weight: 700; }
+  .header .sub { font-size: 14px; color: #6b7280; }
+  .header .upt { margin-left: auto; font-size: 12px; color: #9ca3af; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .card .label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+  .card .value { font-size: 30px; font-weight: 700; color: #d93025; line-height: 1.2; }
+  .card .value small { font-size: 14px; font-weight: 400; color: #6b7280; }
+  .card.plain .value { color: #1f2937; font-size: 22px; }
+  .card .note { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
+  .panel { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
+  .panel h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .panel h2 .tag { font-size: 11px; font-weight: 400; color: #6b7280; background: #f3f4f6; border-radius: 99px; padding: 2px 10px; }
+
+  .layer-tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; border-radius: 6px; padding: 2px 8px; margin: 18px 0 10px; }
+  .layer-1 { background: #d93025; }
+  .layer-2 { background: #1d4ed8; }
+  .layer-3 { background: #6b7280; }
+
+  /* 今日任务四段式 */
+  .today-module { padding: 0; overflow: hidden; }
+  .tm-header { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; padding: 16px 20px; }
+  .tm-date { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .tm-date .track-tag { font-size: 11px; font-weight: 400; color: #fbbf24; margin-left: 8px; }
+  .tm-mainline { font-size: 15px; font-weight: 700; color: #fbbf24; }
+  .tm-block { padding: 12px 20px; border-bottom: 1px solid #f3f4f6; }
+  .tm-block:last-child { border-bottom: none; }
+  .tm-block.yield { background: #fafafa; }
+  .tm-time { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 4px; }
+  .tm-task { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 4px; line-height: 1.4; }
+  .tm-spec { font-size: 12px; color: #374151; line-height: 1.6; }
+  .tm-spec b { color: #1f2937; }
+  .tm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tm-chip { font-size: 11px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 99px; padding: 2px 9px; }
+  .tm-chip.highlight { background: #fef3c7; color: #92400e; }
+  @media (max-width: 640px) { .tm-header { padding: 12px 16px; } .tm-block { padding: 12px 16px; } }
+
+  /* 科目进度条 */
+  .subj { margin-bottom: 14px; }
+  .subj:last-child { margin-bottom: 0; }
+  .subj .row1 { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .subj .name { font-weight: 600; }
+  .subj .name .st { font-weight: 400; font-size: 12px; color: #9ca3af; margin-left: 8px; }
+  .subj .pct { font-weight: 700; color: #374151; }
+  .bar { height: 10px; background: #f0f1f3; border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 99px; }
+
+  /* 周任务清单 */
+  .week { list-style: none; }
+  .week li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+  .week li:last-child { border-bottom: none; }
+  .week .box { flex-shrink: 0; width: 18px; height: 18px; border: 1.5px solid #d1d5db; border-radius: 4px; margin-top: 3px; }
+  .week li.done .box { background: #d1fae5; border-color: #059669; }
+  .week .w-main { font-weight: 600; }
+  .week .w-note { font-size: 12px; color: #9ca3af; }
+
+  /* 拍板区 */
+  .decision { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .decision { grid-template-columns: 1fr; } }
+  .d-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; }
+  .d-card .d-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .d-card .d-adv { font-size: 12px; color: #92400e; }
+
+  /* 通用表 */
+  .g-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .g-table th { text-align: left; font-size: 12px; color: #9ca3af; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
+  .g-table td { padding: 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  .g-table tr:last-child td { border-bottom: none; }
+
+  .note-box { font-size: 12px; color: #6b7280; background: #f3f4f6; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+  .warn-box { font-size: 13px; color: #7f1d1d; background: #fef2f2; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+
+  /* 折叠参考层 */
+  details.ref { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+  details.ref summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 700; list-style: none; display: flex; align-items: center; gap: 8px; }
+  details.ref summary::-webkit-details-marker { display: none; }
+  details.ref summary::after { content: "▸"; margin-left: auto; color: #9ca3af; }
+  details.ref[open] summary::after { content: "▾"; }
+  details.ref .ref-body { padding: 0 20px 16px; font-size: 13px; }
+  details.ref summary .cal { font-size: 11px; font-weight: 400; color: #9ca3af; }
+
+  .footer { text-align: center; font-size: 12px; color: #9ca3af; margin-top: 24px; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>347 备考仪表盘</h1>
+    <span class="sub">北师大 MAP · 心理与行为大数据方向</span>
+    <span class="upt">信息架构 v2 · 三层（决策/执行/参考）· 数据唯一来源《考研备考真源.md》</span>
+  </div>
+
+  <!-- ================= 第 1 层 · 决策层（首屏） ================= -->
+  <div class="layer-tag layer-1">第 1 层 · 决策层：今天做什么 / 到什么程度 / 哪里卡住</div>
+
+  <!-- B. 状态一句话 + Hero -->
+  <div class="panel" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; border: none;">
+    <div style="font-size: 11px; opacity: .7; margin-bottom: 4px;">2026-10-11 · 周日（节假日）</div>
+    <div style="font-size: 26px; font-weight: 700; margin-bottom: 10px;">距初试 <span id="countdown" style="color: #fbbf24;">69</span> 天</div>
+    <div style="background: rgba(255,255,255,.1); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px;">
+      <b>状态一句话：</b>P1 筑基 Day 6｜政治救命课 1/24（第 1 讲 ✅10/9）→ 第 2 讲＋专题一 300 题重做（记三类题号）｜社心：第 1–2 章已看完（01:12 自报）→ 第 2 讲开跑｜墨墨 150 已定稿＋<b>API 自动拉取上线</b>（10/10 建成·说「拉墨墨」即结算）｜研方法＝保命班接管刷题主线（自节奏·<b>前测 25 题今日截止</b>）｜<b>答题营 10/21 开营</b>｜<b>1v1 第 1 课已上线</b>（钉钉回放）｜正式报名 10/16–27｜缓冲余量 ≈46%
+    </div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; opacity: .8;">
+      <span>📍 数据截止：10/11 台账（00:15 补记·无记录）｜真源更新于 10/11 23:43（做题工具 v2.1 上线·四科 1189 题＋阅读 OCR 不折腾拍板）</span>
+      <span>🕐 生成时间：2026-10-12 00:15 · 守夜滞后自检触发重产（H0133）</span>
+      <span>💡 打不开此页 → 刷新或 Ctrl+F5</span>
+    </div>
+  </div>
+
+  <!-- A. 今天做什么（任务卡四段式：对象/达标/预计） -->
+  <div class="panel today-module">
+    <div class="tm-header">
+      <div class="tm-date">📅 今天 · 10/11 周日（节假日）<span class="track-tag">节假日轨（上午社心+普心整块 · 下午政治+300题重做+前测【今日截止】 · 晚间 Anki+提取练习+拉墨墨）</span></div>
+      <div class="tm-mainline">今天做什么（每项：对象 → 达标 → 预计时长）</div>
+    </div>
+
+    <div class="tm-block">
+      <div class="tm-time">🌅 09:00–09:30 · H（起床最低配置）</div>
+      <div class="tm-task">墨墨保签（150 已定稿口径）</div>
+      <div class="tm-spec"><b>对象：</b>墨墨复习队列（新学放碎片/晚间，<b>每天加词 ≤20</b>）｜<b>达标：</b>保签＋复习清零（<b>单次连续 ≤50min</b>；全天碎片累计 ≈1.5–2h·实测 ≈41–52s/词）｜<b>预计：</b>≈15–30min 起步</div>
+      <div class="tm-chips"><span class="tm-chip highlight">最低配置·红线②</span><span class="tm-chip highlight">150 已定稿（10/10 校正·试跑 3 天收官）</span><span class="tm-chip" style="background:#d1fae5;color:#065f46;">✅ 10/9 收官 150 词（102:20·待学 0·忘记率 9.3%）</span><span class="tm-chip">材料：墨墨 App 📗</span></div>
+    </div>
+
+    <div class="tm-block">
+      <div class="tm-time">🌄 上午块 · H 整块（整块攻坚）</div>
+      <div class="tm-task">社心强化课第 2 讲（视频 45min＋讲义标记 15min）＋ 普心二轮整块</div>
+      <div class="tm-spec">
+        <b>对象①社心：</b>强化课<b>第 2 讲</b>（第 1–2 章已看完·10/9 01:12 自报；若 10/9 晚未开跑则今日优先补上）；课后<b>立刻闭卷默写 3–5 张社心卡</b>（无闭环不算完成）<br>
+        <b>对象②普心二轮：</b>先清到期 → 点 <code>347备考::02_普心</code> 当天子牌组 新卡 <b>20 张</b>（再现卡优先）＋ 闭卷默写 <b>3–5 张</b>（要点齐 ≥4/5）<br>
+        <b>材料：</b>强化课+讲义 📦小鹅通已导出｜移山讲义 📗在手·可写｜Anki 📗（父牌组新卡上限=0，只点当天子牌组）<br>
+        <b>检验题（三档三时点）：</b>第 1–2 章 → 今天做 <code>社心_第1-2章_检验题_v3_题型贴合.md</code> 的 <b>L2 提取</b>（合书简答·要点型·≥60%；L1 若欠账先补 ≥80%）；第 2 讲新章看完<b>当天</b>做该章 L1<br>
+        <b>预计：</b>≈2.5h（社心 60+默写 25＋普心 50＋检验题 ≈15）
+      </div>
+      <div class="tm-chips"><span class="tm-chip highlight">P0 每天</span><span class="tm-chip highlight">红线① 主线</span><span class="tm-chip">闭环第 ④⑤⑥ 步</span></div>
+    </div>
+
+    <div class="tm-block">
+      <div class="tm-time">🌇 下午块 · H 整块</div>
+      <div class="tm-task">政治救命课第 2 讲（专题一 唯物论②）＋ 专题一 300 题重做（记三类题号）＋ 保命班前测 25 题【今日截止】</div>
+      <div class="tm-spec">
+        <b>对象①政治：</b><b>第 2 讲 专题一 唯物论②</b>（物质世界的二重化、意识、规律）＋ <b>专题一 300 题重做</b>（第一遍错题号已丢→重做一版；<b>边做边记三类题号：错／蒙对／犹豫</b>，做完发知行出四维归因复盘；💻电子版看题、答案写答题本；推荐用📱<a href="https://quiz-review-347.app.workbuddy.host/" style="color:#1d4ed8;">做题工具</a>在线答（专题一 17 题带解析·自动排复测））<br>
+        <b>对象②研方法前测：</b>实统测保命班<b>前测 25 题</b>（小鹅通首页-【晴天】27实统测保命班）——<b>今日截止·不翻书测真实基线</b>（做完把分数/薄弱点发知行）<br>
+        <b>材料：</b>救命课 💻已导出｜提分手册 📗在手·可写｜300 题 💻可读可做｜前测 📦小鹅通<br>
+        <b>预计：</b>≈90min（第 2 讲 ≈45＋300 题 ≈25＋前测 ≈20）
+      </div>
+      <div class="tm-chips"><span class="tm-chip">✅ 第 1 讲 10/9 完成（1/24）</span><span class="tm-chip">本周保底 6 讲冲 7（进度 1/6）</span><span class="tm-chip highlight">前测今日截止 ⚠️</span></div>
+    </div>
+
+    <div class="tm-block">
+      <div class="tm-time">🌙 晚间块 · H 整块</div>
+      <div class="tm-task">Anki 清零 ＋ 提取练习 ≥25min ＋ 当日汇报</div>
+      <div class="tm-spec">
+        <b>对象①Anki：</b>先清到期 → 点 <b><code>347备考::01_社心::C01–C02</code></b>＋<b><code>04_政治::L01 第1讲-唯物论①</code></b>（全日新卡 20–30 张总额）；达标＝到期清零＋抽 5 张 ≥80%（社心再现＝默写级／政治＝辨析级不默写）<br>
+        <b>对象②提取练习：</b>当日社心＋普心所学 → 闭卷默写 或 <b>1 道简答计时</b>（10 分题 10–12min）或做<b>第 1–2 章 L2 提取</b>（若上午未做）｜≥25min 有产出（无输出不算完成·D6）；写完用《主观题 AI 批改提示词》自批<br>
+        <b>对象③墨墨结算：</b>背完墨墨发一句「<b>拉墨墨</b>」→ 官方 API 自动拉取进度/三档/忘记词表/明日到期（momo-study-sync 技能·与截图 100% 吻合）→ 台账自动登记；反复忘记的词翻《单词记忆手册》例句助记（查用）<br>
+        <b>预计：</b>≈45–60min（到期卡 ×10–15s 实估＋输出 25min）
+      </div>
+      <div class="tm-chips"><span class="tm-chip highlight">最低配置·红线②</span><span class="tm-chip highlight">D6 每天必做</span><span class="tm-chip">24:00 前完成即达标不记塌方</span></div>
+    </div>
+
+    <div class="tm-block yield">
+      <div class="tm-time">🧩 弹性（可让）</div>
+      <div class="tm-task">墨墨新学补足（加词 ≤20）＋ 通勤/碎片音频（辅助不考核）</div>
+      <div class="tm-spec"><b>对象：</b>墨墨新学放碎片（单次连续 ≤50min）；音频选社心基础课音轨／背诵音频第 1–2 期——<b>只听个熟，不抽查不折算</b>（通勤音频 v3）；<b>被打断先砍此层，不追责</b></div>
+      <div class="tm-chips"><span class="tm-chip">弹性层</span><span class="tm-chip">辅助·对齐即可</span></div>
+    </div>
+
+    <div class="tm-block" style="background:#f0f9ff;">
+      <div class="tm-time">📚 检验题三档 · 配套题单索引（固定模块·㉖㉗㉘㉙㉚㉛ 落地）</div>
+      <div class="tm-task">每章按「题型画像」做题：当天 L1 → 次日 L2 → 第 3–5 天 L3</div>
+      <div class="tm-spec">
+        <b>三档三时点：</b>L1 识记（提示词填空/二选一·看完课<b>当天</b>·≥80%）／L2 提取（合书简答·仅要点型·<b>次日</b>·≥60%）／L3 应用（案例/论述/辨析·仅真题画像支持·<b>第 3–5 天</b>·≥70%）；<b>答案＝评分标尺不是背诵材料</b>（背诵材料＝背诵手册"老师原话"定义句）<br>
+        <b>题单（26 份已就绪·<code>工程线系统文档\</code>）：</b>社心 11 份（<code>社心_第X章_检验题_v1.md</code>；1–2 章＝v3 题型贴合版）＋普心 15 份（<code>普心_第X章_检验题_v1.md</code>）——<b>看哪章做哪章，一章一份</b>，答案全部取自背诵手册定稿原文<br>
+        <b>题型画像（防错配·每章题单开头有画像栏）：</b>社心 4/8 章＝简答·论述｜5/7/11 章＝案例｜9 章＝简答＋案例｜6/10 章＝仅 L1/L2 <b>不出大题</b>；普心 15/16 章＝仅 L1 快速过<br>
+        <b>做题分工（㉘㉙）：</b>政治＝300 题（现成）｜英语＝真题（现成）｜<b>研方法＝小红本《实验设计与方法 200 题》＋课程每日一题（不挂外部题单）</b>｜社心/普心＝上述按章题单<br>
+        <b>方向科目口径（㉝·附录B）：</b><b>方向科目无选择题</b>（选择 40 分全在公共）＝简答 2×15＋案例 1×50＝80 分；<b>案例必跨章（≥2–4 章）＋必含设计方案/提建议第二问</b>；方向简答统一句式＝「分析……的原因，并举例说明」；给分＝分点（理论名→定义→情境对应）·<b>至少 3 点言之有理即可</b><br>
+        <b>跨章前置（㉞·附录C）：</b>跨章题<b>只调用已学章节</b>（当前社心上界＝第 1–2 章）；调用未学章 → 题面标「<b>需先学完：第 X 章</b>」延后做；<b>每章 L3 双版本</b>＝单章版（随时可做）＋跨章真题版（标前置）——第 5 章奶茶店真题版需先学完第 3、10 章；各章题单末页有「本章跨章题前置章节」栏<br>
+        <b>做题复盘（H0076·10-09 定稿）：</b>五层流水线 M1 题源→M2 时点→M3 判卷→M4 归因→M5 错题本（<b>分册</b>：<code>政治300题_错题本.md</code>／<code>专业课_错题本.md</code>）；归因五类＝A 知识缺失（回课/回卡）／B 理解偏差（回讲义）／C 审题失误（不额外花时间）／D 纯遗忘（进 Anki）／E 口径差异（进名词解释对照表·不额外背）；<b>错／蒙对／犹豫三档都要进本</b>；归因＝做题内生环节非新任务（超余量当天只记标签·深度归因放缓冲日）；每周一投归因汇总<br>
+        <b>📱 手机做题工具 v2（10/11 上线）：</b><a href="https://quiz-review-347.app.workbuddy.host/" style="color:#1d4ed8;"><b>quiz-review-347.app.workbuddy.host</b></a>——<b>在线答题＋即时解析</b>（政治苏一 300 题·马原 219 题带解析/干扰项辨析）＋<b>记忆调度 1-2-4-7-15</b>（对→晋级／蒙对·犹豫→原地再测／错→当天重排／15 天档=掌握）＋到期队列＋错题重练＋顽固错题（错≥2）＋分专题正确率/14 天趋势 → 一键生成同步卡发知行，<b>知行自动归因入错题本</b>；<b>v2.1 已上线（10/11 当夜）</b>：四科分层共 <b>1189 题</b>＝政治 219＋专业课 874（普心 613/15 章＋社心 261/11 章）＋英语 96（英二真题词汇小测 2010–2015·40 题人工核验）；<b>进度门槛解锁</b>（政治仅专题一／社心第 1–2 章·第 3 章 L1 预习档／普心全开／英语无门槛）＋填空/简答对评分标尺自评（会/半会/不会）
+      </div>
+      <div class="tm-chips"><span class="tm-chip">规范件：题型映射与出题规范 v1＋附录B/C</span><span class="tm-chip">北师动词：分析＞说明＝评价＞设计（少用"试述"）</span><span class="tm-chip">方向简答＝分析原因＋举例</span><span class="tm-chip">做题复盘 M1–M5（H0076）</span><span class="tm-chip">阶段模拟卷＝条件触发（预排 10/21–22·可顺延）</span></div>
+    </div>
+
+    <div class="tm-block" style="background:#f0fdf4;">
+      <div class="tm-time">🧭 进度_当前（用户自报单点 · ㉞ R4 · 谁都不许猜）</div>
+      <div class="tm-task">社心第 1–2 章已看完（10/9 01:12 自报）→ 跨章题可调用上界＝第 1–2 章</div>
+      <div class="tm-spec">
+        <b>社心：</b>强化课第 1–2 章 ✅｜第 3 章题单可先做 L1 预习，<b>跨章 L3 暂不做</b>｜第 5 章奶茶店跨章真题版需先学完第 3、10 章<br>
+        <b>普心：</b>一轮 16 章已过 → 跨章题<b>不受限</b>｜<b>研方法：</b>实验集训营完·统计 2 剩 22%｜<b>政治：</b>救命课 1/24 讲（第 1 讲·10/9 16:06 口述）｜<b>英语：</b>阅读理论课进行中·真题 10/15 起<br>
+        <b>权威源：</b><code>工程线系统文档\_handoff\进度_当前.md</code>——任何进度更新以用户自报为准先改它，本页跟随
+      </div>
+    </div>
+
+    <div class="tm-block" style="background:#f0fdf4;">
+      <div class="tm-time">📌 行政 · ✅ 已办</div>
+      <div class="tm-task">预报名已完成（10/9 用户 22:18 确认）</div>
+      <div class="tm-spec">下节点＝<b>正式报名 10/16–27（可改可补·最后窗口）</b>；<b>报名核对 8 项见页面底部「报名核对」卡</b>（自核即可，不用重填）；报名号＋缴费凭证建议截图存档。</div>
+    </div>
+  </div>
+
+  <!-- C. 要你拍板 -->
+  <div class="panel">
+    <h2>⚠️ 要你拍板（1 件）<span class="tag">只列真需要你的 · 拍完即删</span></h2>
+    <div class="decision">
+      <div class="d-card">
+        <div class="d-title">① 1v1 有效期确认（第 1 课已上线·10/11）</div>
+        <div class="d-adv">第 1 课已上线（钉钉直播回放·10/11 你转发的链接）→ 说明课时在有效期内。<b>动作：</b>上第 1 课时顺口问学管一句"有效期到什么时候？25 节怎么约？"——课后把课的内容/时长发我一句入台账。10/15 兜底不变。</div>
+      </div>
+    </div>
+    <div class="note-box">✅ 已拍板销项（10/11）：英语词汇书分流——两本不是同一本（3500＝词根法／5500 例句法"300 句"）；<b>词根 3500 手册＝速览主用</b>（120 词/天口径不变），<b>例句手册＝查用</b>（墨墨反复忘记的词翻它找语境助记，不系统读——用户原话"没这么多时间看这么多"）。</div>
+    <div class="note-box">✅ 已拍板销项（10/9 16:06 口述）：政治救命课实际起点——用户答"第 1 讲已听完"（选项 a·实际进度=第 1 讲 专题一唯物论①）→ 三层表看课更正为 <b>4%（1/24 讲）</b>、本周 6 讲从<b>第 2 讲</b>接排、弹性层已更新；专题一 300 题按官方节奏（隔 5–6h/次日）今晚或明日做。</div>
+    <div class="note-box">✅ 已拍板销项（10/8）：300 题打印→不打印先看电子版（做题写答题本，已恢复排入）；英语二真题→课程内已齐（早年 02–09 精讲＋含真题版讲义），10/15 阅读计时材料就绪。</div>
+    <div class="note-box">✅ 已拍板销项（10/9 01:25）：阿范题钉位——研方法题源＝小红本《实验设计与方法 200 题》＋课程每日一题，不需外部题单；移山讲义=晴天内部讲义已钉 ✓。另：研招网正式报名 10/16–27 提醒双保险（页面行政块＋手机日历各一条）。</div>
+    <div class="note-box">📌 顺带知会（无需动作）：写者分工按主交接线裁决调整——<b>本页面（L2）改由 347 备考对话维护</b>，L1 驾驶舱仍归「问我」；真源已标「待用户确认·72h 内可否决」，不否决即生效。材料门禁已立：任务必带材料栏（D8）、⚠️需取回不排今天（D9）。</div>
+  </div>
+
+  <!-- ================= 第 2 层 · 执行层 ================= -->
+  <div class="layer-tag layer-2">第 2 层 · 执行层：做到什么程度</div>
+
+  <!-- E. 今日达标看板 -->
+  <div class="cards">
+    <div class="card">
+      <div class="label">墨墨（150 已定稿·10/10 校正）</div>
+      <div class="value">150<small> 词/天</small></div>
+      <div class="note">试跑 3 天实测 68/150/150 词·58/118/102min·≈41–52s/词·忘记率 9–20%；加词 ≤20/天 · 单次连续 ≤50min · 全天碎片 ≈1.5–2h（待学未清=正常不清零）；<b>数据获取＝官方 API 自动拉取（10/10 建成·与截图 100% 吻合，说「拉墨墨」即结算）</b></div>
+    </div>
+    <div class="card plain">
+      <div class="label">Anki（按到期量估时）</div>
+      <div class="value" style="font-size: 20px;">到期 0 → ≈5–8min</div>
+      <div class="note">989 卡全部新卡（零使用）· 新引入 20–30 张/天 · 公式：到期×10–15s</div>
+    </div>
+    <div class="card plain">
+      <div class="label">闭卷输出（D6 每天必有）</div>
+      <div class="value" style="font-size: 20px;">社心课后默写 3–5 张</div>
+      <div class="note">无输出不算完成 · 要点齐 ≥多数</div>
+    </div>
+    <div class="card plain">
+      <div class="label">缓冲余量（73 天）</div>
+      <div class="value" style="font-size: 20px;">≈107h（46%）</div>
+      <div class="note">可用 ≈234h vs 整块需求 ≈127h · 含出差预留 12 天 · 只用于吸收波动不加任务</div>
+    </div>
+  </div>
+
+  <!-- D. 三层进度表（分列，不显示单一 100%） -->
+  <div class="panel">
+    <h2>科目三层进度 <span class="tag">看课/刷题/背诵三层分列 · 科目不显示单一百分比 · 加权口径 v1</span></h2>
+    <div style="font-size: 12px; color: #6b7280; margin-bottom: 14px;">
+      口径：层内等权 · 未记录层剔分母不估 0 · 估算带「≈」 · 综合列=已记录层均值（未记录层计 0 的保守口径，仅参考）
+    </div>
+
+    <div class="subj">
+      <div class="row1"><span class="name">社心（80 分）<span class="st">方向科目 · 强化课第 1 讲完（1–2 章·10/9 自报）</span></span><span class="pct">≈ 6%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 ≈12%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈5%</span>
+      </div>
+      <div style="font-size: 12px; color: #1d4ed8; margin-bottom: 6px;">📊 课别（分列不计和）：强化课 <b>1/4 讲</b>[看]（第 1–2 章完·10/9 自报）｜ 基础课 <b>≈1.5/11 章</b>[听]（10/6 晚 122.7min）｜跨章题上界＝第 1–2 章（进度_当前）</div>
+      <div class="bar"><i style="width:6%; background:#d93025;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1"><span class="name">普心（90 分）<span class="st">一轮已过（背诵未启）</span></span><span class="pct">≈ 33%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 100%（全 16 章一轮·2–3 个月前）</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录（408 卡 10/8 导入）</span></span>
+      </div>
+      <div style="font-size: 12px; color: #b45309; margin-bottom: 6px;">⚠️ 看课 100%＝「一轮已过」≠掌握：二轮（408 卡＋闭卷默写）才是提分主力；综合 ≈33% 为保守口径</div>
+      <div class="bar"><i style="width:33%; background:#1d4ed8;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1"><span class="name">研方法（80 分）<span class="st">实验集训营完 · 统计专题 1 · 保命班接管刷题</span></span><span class="pct">≈ 14%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 ≈40%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录（保命班专题刷题 10/12 起·前测 25 题 10/11 前）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
+      </div>
+      <div class="bar"><i style="width:14%; background:#059669;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1"><span class="name">英语二（100 分）<span class="st">墨墨 500 词入库 [实] · 150 已定稿 · 唯一持续项</span></span><span class="pct">≈ 9%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录（阅读计时 10/15 起）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈9%</span>
+      </div>
+      <div class="bar"><i style="width:9%; background:#9333ea;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1"><span class="name">政治（100 分）<span class="st">救命课已启动 · 1/24 讲（专题一唯物论①·10/9 16:06 口述）</span></span><span class="pct">≈ 2%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 4%（1/24 讲·10/9 用户确认[报]）</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录（300 题专题一题组待做·第 1 讲已听）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
+      </div>
+      <div class="bar"><i style="width:2%; background:#ea580c;"></i></div>
+    </div>
+
+    <div class="subj">
+      <div class="row1"><span class="name">综合写作（50 分）<span class="st">未启动 · 写作营待排</span></span><span class="pct">0%</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+        <span>看课 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #9ca3af;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #9ca3af;">未记录</span></span>
+      </div>
+      <div class="bar"><i style="width:1%; background:#6b7280;"></i></div>
+    </div>
+
+    <div class="note-box"><b>整体加权 ≈24.8%</b>＝(7×80＋100×90＋22×80＋9×100＋2×100＋0×50)÷500（加权口径 v1：未记录剔分母，Σ权重含全部 6 科）；上方各科「综合」为保守口径（未记录层计 0），两套口径并存、各自标注。</div>
+  </div>
+
+  <!-- F. 记忆闭环·可操作版 -->
+  <div class="panel">
+    <h2>🔁 记忆闭环 <span class="tag">每科：当前阶段 + 下一步动作 + 触发条件</span></h2>
+    <table class="g-table">
+      <tr><th>科目</th><th>当前阶段</th><th>下一步动作</th><th>触发条件</th></tr>
+      <tr><td><b>普心</b></td><td>背 · 启动中</td><td>10/8 导入 408 卡 → 晨间抽 5 张再现卡闭卷默写（≥4/5 要点齐）</td><td>卡导入完成</td></tr>
+      <tr><td><b>社心</b></td><td>学 · 第 2 讲（1–2 章已看完·10/9 自报）</td><td>今日第 2 讲开跑 → 课后默写 3–5 张 → 第 1–2 章 L1 补做／L2 明日</td><td>本讲闭环完成</td></tr>
+      <tr><td><b>研方法</b></td><td>学 → 刷题化（<b>实统测保命班接管·自节奏用课</b>）</td><td><b>前测 25 题今日（10/11）截止</b>（不翻书测真实基线）→ 10/12 首节实验专题一（回放倍速为主＋习题按需，不追官方直播日期）；每日一题降级为补充（防双份）</td><td>前测今日截止</td></tr>
+      <tr><td><b>政治</b></td><td>学 · 已启动（1/24 讲）</td><td>第 2 讲（专题一唯物论②）＋ 专题一 300 题（隔 5–6h 已到点）→ 错题三档标记→A–E 归因→回提分手册；2 周听完 14 讲（碎片）</td><td>今晚弹性层/碎片</td></tr>
+      <tr><td><b>英语</b></td><td>背 · 墨墨 150 <b>✅已定稿</b>（10/10 校正）</td><td>150 维持（新学 ≤20/天·复习由墨墨排·复习欠账 &gt;50 当天不加词）→ 阅读理论课 → 早年 02–09 真题 10/15 起计时</td><td>已定稿·转执行</td></tr>
+      <tr><td><b>写作</b></td><td>未启动</td><td>写作营方法课排入 P1（未上课前不自行仿写）</td><td>排产落定</td></tr>
+    </table>
+    <div class="note-box">判定链统一收口主线：Anki 核心卡通过率 ＋ 闭卷默写 ＋ 300 题/每日一题；纪律：宁可 1 讲带闭环，不要 3 讲无闭环。</div>
+  </div>
+
+  <!-- 主观题输出卡 -->
+  <div class="panel">
+    <h2>✍️ 主观题输出 <span class="tag">今日 1 题 · 计时 · 写完用官方 prompt 自批</span></h2>
+    <table class="g-table">
+      <tr><th>项目</th><th>内容</th></tr>
+      <tr><td><b>今日题目</b></td><td>社心简答 1 道（15 分档·对应今日所学章）——今日已由「课后默写 3–5 张」承载；<b>周末</b>加论述/综合 1 道（25–35 分档，40min）</td></tr>
+      <tr><td><b>时间配比</b></td><td>10 分题 <b>10–12min</b> ｜ 25 分题 <b>18–20min</b> ｜ 30 分题 <b>20–25min</b></td></tr>
+      <tr><td><b>批改入口</b></td><td><code>347备考\主观题_AI批改提示词_晴天官方.md</code>——备齐 5 样（题目原文／题型+题分／参考答案带采分点／我的作答／自报用时）发 AI 或发知行 → 出批改报告</td></tr>
+      <tr><td><b>规范 5 条</b></td><td>①时间控制 ②结构清晰 ③题型框架完整 ④连接词过渡 ⑤排版卷面（<b>每条 1 分</b>；评分双轨＝内容分＋规范分）</td></tr>
+      <tr><td><b>批改报告 4 要素</b></td><td>①内容分（对照采分点）②规范分（5 条）③错误类型（知识缺口/框架缺失/时间超/卷面）④下一步补哪里</td></tr>
+    </table>
+    <div class="note-box">⚠️ <b>综合写作 50 分不用该提示词</b>——走《综合写作_方法论笔记_定稿.md》＋写作营路径（方法课→作业①→讲解①→…）。晴天【27答题营】<b>10/21 19:00 开营</b>（小鹅通-全年集训营专栏·有回放·讲义邮寄在途·自节奏用课）→ 开讲后收割使用技巧并入本闭环。</div>
+  </div>
+
+  <!-- 通勤音频（辅助·对齐看板）+ 推荐收听 -->
+  <div class="panel">
+    <h2>🎧 通勤音频（辅助 · 对齐看板）<span class="tag">不考核效果，重点在主线</span></h2>
+    <table class="g-table">
+      <tr><th>今日推荐听什么</th><th>对应主线</th><th>预计时长</th><th>已听/对齐状态</th></tr>
+      <tr><td>社心基础课音轨（与今晚第 2 讲同章优先；未发布则重听第一二章精讲）</td><td>社心主线（第 2 讲）</td><td>≈60min</td><td>10/6 已听 122.7min（第一二章·精讲上）｜对齐 ✓</td></tr>
+      <tr><td>社心背诵音频 第 1–2 期（条目化·今日所学考点）</td><td>社心第 1 讲考点</td><td>≈15min</td><td>未听｜待听</td></tr>
+    </table>
+    <div class="note-box">
+      <b>课程体量（实测校准 10/7）</b>：社心基础课 11 章 ≈1526min ｜ 强化课 4 段 ≈736min ｜ 背诵音频 38 期；<b>推荐原则：优先"与本周主线同章"的音轨</b>，不指向未发布内容。<br>
+      ①通勤/驾驶音频＝<b>辅助</b>：只要求「与规划对齐」，<b>不考核效果</b>（不抽查、不设通过率门槛、不折算有效时长）——目的＝多一次接触机会；②判定「对齐」＝听的章节 ∈ 本周主线章节；未对齐不算错，只作为明日推荐输入；③明日通勤可用 ≈60min，候选凑满即止（≤3 条）；④小程序选择题＝<b>可选练习</b>（题量依考纲与真题频率分布，各章不均，数道至数十道），不作检验工具；⑤L 驾驶三约束：不看屏／不计学习量／路况复杂暂停。
+    </div>
+  </div>
+
+  <!-- Anki 怎么用（速查卡 · 82 子牌组版） -->
+  <div class="panel">
+    <h2>🃏 Anki 怎么用 <span class="tag">989 卡已按课表重排为 82 子牌组（10/7）· 零分类 · 点当天那一个</span></h2>
+    <table class="g-table">
+      <tr><th>每天三步</th><th>说明</th></tr>
+      <tr><td><b>① 点开牌组树</b></td><td>打开 Anki → 左侧点开 <code>347备考</code>：<code>01_社心</code> 148（C01–C11 按章）｜<code>02_普心</code> 408（C01–C16 按章）｜<code>03_研究方法</code> 204（C01–C10 实验/统计/测量）｜<code>04_政治</code> 229（<b>L01–L13 按救命课讲次</b>）</td></tr>
+      <tr><td><b>② 点当天子牌组</b></td><td>如今天点 <code>04_政治::L01 第1讲-唯物论①</code>（已讲→现在学）；<b>未讲到的子牌组不点</b>——牌组已替你分好，<b>不需要自己筛选/Bury</b>；政治对照：L02＝第2讲｜L03-05＝辩证法｜L06-07＝认识论｜L08-09＝唯物史观｜L10-13＝政经</td></tr>
+      <tr><td><b>③ 按 SOP 结算</b></td><td>先看「到期」→ <b>先清到期再加新卡</b>（新卡上限 20/天不变）→ 分 2–3 次（晨间/晚间/睡前）→ 达标＝到期清零＋抽 5 张 ≥80% → 欠账 &gt;50 张当天不加新卡</td></tr>
+    </table>
+    <table class="g-table" style="margin-top: 10px;">
+      <tr><th>科目/卡类</th><th>记忆程度</th><th>怎么答（逐卡动作）</th></tr>
+      <tr><td><b>政治</b></td><td><b>辨析级</b></td><td>固定搭配一字不差＋能分辨对错＋同义替换；<b>不整段默写</b>（10/7 修正：旧"再现卡一律纸上默写"对政治过严，已作废）</td></tr>
+      <tr><td><b>普心/社心/研方法（再现）</b></td><td><b>默写级</b></td><td><b>闭卷在纸上写出</b>答案要点（定义＋分点）；不能只在心里想（心里想＝假会）；要点齐算过</td></tr>
+      <tr><td><b>X再_ 再认</b></td><td>认得级</td><td>看正面想起大意或能选出即过，不必逐字写；碎片/通勤刷</td></tr>
+      <tr><td><b>X应_ 应用</b></td><td>应用级</td><td>说/写出「规则＋一个案例」；周末集中与仿写同块</td></tr>
+    </table>
+    <div class="note-box">
+      <b>⚠️ 现状：989 卡全部新卡（截至 10/7 零使用）</b>——10/8 普心 408 卡随晨间块启动；科目配合：普心→晨间 H 块｜社心→随强化课同步｜研方法→10/12 起｜政治→随救命课讲次。重排前备份 <code>Anki2\账户 1\_备份_重排前_20261007_173757\</code>；卡面绑定音频秒数（开车听→到家刷同一张卡）；车上只听不刷（L 三约束）。
+    </div>
+  </div>
+
+  <!-- G. 本周剩余 -->
+  <div class="panel">
+    <h2>本周剩余 · P1 起步周 <span class="tag">10/6 – 10/11 · v5 排序引擎</span></h2>
+    <ul class="week">
+      <li class="done"><div class="box"></div><div><span class="w-main">P0 每天：墨墨保签 ✅10/6–10/9 连续 4 天（140/68/150/150·150 已定稿）｜社心输入 ✅10/6＋10/8 晚（第 1–2 章·10/9 01:12 自报）｜Anki 清零｜普心二轮（10/8 启动）｜每天闭卷输出 ≥25min</span><br><span class="w-note">普心 90＋社心 80＝170/300 专业分最大头</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">政治救命课保底 6 讲冲 7：✅ 第 1 讲 10/9 完成（16:06 口述）→ 第 2 讲 10/10 下午块 ＋ 10/11 下午块 2</span><br><span class="w-note">进度 1/6；专题一 300 题隔 5–6h/次日做（官方节奏）；2 周听完 14 讲（每天碎片）；史纲 9 讲＋毛中特专题课已上线（小灶班 10/9 更新）</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">社心强化课第 2 讲开跑（第 1–2 章已看完·10/9 01:12 自报；P1 收口 4 讲＝进度 1/4）</span><br><span class="w-note">10/10 上午块；宁可 1 讲带闭环，不要 3 讲无闭环</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">实统测保命班：<b>前测 25 题今日（10/11）截止</b>（不翻书测真实基线）→ 10/12 首节实验专题一（自节奏用课·回放倍速为主＋习题按需）；每日一题降级补充｜实验仿写 10/12 起（P1W2）</span><br><span class="w-note">用户 10/10 拍板：不追官方直播日期，按自己节奏取用回放+习题（与政治救命课同口径）</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">英语阅读计时＋真题 1 套 10/15 起（本周先碰真题 1 套感受风格）</span><br><span class="w-note">P2 预告；真题材料已齐（早年 02–09 精讲＋含真题版讲义）；墨墨 150 ✅已定稿（10/10 校正）</span></div></li>
+      <li><div class="box"></div><div><span class="w-main">行政：✅ 预报名已完成（10/9）→ 正式报名 10/16–27（可改可补）</span><br><span class="w-note">报名核对 8 项见底卡（自核）；网上确认 11 月上旬届时提醒</span></div></li>
+    </ul>
+  </div>
+
+  <!-- 目标↔当前↔缺口对照 -->
+  <div class="panel">
+    <h2>🎯 目标 ↔ 当前 ↔ 缺口 <span class="tag">满分结构 vs 目标得分两列口径 · 当前按三层表保守推算</span></h2>
+    <table class="g-table">
+      <tr><th>科目</th><th>满分（结构）</th><th>目标得分</th><th>当前（保守推算）</th><th>缺口与行动</th></tr>
+      <tr><td>政治</td><td>100</td><td><b>65–70</b></td><td>≈1 分（≈1%）</td><td>≈64–69 → 救命课 14 讲 2 周听完＋300 题（碎片承载）</td></tr>
+      <tr><td>英语二</td><td>100</td><td><b>60–65</b></td><td>≈9 分（≈9%）</td><td>≈51–56 → 墨墨 150 持续＋阅读计时＋真题 10/15 起</td></tr>
+      <tr><td>专业课 347</td><td>300＝<b>公共 220</b>（单选 40＝<b>20 题×2</b>／简答 60＝4×15／论述 70＝2×35／<b>综合写作 50</b>）＋<b>方向 80·单独命题</b>（简答 30＝2×15／案例 50＝1×50·<b>无选择题</b>·案例跨章＋设计方案第二问·㉝）·㉜ 北师 2026 回忆版实测</td><td><b>215–225</b>（32–36／62–68／45–50／32–36／30–34）</td><td>≈45 分（社心≈3＋普心≈30＋研方法≈11＋写作 0）</td><td>≈170–180 → 普心二轮＋社心 4 讲闭环＋研方法刷题化＋写作营路径</td></tr>
+      <tr><td><b>总分</b></td><td><b>500</b></td><td><b>347–360</b>（不淘汰线 276）</td><td>≈55 分</td><td>≈292–305 → 三科同时提分</td></tr>
+    </table>
+    <div class="warn-box">⚠️ <b>算术红线：</b>若政治＋外语只到单科线（96 分）→ 专业课需 83.7%（不可能）→ <b>三科必须同时提分</b>。当前列＝三层表保守推算（未记录层计 0），仅供参考，随台账实测更新。</div>
+  </div>
+
+  <!-- 出差保底三件 -->
+  <div class="panel">
+    <h2>🧳 出差保底三件 <span class="tag">出差日可用 0.5–1h · 全部手机可做不需整块</span></h2>
+    <table class="g-table">
+      <tr><th>#</th><th>事项</th><th>说明</th></tr>
+      <tr><td>1</td><td><b>墨墨保签</b>（150 学习量）</td><td>手机 APP；红线②最低配置之一</td></tr>
+      <tr><td>2</td><td><b>Anki 到期清零</b></td><td>手机端；可只清到期、不加新卡</td></tr>
+      <tr><td>3</td><td><b>音频输入</b>（社心基础课/背诵音频/政治救命课音轨）</td><td>提前离线下载；通勤/差旅路上听（L 档三约束）</td></tr>
+    </table>
+    <div class="note-box">出差期间「墨墨保签＋Anki 清零」即不算塌方（红线②口径保持）；加分可选：口述输出（对题目口述录音→回来发知行批改），保住"输出"不中断。</div>
+  </div>
+
+  <!-- ================= 第 3 层 · 参考层（折叠，不占每日视野） ================= -->
+  <div class="layer-tag layer-3">第 3 层 · 参考层：静态规则（折叠 · 看 1 次就够）</div>
+
+  <details class="ref">
+    <summary>✍️ 答题规范（三步法＋月会硬规则）<span class="cal">校准日期 2026-10-07</span></summary>
+    <div class="ref-body">
+      ①<b>三步法</b>＝名词解释（先下定义，关键词要准）→ 主体内容（按要点展开，白话展开也要背）→ 结尾补充（论述补充字数占分，不只写踩分点）；②关键词要准＋白话展开也要背；③手写复盘练手速（默写计时，题量大）。<b>主页一句提醒：主观题＝定义→要点→补充。</b>
+    </div>
+  </details>
+
+  <details class="ref">
+    <summary>🔴 五条红线<span class="cal">校准日期 2026-10-07（②已带当前量微调）</span></summary>
+    <div class="ref-body">
+      ①<b>社心主线不可被挤占</b>——晚间固定层绝对优先；连续 2 天零推进→次日降为 60min＋只听不选讲。<br>
+      ②<b>最低配置不断更</b>——墨墨保签（<b>150 试跑口径</b>）＋Anki 到期清零（<b>按到期量实估</b>）＝不算塌方；断更一周＝塌方。<br>
+      ③<b>1v1 不做重复劳动</b>——只做录播做不了的事。<br>
+      ④<b>以题带点不通读</b>——禁止"重新过一遍教材"。<br>
+      ⑤<b>台账只记真实</b>——不美化不脑补；同日只一行权威记录。
+    </div>
+  </details>
+
+  <details class="ref">
+    <summary>📮 怎么汇报学习情况（新口径）<span class="cal">校准日期 2026-10-07</span></summary>
+    <div class="ref-body">
+      <b>随手发一条大白话即可</b>（如：单词墨墨 150 刷完／政治救命课第 X 讲／社心第 X 讲听到 YY:YY／默写 X 张）。<br>
+      知行固定四步：①记台账（只记真实）→ ②对比分析（对照本周任务）→ ③调整计划（明日 ≤3 条，默认生效可否决）→ ④呈现层取数。<br>
+      <b>监督（不发邮件）</b>：台账守夜（每天 00:15·对账昨日，只做台账）＋ 信箱巡检（08:00/20:00）；简报与点名邮件 10/7 起已取消。<b>当日达标口径＝24:00 前完成即达标不记塌方</b>（晚间学习窗口至 24:00·H0103）。<br>
+      <b>报名小卡（只读）</b>：找回密码＋绑长期手机号＝<b>已办</b>（用户 2026-10-07 确认）｜考生信息＋学历学籍校验＝<b>已办</b>（用户 2026-10-07 确认）｜预报名 <b>✅已完成（10/9）</b>｜正式报名 10/16–27（可改可补·最后窗口）｜网上确认 11 月上旬。<br>
+      <b>报名核对（自核 8 项·不用重填）</b>：①报考单位/专业/方向＝北师 MAP·大数据（PBD）②⭐就业方式＝<b>定向就业</b>（非全日制必选，错即作废）③报考点符合户籍/工作地 ④考试方式＝统考 ⑤照片已通过审核 ⑥缴费成功 ⑦<b>9 位报名号已生成并记下</b>（查分/准考证要用）⑧学籍学历校验已通过（未过需现场确认）。<span style="opacity:.75">→ 有一项不对，10/16–27 正式报名窗口可改；报名号＋缴费凭证建议截图存档。</span>
+    </div>
+  </details>
+
+  <details class="ref">
+    <summary>🗺 剩余 69 天三阶段（v5 排产）<span class="cal">当前 P1 筑基 Day 6</span></summary>
+    <div class="ref-body">
+      <b>P1 筑基（10/6–10/25·19 天）</b>：普心二轮＋社心新课＋政治启动（◀ 现在）<br>
+      <b>P2 铺开（10/26–11/20）</b>：研方法刷题＋写作营作业②③＋实验仿写＋英语阅读<br>
+      <b>P3 冲刺（11/21–12/19）</b>：模考＋错题回炉＋主观题背诵
+    </div>
+  </details>
+
+  <div class="footer">
+    数据唯一来源：《考研备考真源.md》（本目录）· 信息架构 v2（模块准入三问：每天要看吗／驱动什么决策／数据从哪来）<br>
+    监督：台账守夜（每天 00:15·对账昨日·不发邮件；24:00 前完成即达标不记塌方）＋ 信箱巡检（08:00/20:00）· 简报与点名邮件 2026-10-07 起已取消<br>
+    本页请勿手改，事件驱动重产（用户指令/信箱投递单触发·不上定时）· 呈现层 L2 由 347 备考对话维护（10/7 回移）· 重产日志见页首 HTML 注释 · 旧版归档 _报告工作区\归档_仪表盘_v5口径_20261007.html
+  </div>
+</div>
+
+<script>
+  (function () {
+    var exam = new Date(2026, 11, 19);
+    var now = new Date();
+    var days = Math.ceil((exam - now) / 86400000);
+    if (days < 0) days = 0;
+    var topEl = document.getElementById('countdown');
+    if (topEl) topEl.innerHTML = days + '';
+  })();
+</script>
+</body>
+</html>
