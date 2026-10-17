@@ -295,7 +295,7 @@
       </details>
     </div>
     <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; opacity: .85;">
-      <span>📍 数据截止：10/16 台账（00:15 补记·无记录）｜真源更新于 10/17 00:5x（H0229–H0233：禁词清零＋两表并入＋周末收口版）</span>
+      <span>📍 数据截止：10/16 台账（00:15 补记·无记录）｜真源更新于 10/17 14:0x（H0238 新作息：10/18 起 08:00 起床·黄金块 08:20–09:20）</span>
       <span>🕐 生成时间：2026-10-17 01:0x · CLAH 心跳事件驱动重产（H0229 三处修正＋过期自检落地）</span>
       <span>💡 打不开此页 → 刷新或 Ctrl+F5</span>
     </div>
@@ -753,6 +753,46 @@
         card.appendChild(tag);
       }
     });
+    // ③ 全页日期扫描（H0239 扩检·10-17）：可见文本内所有 YYYY-MM-DD 不得早于今天（豁免：已拍板记录留痕折叠区；HTML 注释区天然豁免）
+    try {
+      var stale = [];
+      var re = /(\d{4})-(\d{2})-(\d{2})/g;
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (n) {
+          var el = n.parentElement;
+          if (!el) return NodeFilter.FILTER_REJECT;
+          if (el.closest('details') && el.closest('details').querySelector('summary') &&
+              el.closest('details').querySelector('summary').textContent.indexOf('已拍板记录') >= 0) return NodeFilter.FILTER_REJECT;
+          if (el.closest('.date-warn')) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var node;
+      var CITE = /并入|定稿|归档|拍板|落地|更正|superseded|口径|依据件|沿旧|移交|裁决|实测|校准|确认|取消|自报|登记/;
+      while ((node = walker.nextNode())) {
+        var m; re.lastIndex = 0;
+        while ((m = re.exec(node.nodeValue))) {
+          var d = new Date(+m[1], +m[2] - 1, +m[3]);
+          if (d.getTime() >= today.getTime()) continue;
+          var host = node.parentElement ? node.parentElement.textContent : node.nodeValue;
+          var pos = host.indexOf(m[0]);
+          var ctx = pos >= 0 ? host.slice(Math.max(0, pos - 20), pos + 20) : node.nodeValue.slice(Math.max(0, m.index - 14), m.index + 14);
+          if (CITE.test(ctx)) continue; // 历史注记引用（定稿/并入/拍板日期）≠ 内容过期
+          stale.push(m[0]);
+        }
+      }
+      if (stale.length) {
+        var hero2 = document.getElementById('hero');
+        if (hero2) {
+          var b2 = document.createElement('div');
+          b2.className = 'date-warn';
+          b2.setAttribute('role', 'alert');
+          b2.style.cssText = 'background:#dc2626;color:#fff;font-weight:700;';
+          b2.innerHTML = '🚨 全页日期自检发现 <b>' + stale.length + '</b> 处过期日期（' + stale.slice(0, 5).join('、') + (stale.length > 5 ? '…' : '') + '）早于今天——本页部分内容已过期，请叫知行重产（H0239 全页扫日期自检）';
+          hero2.insertBefore(b2, hero2.firstChild);
+        }
+      }
+    } catch (e) { /* 扫描失败不阻断页面 */ }
   })();
 </script>
 
