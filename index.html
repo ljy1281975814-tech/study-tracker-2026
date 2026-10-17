@@ -283,7 +283,7 @@
 
   <!-- B. 状态一句话 + Hero -->
   <div class="panel" id="hero" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; border: none;">
-    <div style="font-size: 12px; opacity: .75; margin-bottom: 4px;">2026-10-11 · 周日（节假日）</div>
+    <div style="font-size: 12px; opacity: .75; margin-bottom: 4px;">2026-10-17 · 周六（节假日）</div>
     <div style="font-size: 26px; font-weight: 700; margin-bottom: 10px;">距初试 <span id="countdown" style="color: #fbbf24;">69</span> 天</div>
     <div style="background: rgba(255,255,255,.1); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px;">
       <div style="margin-bottom: 4px;"><b>状态一句话：</b>P1 筑基·框架卡吃透期（MAP 尺）Day 12｜<b style="color:#fbbf24;">周末收口（10/17–18）：保命班前测 25 题今日上午必做＋政治第 2 讲＋社心第 1 讲收口</b>｜正式报名窗口进行中（至 10/27）</div>
@@ -754,6 +754,26 @@
       }
     });
   })();
+</script>
+
+<script>
+// 2026-10-17 hotfix：内嵌浏览器/滚动容器下 # 锚点可能失效 => 显式 scrollIntoView
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    document.querySelectorAll('.chip-nav a').forEach(function(a){
+      a.addEventListener('click', function(ev){
+        var href = a.getAttribute('href') || '';
+        if(href.charAt(0) !== '#') return;
+        var el = document.getElementById(href.slice(1));
+        if(!el) return;
+        ev.preventDefault();
+        try{ el.scrollIntoView({behavior:'smooth', block:'start'}); }
+        catch(e){ el.scrollIntoView(true); }
+        if(history && history.replaceState){ try{ history.replaceState(null,'',href); }catch(e){} }
+      });
+    });
+  }catch(e){}
+});
 </script>
 </body>
 </html>
