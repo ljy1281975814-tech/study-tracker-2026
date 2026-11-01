@@ -1,761 +1,1463 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>347备考仪表盘</title>
-  <!--
-    【状态 · 2026-10-07 03:00 重产 · 信息架构 v2 首版】本地为唯一源，自动同步至 GitHub Pages。
-    线上入口：https://ljy1281975814-tech.github.io/study-tracker-2026/
-    同步节奏：用户一句话触发（暂不开定时），单向：本地 → 线上。
-    由助手执行 _deploy_sync.sh 同步；失败会回执，不静默吞错。
-    重产日志（可追溯）：
-    - 2026-10-06 00:07：用户 00:05 发 10-05 墨墨终值截图（140 词）触发人工重产，回填终值。
-    - 2026-10-06 00:38：用户指令——补「当天时间块」模块 + 快照时间戳同步 + 部署断链修复。
-    - 2026-10-06 13:02：用户指令——整页去重 + 新鲜度机制。
-    - 2026-10-06 14:03：用户指令——上午块暂缓 + 10-07 聚餐/补课同步 + 双时间戳。
-    - 2026-10-07 00:19：v5 定稿口径重产（0002 工作包）。
-    - 2026-10-07 03:00：投递单 A 批一次重产（信息架构 v2 首版）——①三层架构（决策层/执行层/参考层折叠）
-      +模块准入三问 ②假期轨删 07:45 块、10-07 走聚餐日轨 ③同类聚合（政治课+300题同块；社心课后紧跟默写）
-      ④Anki 按到期量估时（公式 10–15s/卡，非固定 20min）⑤墨墨 150 试跑口径（加词≤20/50min 硬顶）
-      ⑥任务四段式（对象/达标/预计时长）⑦通勤音频改「辅助·对齐看板」删一切效果考核+推荐收听
-      ⑧主观题输出卡（时间配比/批改入口/规范5条）⑨Anki 怎么用速查卡（989 卡映射+零使用标注）
-      ⑩缓冲余量+出差保底三件+目标↔当前↔缺口对照+底部改台账守夜/信箱巡检口径。
-      旧版归档：_报告工作区\归档_仪表盘_v5口径_20261007.html。
-      依据件：主交接线_规格_347仪表盘信息架构v2 + 修正_107排产 + 修正_任务具体化规范 + 规格_Anki使用规范
-      + 定稿_通勤音频机制v3 + 修正_预算重算与出差缓冲 + 修正_写作路径与批改闭环。
-    - 2026-10-07 20:00：投递单 09:30 版（工作包②④⑤⑧⑨）重产——任务卡材料栏+材料徽标（D8）、政治精确讲名
-      （开课导航+第 1 讲 专题一唯物论①）、Anki 任务改"点哪个子牌组"（82 子牌组已按课表排好·零分类）、
-      Anki 学法分科表（政治=辨析级不默写）、拍板区更新（300 题打印/英语二真题/阿范题钉位）、通勤音频体量大校准。
-      依据件：清单_政治材料电子版路径_v1 + 清单_材料可及性总表_v1 + 映射_课程与材料需求_v1
-      + 交付_Anki按课表重排结果_v1 + 0020_写者分工与校准。
-    - 2026-10-08 08:00：信箱投递单⑪⑬重产——切工作日轨（07:45–08:45 晨间块回归：普心二轮启动 02_普心::C01）；
-      300 题文件名更正为「马原300题题目+解析（不用打印）.pdf」（投递单⑪·此前误登记的文件名作废）；
-      Anki 父牌组防呆（父牌组新卡上限=0，只点当天子牌组）；政治第 1 讲转机动层（10-07 压缩块未执行·顺延不追责）；
-      300 题做题待拍板区②（D9 材料门禁：纸质未取回+PDF 不可写）；行政：预报名窗口 10-08–10-13 当日开启。
-      依据件：投递单（10-07 22:30 版·工作包⑪⑬）+ 考研备考真源 §3.1/§3.4/§十。
-    - 2026-10-08 20:00：信箱投递单⑭⑮重产——300 题口径更正（用户 10-07 22:20 拍板"不打印先看电子版"→💻可读可做·做题写答题本），
-      当日机动层恢复 300 题（看框架→听讲解→做题同块）；英语真题更正为课程内已齐（早年 02–09 精讲＋含真题版讲义），
-      拍板区 4→2 件（300 题打印/英语真题缺口均销项）。
-      依据件：投递单（10-08 08:50 版·工作包⑭⑮）。
-    - 2026-10-08 23:59：投递单⑱⑲重产——①数据截止 10-07→10-08（真源已有 10-08 墨墨 150 真实台账行）
-      ②墨墨口径更正：150 维持/新学≤20/全天碎片累计≈1.5–2h（实测 47s/词）/「硬顶」=单次连续≤50min
-      （非全天上限）/待学未清=正常不清零（⑱"70 词"方案已作废·远低于考试要求）③状态一句话反映当日实际
-      （墨墨✅；政治/社心/Anki 待确认）。依据件：投递单（10-08 20:50 版·工作包⑱⑲）。
-    - 2026-10-09 00:35：投递单⑰㉒外审整改记录——页面数据不变（数据截止仍为 10-08），本次仅同步工程侧整改：
-      ①建 _产物索引.md（A1）②真源/内化规则/产品原型失效引用全部改实测路径（A5）③D4 占位 2 处标注闭环
-      ④旧 automation 残留目录归档（现行=DB automation_runs＋logs/）⑤备考规划×2 标 superseded
-      ⑥真源规划索引区合并瘦身（233→230 行，投递单四版合一登记⑯–㉓）。
-      依据件：投递单（10-08 20:50 版·工作包⑰⑳㉒）。
-    - 2026-10-09 02:45：投递单：投递单㉖㉗㉘㉙㉚㉛㉜落地——①社心任务卡挂检验题三档三时点（当天 L1／次日 L2／第 3–5 天 L3）
-      ②新增「检验题三档·配套题单索引」固定模块（26 份题单：社心 11＋普心 15，按章做题；题型画像防错配；
-      研方法改指小红本 200 题不挂外部题单㉙）③提取练习卡加"昨日章题单 L2"选项
-      ④347 题型结构更正为北师 2026 回忆版实测（㉜：单选 20×2／公共简答 4＋方向简答 2／综合写作 50 属公共／方向科目单独命题）。
-      依据件：投递单（10-09 00:55 版·工作包㉖–㉜）＋主交接线_模块_347题型映射与出题规范_v1。
-    - 2026-10-09 04:55：投件㉝㉞落地——①方向科目口径钉死（无选择题·简答2×15＋案例1×50＝80分·案例必跨章＋设计方案第二问·
-      方向简答统一句式"分析……的原因，并举例说明"·至少3点言之有理）②新增「进度_当前」区块（用户自报单点：
-      社心第1–2章已看→跨章题上界＝1–2章）③跨章前置规则上页（只用已学章·未学章标"需先学完第X章"·L3双版本）
-      ④社心第5章题单改双版（单章版＋跨章真题版命中2026真题奶茶店）⑤4章/9章补真题型方向简答（五-28/五-29）
-      ⑥25份题单末页加「本章跨章题前置章节」栏⑦阶段模拟卷列入P2排产（一轮结束触发）。
-      依据件：投件㉝㉞（10-09 01:10 与 01:12）＋附录B（北师方向科目）＋附录C（进度与分值配比）。
-    - 2026-10-09 15:35：H0070 页面重产（真源 13:18 收口同步）——①「当天块」切 10-09 周五工作日轨（社心第 2 讲开跑·
-      墨墨试跑 Day3·通勤回周五=Anki TTS·检验题第 1–2 章三档时点对齐）②拍板区改 2 件（问学管 1v1＋政治救命课
-      实际起点 §五④），阿范题销项卡删除、留痕 note-box（10-09 01:25 拍板）③数据截止注明「真源更新于 10-09·台账
-      数据截止 10-08」（10-09 尚无真实台账行，按 H0070 §四.2 口径）。
-      依据件：H0070（10-09 13:31）＋考研备考真源.md（10-09 13:18 版·§五收口 230 行）。
-    - 2026-10-09 17:50：H0074 重产（H0070 验收通过＋数据截止更新）——①数据截止 10-08 台账→10-09 台账（真源 10-09 政治真实行
-      16:06 口述并入）；②政治第 1 讲上页：三层表看课 0%→4%（选项a 实测=第 1 讲）、机动层改第 2 讲＋专题一 300 题、
-      拍板区②销项（2→1 件留痕）；③H0076 做题复盘模块化上页（检验题模块加 M1–M5 流水线：A–E 归因·三档标记·分册错题本）。
-      依据件：H0074（10-09 16:22）＋H0076（10-09 16:55）＋考研备考真源.md（10-09 17:45 版·230 行）。
-    - 2026-10-10 00:10：H0104+H0103 编辑——预报名 ✅已完成（10-09）＋报名核对 8 项卡＋守夜改 00:15 对账昨日（补登记，
-      部署 d5f2fc3）。
-    - 2026-10-10 18:5x：H0130 重产——①「当天块」切 10-10 周六节假日轨（上午社心第 2 讲+普心二轮整块／下午政治
-      第 2 讲+专题一 300 题+保命班前测 25 题／晚间 Anki+提取练习 L2）②墨墨 150 试跑→已定稿（10-10 校正：
-      68/150/150 词·58/118/102min·≈41–52s/词·忘记率 9–20%）③研方法=实统测保命班接管刷题主线（后于 10/17 改为具体日程·
-      前测 25 题 10-11 前·10-12 首节实验专题一）④时间口径上页（24:00 前完成即达标不记塌方）⑤数据截止
-      10-09 台账（真源更新于 10-10 17:32）⑥英语墨墨入库 496→500 词。P1 Day 4→Day 5。
-      依据件：H0130（10-10 14:51）＋H0131（10-10 16:50）＋投递单（10-10 18:20 版）＋考研备考真源.md（10-10 17:32 版）。
-    - 2026-10-11 00:15：守夜滞后自检触发重产（H0133 通道·首触发）——真源 mtime 10-10 22:36（22:40 §十 英语
-      纸质材料 6 册实拍登记行内重写，页面无直接显示字段受影响）> 页面 18:54。本次仅同步：①数据截止
-      10-09 台账→10-10 台账（00:15 补记·无记录）②真源更新时间 17:32→22:36。守 H0104 先例：不切日、
-      不排产（10-11 计划由 347 备考对话事件驱动另产）。
-    - 2026-10-11 15:40：用户指令五件事批次重产——①「当天块」切 10-11 周日节假日轨（下午块=政治第 2 讲+专题一 300 题
-      重做记三类题号+保命班前测 25 题【当日截止】；晚间加「拉墨墨」API 结算）②做题复盘手机工具上线（quiz-review-347：
-      逐题四态标记→生成复盘卡发知行→归因入错题本，入口上页检验题模块）③墨墨加 API 自动拉取口径（momo-study-sync
-      技能 10-10 建成·与截图 100% 吻合）④答题营 10/21 19:00 开营（主观题输出卡+状态一句话）⑤1v1 第 1 课上线
-      （钉钉回放·拍板区①改"有效期随课顺口问"）⑥英语词汇书分流销项（词根 3500 速览主用／例句 5500 查用）。
-      依据件：考研备考真源.md（10-11 15:25 版·230 行）＋用户 10-11 五件事指令。
-    - 2026-10-12 00:15：守夜滞后自检触发重产（H0133 通道·第 2 次触发）——真源 mtime 10-11 23:43（做题工具
-      v2.1 上线·当夜补英语：四科 1189 题＋进度门槛＋自评三档；阅读 OCR 不折腾拍板）> 页面 21:03。本次同步：
-      ①数据截止 10-10 台账→10-11 台账（00:15 补记·无记录）②真源更新时间 15:25→23:43 ③检验题模块
-      v2.1 待补→已上线（四科 1189 题＋进度门槛解锁）。守 H0104 先例：不切日、不排产（10-12 计划由 347 备考
-      对话事件驱动另产）。
-    - 2026-10-13：Phase 3 工程改造（ui-347dash 团队·前端工程落地）——内容与口径零删减，仅结构/样式/可访问性改造：
-      ①移动端表格卡片化（≤640px，7 张 g-table 全覆盖，杜绝竖排）②今天模块减重（检验题索引/进度_当前折叠为
-      details 默认收起；行政已办块并入折叠；块内明细收块内 details，块面只留「对象+达标+预计」）
-      ③Hero 状态一句话 6 行→3 行要点（全部事实移入折叠行）④外链 target=_blank+rel=noopener+触控≥44px
-      ⑤顶部锚点 chip 导航（今天/拍板/进度/通勤）+右下「回到今天」悬浮 ⑥辅助文字 #9ca3af→#6b7280（≥4.5:1）
-      ⑦红色语义收敛（卡值/社心进度条去红）⑧双深色块收敛（tm-header 改白底+2px 深色底线，全页唯一深色块=Hero）
-      ⑨字阶收敛 ⑩拍板留痕 5 条折叠 ⑪JS 日期错位黄色提示条 ⑫执行层手册型内容折叠+「今日点哪个」一行
-      ⑬通勤音频去重（弹性块只留一行「今日听」）⑭chip 语义统一+科目色 10px 圆点 ⑮工程元信息移 footer
-      ⑯材料徽标文字化（纸质/电子/小鹅通）⑰倒计时口径统一（JS 统一填充）⑱layer-tag 语义化 h2+th scope+
-      :focus-visible。依据件：Phase 1 视觉审查＋Phase 2 体验规范＋Phase 3 实施清单（ui-347dash）。
-    - 10月17日 01:0x：H0229–H0233 根因修复重产（CLAH 心跳·事件驱动）——①真源先行：禁词清零（作息 B 层
-      更名机动层／保命班改具体日程／钉位措辞改待确认口径）＋出件 v1.1 两表并入 §三＋周任务段改 10/17–18 周末收口版；
-      ②本页跟随：「今天」切 10/17 周六轨（上午前测 25 题+社心第 1 讲收口／下午政治第 2 讲+普心卡单／晚间 Anki+
-      提取练习+1v1 第 2 课时）③社心进度按用户最新自报更正（强化课第 1 讲·第 2 章进行中）④拍板区 1v1 项
-      事实已满足自动移出（改列报名双保险+阿范题，每条带依据件+有效条件 data-until）⑤过期自检落地：
-      今天块带 data-plan-date＋JS 渲染比对（不一致弹红色告警条），发布门禁=主交接线_计划完整性.py 全绿。
-      依据件：H0229/H0230/H0231/H0232/H0233＋出件 v1.1＋考研备考真源.md（10/17 版·228 行）。
-    - 2026-10-19 00:15：守夜滞后自检触发（H0133 通道·第 3 次触发）——真源 mtime 10-18 00:17 > 页面 10-17 14:08
-      （10/17、10/18 两夜补记行属台账自写，无实质内容变更）。本次仅同步：数据截止 10/16 台账→10/18 台账
-      （00:15 补记·无记录）。守 H0104 先例：不切日、不排产、不改正文。
-    - 2026-10-21 00:15：守夜滞后自检触发（H0133 通道·第 4 次触发）——真源 mtime 10-20 00:17 > 页面 10-19 00:19
-      （10/19、10/20 两夜补记行属台账自写，无实质内容变更；10/20 00:15 轮未触发故徽标一跳两级）。本次仅同步：
-      数据截止 10/18 台账→10/20 台账（00:15 补记·无记录）。守 H0104 先例：不切日、不排产、不改正文。
-    - 2026-10-22 00:15：守夜滞后自检触发（H0133 通道·第 5 次触发）——真源 mtime 10-21 01:21 > 页面 10-21 00:18。
-      本次有实质变更（10/21 凌晨真实补记两行：政治救命课第 2 讲听完·断档 11 天恢复＋墨墨 119/150·忘记率 7.6%）。
-      本次同步：①数据截止 10/20 台账（补记·无记录）→10/20 台账（补记·真实行×2：政治第 2 讲＋墨墨 119/150）
-      ②真源更新时间→10/21 01:21 ③三层进度表政治行 1/24→2/24 讲（≈2%→≈8%）。守 H0104 先例：不切日、不排产。
-    - 2026-10-24 00:15：守夜滞后自检触发（H0133 通道·第 6 次触发）——真源 mtime 10-24 00:17 > 页面 10-22 00:20
-      （10/22、10/23 两夜补记行属台账自写，无实质内容变更；10/23 00:15 轮未触发故徽标一跳三级）。本次仅同步：
-      数据截止 10/20 台账→10/23 台账（00:15 补记·无记录）＋真源更新时间→10/24 00:17。
-      守 H0104 先例：不切日、不排产、不改正文。
-    - 2026-10-26 21:33：守夜滞后自检触发（H0133 通道·第 7 次触发）——真源 mtime 10-25 00:16 > 页面 10-24 00:18
-      （10/25 一夜补记行属台账自写，无实质内容变更；徽标自 10/23 补 QoS 顺延）。本次仅同步：
-      数据截止 10/23 台账→10/25 台账（00:15 补记·无记录）＋真源更新时间→10/26 21:33。
-      守 H0104 先例：不切日、不排产、不改正文（注：按真源 §一 阶段定义 P1＝10/6–10/25、P2＝10/26 起，
-      页面「当前 P1／Day 12」已越期但属排产类字段，本轮不擅自切换，已在回执中提请知行/主交接线确认）。
-    - 2026-11-01 00:15：守夜滞后自检触发（H0133 通道·第 8 次触发）——真源 mtime 11-01 00:16 > 页面 10-26 21:37。
-      背景：10/27–10/31 台账连续空档（守夜或连续未执行），本轮按规则仅补 10/31 一行，属台账自写、无实质内容变更。
-      本次仅同步：数据截止 10/25 台账→10/31 台账（00:15 补记·无记录）＋真源更新时间→11/01 00:16。
-      守 H0104 先例：不切日、不排产、不改正文。
-  -->
-  <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-    background: #f5f6f8; color: #2b2f36; line-height: 1.6; padding: 24px 16px 72px; overflow-x: hidden;
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08090b">
+<meta name="description" content="北师大 MAP 347 备考台 · 距初试 48 天">
+<title>MAP 347 · 备考台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23d4f88b'/%3E%3Cpath d='M9 22V10l7 7 7-7v12' fill='none' stroke='%2308090a' stroke-width='2.4' stroke-linecap='square'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#08090b;
+    --ink:#f4f7ee;
+    --ink-2:#cbd3c2;
+    --muted:#a0aa98;
+    --faint:#8a9484;
+    --line:rgba(255,255,255,.10);
+    --line-soft:rgba(255,255,255,.058);
+    --lime:#d4f88b;
+    --lime-deep:#a9e05e;
+    --lime-soft:rgba(212,248,139,.10);
+    --lime-line:rgba(212,248,139,.30);
+    --amber:#f2b87a;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    --mono:"SFMono-Regular","Cascadia Mono","Roboto Mono",ui-monospace,Menlo,Consolas,monospace;
   }
-  a { overflow-wrap: anywhere; }
-  code { overflow-wrap: anywhere; }
-  :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; border-radius: 4px; }
-  [id] { scroll-margin-top: 76px; }
-  .wrap { max-width: 960px; margin: 0 auto; }
-  .header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-bottom: 12px; }
-  .header h1 { font-size: 26px; font-weight: 700; }
-  .header .sub { font-size: 14px; color: #6b7280; }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{
+    margin:0;min-width:320px;overflow-x:hidden;
+    background:
+      radial-gradient(980px 600px at 2% -14%,rgba(212,248,139,.075),transparent 62%),
+      radial-gradient(760px 520px at 100% 4%,rgba(110,150,255,.035),transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:15px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px);
+    background-size:88px 88px;
+    -webkit-mask-image:radial-gradient(ellipse 90% 55% at 50% 0%,#000 0%,transparent 78%);
+    mask-image:radial-gradient(ellipse 90% 55% at 50% 0%,#000 0%,transparent 78%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.018;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  ::selection{background:var(--lime);color:#0a0d08}
+  h1,h2,h3,h4,p{margin:0}
+  ol,ul{margin:0;padding:0;list-style:none}
+  button{font:inherit;color:inherit;background:none;border:0}
+  a{color:inherit;text-decoration:none}
+  svg{display:block}
+  b,strong{font-weight:500}
+  [hidden]{display:none!important}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0 0 0 0);white-space:nowrap;border:0;
+  }
+  .wrap{position:relative;z-index:1;width:min(1120px,calc(100% - 56px));margin:0 auto}
+  .skip{
+    position:absolute;left:14px;top:-70px;z-index:99;
+    padding:9px 13px;border-radius:8px;background:var(--lime);color:#080b07;
+    font-size:12px;text-decoration:none;transition:top .2s ease;
+  }
+  .skip:focus{top:14px}
+  :focus-visible{outline:1.5px solid var(--lime);outline-offset:3px;border-radius:4px}
 
-  /* 顶部锚点 chip 导航 */
-  .chip-nav { position: sticky; top: 0; z-index: 50; display: flex; gap: 8px; padding: 8px 0; margin-bottom: 16px; background: rgba(245,246,248,.96); }
-  .chip-nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px; border-radius: 99px; background: #fff; border: 1px solid #d1d5db; color: #1f2937; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+  /* ---------- top ---------- */
+  .top{padding-top:22px}
+  .top-in{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding-bottom:16px;border-bottom:1px solid var(--line-soft);
+  }
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .mark{
+    width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;
+    color:var(--lime);border:1px solid var(--lime-line);border-radius:10px;
+    background:linear-gradient(145deg,rgba(212,248,139,.13),rgba(255,255,255,.015));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .brand-t{min-width:0}
+  .brand-t .bn{
+    display:block;font-family:var(--mono);font-size:12.5px;font-weight:500;
+    letter-spacing:.14em;color:#eef3e7;line-height:1.2;
+  }
+  .brand-t .bn i{font-style:normal;color:var(--lime)}
+  .brand-t .bs{display:block;margin-top:3px;font-size:11px;letter-spacing:.16em;color:var(--faint)}
+  .clock{
+    display:flex;align-items:center;gap:10px;
+    font-family:var(--mono);font-size:11.5px;color:var(--faint);white-space:nowrap;
+  }
+  .clock b{font-size:12px;font-weight:400;color:#dfe6d8;letter-spacing:.02em}
+  .clock .csep{width:1px;height:10px;background:var(--line)}
 
-  /* 右下「回到今天」悬浮 */
-  .back-today { position: fixed; right: 14px; bottom: 14px; z-index: 60; display: inline-flex; align-items: center; min-height: 44px; padding: 10px 16px; border-radius: 99px; background: #1f2937; color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 10px rgba(0,0,0,.28); }
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;margin-top:26px;display:grid;
+    grid-template-columns:minmax(0,1fr) 304px;
+    border:1px solid rgba(255,255,255,.115);border-radius:26px;overflow:hidden;
+    background:
+      radial-gradient(760px 420px at 4% -34%,rgba(212,248,139,.13),transparent 62%),
+      radial-gradient(560px 380px at 100% 118%,rgba(112,142,255,.045),transparent 64%),
+      linear-gradient(158deg,#101210 0%,#0b0d0c 52%,#090a0b 100%);
+    box-shadow:0 50px 140px -70px rgba(0,0,0,.98),inset 0 1px 0 rgba(255,255,255,.07);
+    isolation:isolate;
+    animation:rise .8s cubic-bezier(.16,1,.3,1) both;
+  }
+  .hero::before{
+    content:"";position:absolute;left:0;right:0;top:0;height:1px;z-index:3;
+    background:linear-gradient(90deg,transparent,rgba(212,248,139,.55),transparent);
+    opacity:.6;pointer-events:none;
+  }
+  .hero-main{
+    position:relative;z-index:1;display:flex;flex-direction:column;min-width:0;
+    padding:32px 36px 26px;
+  }
+  .hero-main::before{
+    content:"";position:absolute;left:36px;top:0;width:112px;height:1px;
+    background:linear-gradient(90deg,var(--lime),transparent);opacity:.85;
+  }
+  .hero-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+    font-size:12px;letter-spacing:.07em;color:#e0f4bd;
+  }
+  .dot{
+    width:5px;height:5px;flex:0 0 5px;border-radius:50%;background:var(--lime);
+    box-shadow:0 0 0 4px rgba(212,248,139,.08),0 0 12px rgba(212,248,139,.5);
+    animation:pulse 3s ease-in-out infinite;
+  }
+  .hero-count{
+    font-family:var(--mono);font-size:11.5px;color:var(--faint);
+    letter-spacing:.03em;white-space:nowrap;
+    padding-left:13px;border-left:1px solid var(--line-soft);
+  }
+  .hero-title{
+    margin-top:16px;
+    font-size:clamp(38px,4.8vw,54px);line-height:1.04;font-weight:500;
+    letter-spacing:-.05em;color:#f8fbf3;overflow-wrap:anywhere;
+  }
+  .hero-title .pre{
+    font-size:.5em;font-weight:400;letter-spacing:-.01em;color:#9da895;
+    margin-right:2px;white-space:nowrap;
+  }
+  .hero-meta{margin-top:9px;font-size:12.5px;color:var(--muted);letter-spacing:.01em}
+  .goal{
+    display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;
+    margin-top:18px;padding:11px 14px;
+    border:1px solid rgba(212,248,139,.19);border-radius:12px;
+    background:linear-gradient(90deg,rgba(212,248,139,.075),rgba(212,248,139,.018) 58%,transparent);
+  }
+  .goal-lab{font-size:11px;letter-spacing:.14em;color:var(--lime);opacity:.85}
+  .gi{display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
+  .gi-l{font-size:12px;color:var(--muted)}
+  .gi b{font-family:var(--mono);font-size:16px;font-weight:500;color:#f4f9e9;letter-spacing:-.03em}
+  .gi i{font-style:normal;font-size:11px;color:var(--faint)}
+  .goal-rep{
+    margin-left:auto;display:inline-flex;align-items:baseline;gap:7px;
+    padding-left:16px;border-left:1px solid rgba(212,248,139,.16);
+    font-family:var(--mono);font-size:11.5px;color:#dcefb8;white-space:nowrap;
+  }
+  .goal-rep span{font-family:var(--font);font-size:11px;color:var(--faint)}
+  .goal-rep b{font-weight:400;letter-spacing:.01em}
+  .nowline{
+    display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;
+    margin-top:18px;padding-top:15px;border-top:1px solid var(--line-soft);
+  }
+  .now-lab{font-size:11px;letter-spacing:.12em;color:var(--faint);white-space:nowrap}
+  .now-txt{font-size:14px;color:#e7eddb;letter-spacing:.01em}
+  .now-txt b{font-family:var(--mono);font-weight:500;font-size:15px;color:#fff;letter-spacing:-.02em}
+  .now-txt b.goal-b{color:var(--lime)}
+  .now-txt .ar{color:var(--lime);margin:0 4px;font-size:12px}
+  .now-meta{font-size:11.5px;color:var(--faint)}
+  .creed{
+    display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
+    margin-top:auto;padding-top:16px;font-size:12px;color:#a9b49f;line-height:1.55;
+  }
+  .creed span{font-size:11px;letter-spacing:.12em;color:var(--faint)}
 
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-  .card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
-  .card .label { font-size: 13px; color: #6b7280; margin-bottom: 4px; }
-  .card .value { font-size: 30px; font-weight: 700; color: #1f2937; line-height: 1.2; }
-  .card .value small { font-size: 14px; font-weight: 400; color: #6b7280; }
-  .card.plain .value { color: #1f2937; font-size: 22px; }
-  .card .note { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .hero-side{
+    position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:18px;
+    min-width:0;padding:28px 26px 24px;border-left:1px solid var(--line);
+    background:
+      radial-gradient(340px 280px at 108% -6%,rgba(212,248,139,.08),transparent 68%),
+      linear-gradient(180deg,rgba(0,0,0,.26),rgba(0,0,0,.04));
+  }
+  .hero-side::before{
+    content:"";position:absolute;left:-1px;top:34px;width:1px;height:46px;
+    background:linear-gradient(var(--lime),transparent);opacity:.55;
+  }
+  .side-lab{display:block;font-size:11px;letter-spacing:.16em;color:var(--faint)}
+  .side-phase{
+    margin-top:7px;font-size:13.5px;line-height:1.5;color:#e5ebda;letter-spacing:.01em;
+  }
+  .side-phase b{
+    display:inline-block;margin-right:7px;padding:1px 5px;
+    font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.06em;
+    color:var(--lime);background:var(--lime-soft);
+    border:1px solid var(--lime-line);border-radius:5px;vertical-align:1px;
+  }
+  .side-win{display:block;margin-top:5px;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em}
+  .cd{display:flex;align-items:flex-end;gap:7px;margin-top:2px}
+  #daysNum{
+    display:block;
+    font-size:clamp(72px,8vw,96px);line-height:.78;font-weight:500;
+    letter-spacing:-.07em;transform:translateX(-.03em);
+    background:linear-gradient(172deg,#e8eddf 0%,#a6b19b 46%,#5a6456 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    font-variant-numeric:tabular-nums;
+  }
+  @supports not ((-webkit-background-clip:text) or (background-clip:text)){
+    #daysNum{color:#cdd5c2;background:none}
+  }
+  .cd-u{font-size:13px;color:var(--muted);letter-spacing:.12em;margin-bottom:9px;white-space:nowrap}
+  .cd-date{display:block;margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.03em}
+  .side-fact{
+    display:flex;align-items:baseline;gap:6px;
+    padding-top:13px;border-top:1px solid var(--line-soft);
+    font-size:11.5px;color:var(--faint);
+  }
+  .side-fact b{font-family:var(--mono);font-size:15px;font-weight:500;letter-spacing:-.02em;color:#dee7d3}
+  .side-fact span{font-size:11.5px;color:var(--faint)}
 
-  .panel { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px; }
-  .panel h2 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .panel h2 .tag { font-size: 12px; font-weight: 400; color: #6b7280; background: #f3f4f6; border-radius: 99px; padding: 2px 10px; }
-
-  h2.layer-tag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; border-radius: 6px; padding: 3px 10px; margin: 18px 0 10px; }
-  .layer-1 { background: #d93025; }
-  .layer-2 { background: #1d4ed8; }
-  .layer-3 { background: #6b7280; }
-
-  /* 外链按钮化（触控目标 ≥44px） */
-  .ext-link { display: inline-block; max-width: 100%; min-height: 44px; padding: 10px 14px; margin: 4px 0; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 10px; color: #1d4ed8; font-weight: 700; text-decoration: none; }
-
-  /* 材料徽标（文字 chip，替代 📗💻📦） */
-  .mat { display: inline-block; font-size: 12px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 4px; padding: 0 6px; margin: 0 2px; vertical-align: 1px; }
-
-  /* 今日任务四段式 */
-  .today-module { padding: 0; overflow: hidden; }
-  .tm-header { background: #fff; color: #1f2937; padding: 14px 20px; border-bottom: 2px solid #1f2937; }
-  .tm-date { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-  .tm-date .track-tag { font-size: 12px; font-weight: 400; color: #6b7280; margin-left: 8px; }
-  .tm-mainline { font-size: 15px; font-weight: 700; color: #1f2937; }
-  .tm-block { padding: 12px 20px; border-bottom: 1px solid #f3f4f6; }
-  .tm-block:last-child { border-bottom: none; }
-  .tm-block.yield { background: #fafafa; }
-  .tm-time { font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 4px; }
-  .tm-task { font-size: 15px; font-weight: 700; color: #1f2937; margin-bottom: 4px; line-height: 1.4; }
-  .tm-spec { font-size: 13px; color: #374151; line-height: 1.6; }
-  .tm-spec b { color: #1f2937; }
-  .tm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-  .tm-chip { font-size: 12px; font-weight: 600; color: #374151; background: #f3f4f6; border-radius: 99px; padding: 2px 9px; }
-  .tm-chip.highlight { background: #fef3c7; color: #92400e; }
-  .tm-chip.ok { background: #d1fae5; color: #065f46; }
-
-  /* 时间块内「明细」折叠 */
-  details.tm-detail { margin-top: 8px; background: #f9fafb; border-radius: 8px; }
-  details.tm-detail > summary { cursor: pointer; list-style: none; padding: 8px 12px; font-size: 13px; font-weight: 600; color: #6b7280; min-height: 44px; display: flex; align-items: center; }
-  details.tm-detail > summary::-webkit-details-marker { display: none; }
-  details.tm-detail > summary::after { content: "▸"; margin-left: auto; color: #9ca3af; }
-  details.tm-detail[open] > summary::after { content: "▾"; }
-  details.tm-detail .tm-detail-body { padding: 0 12px 10px; font-size: 13px; color: #374151; line-height: 1.7; }
-  details.tm-detail .tm-detail-body b { color: #1f2937; }
-
-  /* today-module 内大块折叠（检验题索引 / 进度_当前+行政） */
-  details.tm-fold { border-bottom: 1px solid #f3f4f6; }
-  details.tm-fold:last-child { border-bottom: none; }
-  details.tm-fold > summary { cursor: pointer; list-style: none; padding: 12px 20px; font-size: 14px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 44px; }
-  details.tm-fold > summary::-webkit-details-marker { display: none; }
-  details.tm-fold > summary::after { content: "▸"; margin-left: auto; color: #9ca3af; }
-  details.tm-fold[open] > summary::after { content: "▾"; }
-  details.tm-fold .tm-fold-body { padding: 0 20px 14px; }
-
-  /* 执行层「今日点哪个」+ 明细折叠 */
-  .today-line { font-size: 13px; background: #f0f9ff; border-radius: 8px; padding: 10px 12px; }
-  .today-line b { color: #1f2937; }
-  details.fold { border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 10px; background: #fff; }
-  details.fold > summary { cursor: pointer; list-style: none; padding: 12px 14px; font-size: 13px; font-weight: 700; color: #374151; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 44px; }
-  details.fold > summary::-webkit-details-marker { display: none; }
-  details.fold > summary::after { content: "▸"; margin-left: auto; color: #9ca3af; }
-  details.fold[open] > summary::after { content: "▾"; }
-  details.fold .fold-body { padding: 0 14px 12px; }
-  details.fold .fold-body .note-box { margin-top: 10px; }
-  details.fold .cal { font-size: 12px; font-weight: 400; color: #6b7280; }
-
-  /* 日期错位提示条（JS 注入） */
-  .date-warn { background: #fef3c7; color: #92400e; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
-
-  /* 科目进度条 */
-  .subj { margin-bottom: 14px; }
-  .subj:last-child { margin-bottom: 0; }
-  .subj .row1 { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
-  .subj .name { font-weight: 600; }
-  .subj .name .st { font-weight: 400; font-size: 13px; color: #6b7280; margin-left: 8px; }
-  .subj .pct { font-weight: 700; color: #374151; }
-  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
-  .bar { height: 10px; background: #f0f1f3; border-radius: 99px; overflow: hidden; }
-  .bar i { display: block; height: 100%; border-radius: 99px; }
-
-  /* 周任务清单 */
-  .week { list-style: none; }
-  .week li { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
-  .week li:last-child { border-bottom: none; }
-  .week .box { flex-shrink: 0; width: 18px; height: 18px; border: 1.5px solid #d1d5db; border-radius: 4px; margin-top: 3px; }
-  .week li.done .box { background: #d1fae5; border-color: #059669; }
-  .week .w-main { font-weight: 600; }
-  .week .w-note { font-size: 13px; color: #6b7280; }
-
-  /* 拍板区 */
-  .decision { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  @media (max-width: 640px) { .decision { grid-template-columns: 1fr; } }
-  .d-card { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; }
-  .d-card .d-title { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
-  .d-card .d-adv { font-size: 13px; color: #92400e; }
-
-  /* 通用表 */
-  .g-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .g-table th { text-align: left; font-size: 13px; color: #6b7280; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; }
-  .g-table td { padding: 8px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
-  .g-table tr:last-child td { border-bottom: none; }
-
-  /* 表格移动端卡片化（≤640px）：杜绝「一字一行」竖排 */
-  @media (max-width: 640px) {
-    .g-table tr { display: block; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px; padding: 4px 0; background: #fff; }
-    .g-table tr:first-child { display: none; }
-    .g-table td { display: block; border-bottom: 1px dashed #e5e7eb; padding: 8px 12px; }
-    .g-table td:last-child { border-bottom: none; }
-    .g-table td[data-label]::before { content: attr(data-label) "："; display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 2px; }
-    .g-table td.row-title { font-weight: 700; font-size: 14px; color: #1f2937; background: #f9fafb; }
+  /* ---------- section ---------- */
+  .sec{position:relative;z-index:1;margin-top:54px;scroll-margin-top:26px}
+  .sec-head{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:10px 18px;
+    margin-bottom:13px;padding-bottom:10px;border-bottom:1px solid var(--line-soft);
+    position:relative;flex-wrap:wrap;
+  }
+  .sec-head::after{
+    content:"";position:absolute;left:0;bottom:-1px;width:34px;height:1px;
+    background:var(--lime);opacity:.8;
+  }
+  .sh-l{display:flex;align-items:baseline;gap:11px;min-width:0}
+  .idx{font-family:var(--mono);font-size:11px;color:var(--lime);letter-spacing:.06em;opacity:.9}
+  .sec-head h2{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1.3;color:#f3f7ed}
+  .sec-meta{
+    font-family:var(--mono);font-size:11px;color:var(--faint);
+    text-align:right;letter-spacing:.01em;font-variant-numeric:tabular-nums;
   }
 
-  .note-box { font-size: 13px; color: #6b7280; background: #f3f4f6; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
-  .warn-box { font-size: 13px; color: #7f1d1d; background: #fef2f2; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+  /* ---------- board ---------- */
+  .board{
+    border:1px solid var(--line);border-radius:22px;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.036),rgba(255,255,255,.01));
+    box-shadow:0 36px 100px -70px #000,inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .dayrail{
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    border-bottom:1px solid var(--line);background:rgba(0,0,0,.2);
+  }
+  .day{
+    position:relative;display:block;appearance:none;border:0;border-right:1px solid var(--line-soft);
+    background:transparent;padding:11px 12px 10px;text-align:left;cursor:pointer;
+    min-width:0;transition:background .18s ease;
+  }
+  .day:last-child{border-right:0}
+  .day b{display:block;font-family:var(--mono);font-size:11.5px;font-weight:400;color:#c8d0bf;letter-spacing:.03em}
+  .day span{display:block;margin-top:2px;font-size:11px;color:var(--faint);letter-spacing:.02em}
+  .day .dbar{display:block;height:2px;margin-top:8px;border-radius:1px;background:rgba(255,255,255,.07);overflow:hidden}
+  .day .dbar i{display:block;height:100%;width:var(--w,0%);background:var(--lime);opacity:.6}
+  .day[aria-selected="true"]{background:linear-gradient(180deg,rgba(212,248,139,.08),rgba(212,248,139,0))}
+  .day[aria-selected="true"]::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--lime);opacity:.95}
+  .day[aria-selected="true"] b{color:var(--lime)}
+  .day[aria-selected="true"] .dbar i{opacity:1}
+  .day:hover{background:rgba(255,255,255,.025)}
 
-  /* 折叠参考层 */
-  details.ref { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
-  details.ref summary { cursor: pointer; padding: 14px 20px; font-size: 14px; font-weight: 700; list-style: none; display: flex; align-items: center; gap: 8px; }
-  details.ref summary::-webkit-details-marker { display: none; }
-  details.ref summary::after { content: "▸"; margin-left: auto; color: #9ca3af; }
-  details.ref[open] summary::after { content: "▾"; }
-  details.ref .ref-body { padding: 0 20px 16px; font-size: 13px; }
-  details.ref summary .cal { font-size: 12px; font-weight: 400; color: #6b7280; }
+  .board-body{padding:16px 20px 4px}
+  .focus{
+    position:relative;display:grid;grid-template-columns:minmax(0,1fr) 262px;
+    border:1px solid rgba(212,248,139,.2);border-radius:16px;overflow:hidden;
+    background:
+      radial-gradient(400px 240px at 66% -12%,rgba(212,248,139,.08),transparent 72%),
+      linear-gradient(135deg,rgba(212,248,139,.065),rgba(212,248,139,.012) 48%,rgba(255,255,255,.006));
+  }
+  .focus.is-done{opacity:.6;border-color:var(--line)}
+  .focus-main{padding:16px 18px 14px;min-width:0}
+  .focus-head{display:flex;align-items:flex-start;gap:12px}
+  .f-n{font-family:var(--mono);font-size:11px;color:var(--lime);letter-spacing:.06em;padding-top:6px}
+  .f-ttl{flex:1;min-width:0}
+  .f-ttl h3{font-size:19px;font-weight:500;letter-spacing:-.015em;color:#f5f9ee;line-height:1.3}
+  .f-ttl p{margin-top:3px;font-size:11.5px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .check{
+    flex:0 0 auto;position:relative;width:26px;height:26px;padding:0;
+    display:grid;place-items:center;border-radius:50%;
+    border:1px solid rgba(255,255,255,.32);background:transparent;
+    color:transparent;cursor:pointer;
+    transition:background .18s ease,border-color .18s ease,color .18s ease,transform .12s ease;
+  }
+  .check::after{content:"";position:absolute;inset:-9px}
+  .check svg{width:11px;height:11px}
+  .check:hover{border-color:var(--lime);background:rgba(212,248,139,.08);color:rgba(212,248,139,.65)}
+  .check[aria-pressed="true"]{background:var(--lime);border-color:var(--lime);color:#0a0d07}
+  .check.pressed{background:var(--lime);border-color:var(--lime);color:#0a0d07;transform:scale(.9)}
+  .check.is-fixed{background:var(--lime);border-color:var(--lime);color:#0a0d07;cursor:default;opacity:.8}
+  .steps{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    margin-top:14px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+  }
+  .step{padding:9px 0 9px 14px;border-left:1px solid var(--line-soft);min-width:0}
+  .step:first-child{padding-left:0;border-left:0}
+  .step span{display:block;font-size:11px;letter-spacing:.1em;color:var(--faint)}
+  .step b{display:block;margin-top:3px;font-size:13px;font-weight:400;color:#e3e9da;line-height:1.4;overflow-wrap:anywhere}
+  .step.core b{color:var(--lime)}
+  .pass{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-top:10px}
+  .pass-lab{font-size:11px;letter-spacing:.1em;color:var(--faint)}
+  .pi{display:inline-flex;align-items:baseline;gap:5px;white-space:nowrap}
+  .pi span{font-size:11.5px;color:var(--muted)}
+  .pi b{font-family:var(--mono);font-size:17px;font-weight:500;letter-spacing:-.03em;color:#f3f8ea}
+  .pi i{font-style:normal;font-size:11px;color:var(--faint)}
+  .report{
+    display:flex;flex-direction:column;gap:9px;min-width:0;
+    padding:15px 16px 14px;border-left:1px solid rgba(212,248,139,.15);
+    background:linear-gradient(180deg,rgba(0,0,0,.24),rgba(0,0,0,.06));
+  }
+  .rep-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rep-lab{font-size:11px;letter-spacing:.14em;color:var(--lime)}
+  .rep-ch{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+  .rep-fields{display:flex;flex-direction:column;gap:8px}
+  .rep-row{display:flex;align-items:center;gap:7px;min-width:0;font-size:11.5px;color:var(--muted)}
+  .rep-row .rlab{flex:0 0 1.2em;color:#cbd3c0}
+  .rep-row .pct{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+  .rep-in{
+    flex:0 0 76px;width:76px;min-width:0;height:30px;padding:0 6px;
+    border:1px solid rgba(255,255,255,.14);border-radius:6px;
+    background:rgba(0,0,0,.28);outline:none;
+    color:var(--lime);font-family:var(--mono);font-size:14px;text-align:center;
+    -webkit-appearance:none;appearance:none;
+    transition:border-color .18s ease,background .18s ease;
+  }
+  .rep-in::placeholder{color:rgba(212,248,139,.5)}
+  .rep-in:focus{border-color:var(--lime);background:rgba(212,248,139,.07);box-shadow:0 0 0 2px rgba(212,248,139,.08)}
+  .copy{
+    position:relative;display:flex;align-items:center;justify-content:center;gap:6px;
+    width:100%;height:32px;margin-top:auto;padding:0 8px;
+    border:1px solid var(--lime-line);border-radius:7px;
+    background:rgba(212,248,139,.08);color:#e6f4ca;font-size:11.5px;cursor:pointer;
+    transition:background .18s ease,color .18s ease,border-color .18s ease;
+  }
+  .copy::after{content:"";position:absolute;inset:-6px}
+  .copy:hover{background:rgba(212,248,139,.15);color:#fff}
+  .copy.ok{background:var(--lime);border-color:var(--lime);color:#0a0d07}
+  .copy svg{width:11px;height:11px}
 
-  .footer { text-align: center; font-size: 13px; color: #6b7280; margin-top: 24px; line-height: 1.8; }
-  </style>
+  .rows{margin-top:4px}
+  .row{
+    display:grid;grid-template-columns:30px minmax(0,1fr) auto 26px;
+    gap:12px;align-items:center;padding:12px 2px;border-bottom:1px solid var(--line-soft);
+    transition:background .18s ease;
+  }
+  .row.no-est{grid-template-columns:30px minmax(0,1fr) 26px}
+  .row:last-child{border-bottom:0}
+  .row:hover{background:rgba(255,255,255,.018)}
+  .r-n{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.03em}
+  .r-main{min-width:0}
+  .r-ttl{display:block;font-size:14px;color:#e9eee1;line-height:1.4}
+  .r-meta{display:block;margin-top:2px;font-size:11.5px;color:var(--faint);line-height:1.45}
+  .r-est{font-family:var(--mono);font-size:11px;color:var(--faint);text-align:right;white-space:nowrap}
+  .m-est{display:none}
+  .row.is-done .r-ttl{color:var(--faint)}
+  .row.is-done .r-n{color:rgba(212,248,139,.55)}
+  .row .check{width:24px;height:24px}
+  .row .check svg{width:10.5px;height:10.5px}
+
+  .board-foot{
+    display:flex;align-items:center;justify-content:space-between;gap:6px 18px;flex-wrap:wrap;
+    padding:11px 20px 12px;border-top:1px solid var(--line-soft);
+    background:rgba(0,0,0,.16);font-size:11px;color:var(--faint);
+  }
+  .board-foot b{color:#dfe6d5;font-weight:400;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .empty{padding:26px 8px 30px;text-align:center}
+  .e-n{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--faint)}
+  .empty h3{margin-top:8px;font-size:19px;font-weight:500;color:#edf2e6;letter-spacing:-.01em}
+  .empty p{margin-top:5px;font-size:12px;color:var(--muted);line-height:1.55}
+  .empty .a-next{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .noscript{padding:18px 4px;font-size:12px;color:var(--muted)}
+
+  /* ---------- band ---------- */
+  .band{
+    border:1px solid var(--line);border-radius:18px;
+    padding:4px 20px 0;
+    background:linear-gradient(180deg,rgba(255,255,255,.034),rgba(255,255,255,.008));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .brow{
+    display:grid;grid-template-columns:106px minmax(0,1fr) auto;
+    gap:16px;align-items:center;padding:12px 0;border-top:1px solid var(--line-soft);
+  }
+  .brow:first-child{border-top:0}
+  .b-name{font-size:13px;color:#dfe6d5;letter-spacing:.01em;white-space:nowrap}
+  .b-track{position:relative;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;min-width:0}
+  .b-track i{
+    display:block;height:100%;width:var(--w);border-radius:inherit;
+    background:linear-gradient(90deg,rgba(212,248,139,.45),var(--lime));
+    transform-origin:left;animation:grow .9s cubic-bezier(.16,1,.3,1) both;
+  }
+  .b-track.two{
+    background:linear-gradient(90deg,
+      var(--lime) 0 var(--a),
+      rgba(212,248,139,.28) var(--a) var(--b),
+      rgba(255,255,255,.07) var(--b) 100%);
+  }
+  .b-track.two i{display:none}
+  .b-val{display:flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1.25;text-align:right}
+  .b-val b{font-family:var(--mono);font-size:14px;font-weight:500;color:#f1f6e6;letter-spacing:-.02em;white-space:nowrap}
+  .b-val em{font-style:normal;font-size:11px;color:var(--faint);white-space:nowrap}
+  .brow.risk{border-top:1px solid rgba(242,184,122,.22)}
+  .brow.risk .b-name{color:#f0cfa6}
+  .brow.risk .b-track{background:rgba(242,184,122,.13)}
+  .brow.risk .b-track i{background:var(--amber)}
+  .brow.risk .b-val b{color:var(--amber)}
+  .warn-dot{
+    display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);
+    margin-right:7px;vertical-align:1px;box-shadow:0 0 8px rgba(242,184,122,.45);
+  }
+  .band-foot{
+    display:flex;align-items:baseline;justify-content:space-between;gap:5px 18px;flex-wrap:wrap;
+    padding:11px 0 13px;border-top:1px solid var(--line-soft);
+    font-size:11px;color:var(--faint);line-height:1.5;
+  }
+
+  /* ---------- rhythm ---------- */
+  .duo{display:grid;grid-template-columns:1.04fr .96fr;gap:14px;align-items:stretch}
+  .card{
+    display:flex;flex-direction:column;min-width:0;
+    padding:18px 20px 14px;border:1px solid var(--line);border-radius:18px;
+    background:linear-gradient(180deg,rgba(255,255,255,.032),rgba(255,255,255,.008));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .card-head h3{font-size:14.5px;font-weight:500;color:#eef3e7;letter-spacing:.01em}
+  .card-head span{font-size:11px;color:var(--faint);white-space:nowrap}
+  .loop3{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:5px;margin:18px 0 16px;flex:1}
+  .l3{
+    position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;
+    padding:13px 10px 12px;border:1px solid var(--line-soft);border-radius:12px;
+    background:rgba(255,255,255,.014);min-width:0;
+  }
+  .l3 b{font-size:24px;font-weight:500;line-height:1;color:#e8eee0;letter-spacing:.02em}
+  .l3 span{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .l3.core{
+    border-color:rgba(212,248,139,.34);
+    background:linear-gradient(180deg,rgba(212,248,139,.11),rgba(212,248,139,.02));
+    box-shadow:inset 0 1px 0 rgba(212,248,139,.16);
+  }
+  .l3.core b{color:var(--lime)}
+  .l3.core em{position:absolute;top:8px;right:8px;font-style:normal;font-size:11px;color:var(--lime);letter-spacing:.04em}
+  .l3-arrow{align-self:center;font-size:12px;color:#697564}
+  .card-foot{
+    margin-top:auto;padding-top:12px;border-top:1px solid var(--line-soft);
+    display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;
+    font-size:11px;color:var(--faint);line-height:1.5;
+  }
+  .card-foot b{font-weight:400;color:#cfd8c6}
+  .weights{margin-top:12px;display:flex;flex-direction:column}
+  .wrow{
+    display:grid;grid-template-columns:26px minmax(0,1fr) auto 40px;
+    align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft);
+  }
+  .wrow:first-child{border-top:0;padding-top:2px;padding-bottom:11px}
+  .wch{font-family:var(--mono);font-size:11px;color:var(--faint)}
+  .wname{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px;color:#e4eadd}
+  .wname em{
+    font-style:normal;font-size:11px;color:var(--lime);line-height:1.55;
+    border:1px solid var(--lime-line);border-radius:3px;padding:0 4px;white-space:nowrap;
+  }
+  .wrow.top .wname{font-size:17px;color:#fff}
+  .wlv{font-size:11px;color:var(--faint);white-space:nowrap;letter-spacing:.04em}
+  .wrow.top .wlv{color:var(--lime)}
+  .wmeter{display:flex;align-items:center;gap:3px;justify-content:flex-end}
+  .wmeter i{width:5px;height:11px;border-radius:1px;background:rgba(255,255,255,.13)}
+  .wmeter i.on{background:var(--lime);opacity:.85}
+  .wrow.top .wmeter i.on{opacity:1;box-shadow:0 0 6px rgba(212,248,139,.4)}
+
+  /* ---------- footer ---------- */
+  .foot{position:relative;z-index:1;margin-top:46px;border-top:1px solid var(--line-soft);padding:14px 0 30px}
+  .foot-in{
+    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:5px 10px;text-align:center;
+    font-family:var(--mono);font-size:11px;color:#7d8778;letter-spacing:.01em;
+  }
+  .foot b{font-weight:400;color:#a8b2a1}
+  .foot .sep{width:3px;height:3px;border-radius:50%;background:#485045}
+  .foot .stale{color:var(--amber);white-space:nowrap;font-family:var(--font)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.82)}}
+
+  @media (max-width:1040px){
+    .hero{grid-template-columns:minmax(0,1fr) 284px}
+    .hero-main{padding:28px 30px 24px}
+    .hero-side{padding:24px 22px 22px}
+  }
+  @media (max-width:880px){
+    .hero{grid-template-columns:minmax(0,1fr)}
+    .hero-side{
+      display:grid;grid-template-columns:minmax(0,1fr) auto;
+      grid-template-areas:"phase cd" "fact fact";
+      align-items:end;gap:16px 24px;padding:20px 24px;
+      border-left:0;border-top:1px solid var(--line);
+    }
+    .hero-side::before{display:none}
+    .hero-side .side-block:first-child{grid-area:phase;min-width:0}
+    #cd{grid-area:cd;justify-self:end;text-align:right}
+    #cd .cd{justify-content:flex-end}
+    #cd .cd-date{text-align:right}
+    .side-fact{grid-area:fact;justify-self:stretch;border-top:1px solid var(--line-soft);padding-top:10px}
+    .cd{margin-top:0}
+    #daysNum{font-size:72px}
+    .duo{grid-template-columns:minmax(0,1fr)}
+  }
+  @media (max-width:760px){
+    .focus{grid-template-columns:minmax(0,1fr)}
+    .report{
+      flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 10px;
+      padding:11px 14px;border-left:0;border-top:1px solid rgba(212,248,139,.15);
+    }
+    .rep-head{flex:1 0 100%;justify-content:space-between;gap:8px}
+    .rep-fields{flex-direction:row;gap:9px}
+    .rep-row .rep-in{flex:0 0 auto;width:52px}
+    .copy{width:auto;height:30px;margin:0 0 0 auto;padding:0 9px}
+  }
+  @media (max-width:640px){
+    .wrap{width:calc(100% - 32px)}
+    .top{padding-top:14px}
+    .top-in{padding-bottom:12px;gap:10px}
+    .brand-t .bn{font-size:12px;letter-spacing:.12em}
+    .brand-t .bs{font-size:11px;letter-spacing:.14em}
+    .mark{width:30px;height:30px;flex-basis:30px}
+    .clock{font-size:11px;gap:7px}
+    .clock b{font-size:11.5px}
+    .clock .csep{display:none}
+    .hero{margin-top:16px;border-radius:20px}
+    .hero-main{padding:22px 18px 20px}
+    .hero-main::before{left:18px;width:80px}
+    .hero-top{gap:8px}
+    .kicker{font-size:11.5px}
+    .hero-title{font-size:38px;margin-top:14px}
+    .hero-meta{font-size:12px}
+    .goal{margin-top:16px;padding:10px 12px;gap:7px 13px}
+    .goal-rep{margin-left:0;flex:1 0 100%;padding-top:8px;padding-left:0;border-top:1px dashed rgba(212,248,139,.16);border-left:0}
+    .nowline{margin-top:15px;padding-top:13px}
+    .creed{padding-top:13px}
+    .hero-side{padding:18px 18px 16px;gap:14px 22px}
+    #daysNum{font-size:64px}
+    .cd-u{margin-bottom:7px;font-size:12px}
+    .side-phase{font-size:12.5px}
+    .side-lab{font-size:11px}
+    .sec{margin-top:40px}
+    .sec-head{margin-bottom:11px;padding-bottom:9px}
+    .sec-head h2{font-size:18px}
+    .sec-meta{font-size:11px;white-space:normal}
+    .board{border-radius:18px}
+    .day{padding:9px 8px 8px}
+    .day b{font-size:11px}
+    .day span{font-size:11px}
+    .day .dbar{margin-top:6px}
+    .board-body{padding:12px 12px 4px}
+    .focus{border-radius:14px}
+    .focus-main{padding:14px 14px 12px}
+    .f-ttl h3{font-size:17px}
+    .f-ttl p{font-size:11px}
+    .steps{margin-top:12px}
+    .step{padding:8px 0 8px 10px}
+    .step span{font-size:11px}
+    .step b{font-size:12px}
+    .pass{gap:11px;margin-top:9px}
+    .pi b{font-size:16px}
+    .report{padding:10px 12px}
+    .rep-row{font-size:11px}
+    .rep-in{font-size:13px;height:28px}
+    .row{padding:10px 2px;gap:10px}
+    .r-ttl{font-size:13.5px}
+    .r-meta{font-size:11px}
+    .board-foot{padding:10px 14px 11px;font-size:11px}
+    .band{padding:2px 15px 0;border-radius:16px}
+    .brow{grid-template-columns:92px minmax(0,1fr) auto;gap:11px;padding:11px 0}
+    .b-name{font-size:12.5px}
+    .b-val b{font-size:13.5px}
+    .b-val em{font-size:11px}
+    .card{padding:16px 16px 13px;border-radius:16px}
+    .card-head h3{font-size:14px}
+    .l3{padding:10px 8px}
+    .l3 b{font-size:22px}
+    .l3 span{font-size:11px}
+    .l3.core em{font-size:11px;top:7px;right:7px}
+    .wrow{grid-template-columns:24px minmax(0,1fr) auto 38px;gap:8px;padding:8px 0}
+    .wname{font-size:13.5px}
+    .wrow.top .wname{font-size:16px}
+    .wmeter i{width:5px;height:10px}
+    .foot{margin-top:36px;padding:12px 0 26px}
+    .foot-in{font-size:11px;gap:4px 8px}
+  }
+  @media (max-width:560px){
+    .hero-side{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"phase" "cd" "fact";gap:14px}
+    #cd{justify-self:start;text-align:left}
+    #cd .cd{justify-content:flex-start}
+    #cd .cd-date{text-align:left}
+    .side-fact{border-top:1px solid var(--line-soft);padding-top:10px;justify-content:flex-start}
+    .row{grid-template-columns:26px minmax(0,1fr) 26px}
+    .row.no-est{grid-template-columns:26px minmax(0,1fr) 26px}
+    .r-est{display:none}
+    .m-est{display:inline}
+    .loop3{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:4px;margin:14px 0 13px}
+    .l3{padding:9px 7px 8px}
+    .l3 b{font-size:20px}
+    .l3 span{font-size:11px;line-height:1.4}
+    .l3-arrow{font-size:11px}
+    .l3.core em{top:6px;right:6px}
+    .band-foot{display:block}
+    .band-foot span{display:block}
+    .band-foot span + span{margin-top:3px}
+    .foot .sep{display:none}
+  }
+  @media (max-width:390px){
+    .hero-main{padding:20px 16px 18px}
+    .hero-title{font-size:36px}
+    .hero-side{padding:16px 16px 14px}
+    #daysNum{font-size:54px}
+    .copy{padding:0 8px}
+    .board-body{padding:10px 10px 2px}
+    .focus-main{padding:12px 12px 10px}
+    .step{padding-left:8px}
+    .row{padding:9px 1px;gap:9px}
+    .day{padding:8px 6px 7px}
+    .band{padding:2px 12px 0}
+    .brow{grid-template-columns:84px minmax(0,1fr) auto;gap:9px}
+    .b-name{font-size:12px}
+    .card{padding:14px 13px 12px}
+    .loop3{margin:13px 0 13px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
 </head>
 <body>
-<div id="H-DAILY-20261102" style="position:relative;z-index:9999;margin:0 0 16px 0;padding:14px 16px;border:2px solid #c62828;border-radius:10px;background:#fffbfa;font-family:system-ui,-apple-system,'Microsoft YaHei',sans-serif">
-  <div style="font-size:15px;font-weight:700;color:#b71c1c;margin-bottom:6px">
-    ⭐ 今天干什么（2026-11-02 周一）｜H 侧 21:00 生成｜核心 ≈ 4.3 小时（求十得五：实际落 2.5–3h 即达标）
-  </div>
-  <div style="font-size:12px;color:#555;margin-bottom:8px">
-    权重依据 1v1 周表 v2 §1.3：<b>记忆(6章)🔴 ／感觉(4章)🔴 ／知觉(5章)🟠 ／注意(3章)🟡（无大题，只认不默）</b>
-    　｜　阶段 <b>P2 铺开＝主观题输出强化期</b>：写得出来才算会
-    　｜　⭐ <b>学-验-调闭环：看→默→做→报两个数→我判定次日动作</b>
-  </div>
-  <table style="width:100%;border-collapse:collapse;font-size:13px">
-    <thead><tr style="background:#ffebee;color:#b71c1c">
-      <th style="padding:6px 8px;text-align:left">时段</th><th style="padding:6px 8px;text-align:left">任务</th>
-      <th style="padding:6px 8px;text-align:left">要点</th><th style="padding:6px 8px;text-align:right">预估</th>
-    </tr></thead><tbody><tr style="background:08:20-09:40"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">普心·第6章(记忆) 闭环</td><td style="padding:6px 8px">看15+默L1 24卡35+做题工具30；收尾报默写率/做题率</td><td style="padding:6px 8px;color:#555;font-size:12px">80'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#ffebee</td></tr><tr style="background:09:40-09:55"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">休息</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">15'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f5f5f5</td></tr><tr style="background:09:55-10:55"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">墨墨 85 词（目标写 100）</td><td style="padding:6px 8px">新词25+复习60；求十得五⇒实际落60-75</td><td style="padding:6px 8px;color:#555;font-size:12px">60'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e8f5e9</td></tr><tr style="background:10:55-11:10"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">休息</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">15'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f5f5f5</td></tr><tr style="background:11:10-11:55"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">政治·救命课第3讲</td><td style="padding:6px 8px">ROI最高；当堂标记不懂点</td><td style="padding:6px 8px;color:#555;font-size:12px">45'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e8f5e9</td></tr><tr style="background:11:55-14:00"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">午饭+午休</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">120'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#fff8e1</td></tr><tr style="background:14:00-15:00"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">英语·阅读技巧课第1讲</td><td style="padding:6px 8px">晶婷；技巧+真题优先，不追全题库</td><td style="padding:6px 8px;color:#555;font-size:12px">60'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e3f2fd</td></tr><tr style="background:15:00-16:00"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">社心·强化课第1讲收口(第2章)</td><td style="padding:6px 8px">视频45+讲义标记15；课后闭卷默写社心卡3-5张</td><td style="padding:6px 8px;color:#555;font-size:12px">60'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#ffebee</td></tr><tr style="background:16:00-19:30"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">自由/晚饭</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">—</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#fff8e1</td></tr><tr style="background:19:30-20:10"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">答题营 第1期 开营仪式</td><td style="padding:6px 8px">8期0/8；前6期有回放</td><td style="padding:6px 8px;color:#555;font-size:12px">40'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f3e5f5</td></tr><tr style="background:20:10-20:50"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">答题营 第2期「具体问」</td><td style="padding:6px 8px">直接对应主观题84%</td><td style="padding:6px 8px;color:#555;font-size:12px">40'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f3e5f5</td></tr><tr style="background:20:50-21:20"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">错题回填+填掌握表</td><td style="padding:6px 8px">报两个数：默写率/做题率</td><td style="padding:6px 8px;color:#555;font-size:12px">30'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e0f2f1</td></tr></tbody></table>
-  <div style="margin-top:8px;font-size:12px;color:#b71c1c">
-    ⭐ <b>今日硬指标</b>：第6章(记忆) A档 24 卡闭卷默写 <b>≥80%（≥20 卡写得出）</b> ＋ 做题正确率 <b>≥70%</b>
-    　｜　⭐ 报数格式：<b>「6章：默 __% 做 __%」</b>，我按阈值给次日动作
-  </div>
-</div>
+<a class="skip" href="#main">跳到主内容</a>
 
-<div style="font-size:12px;color:#555;margin-bottom:8px">
-    权重依据 1v1 周表 v2 §1.3：<b>记忆(6章)🔴 ／感觉(4章)🔴 ／知觉(5章)🟠 ／注意(3章)🟡（无大题，只认不默）</b>
-    　｜　当前阶段 <b>P2 铺开＝主观题输出强化期</b>（默写+计时+论述组装，不是"过一遍"）
-  </div>
-  <table style="width:100%;border-collapse:collapse;font-size:13px">
-    <thead><tr style="background:#ffebee;color:#b71c1c">
-      <th style="padding:6px 8px;text-align:left">时段</th><th style="padding:6px 8px;text-align:left">任务</th>
-      <th style="padding:6px 8px;text-align:left">要点</th><th style="padding:6px 8px;text-align:right">预估</th>
-    </tr></thead><tbody><tr style="background:13:40-14:40"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">⭐ 普心·第6章(记忆) 看15+默35+记10</td><td style="padding:6px 8px">真题命中章·最高权重；A档24卡闭卷默写</td><td style="padding:6px 8px;color:#555;font-size:12px">60'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#ffebee</td></tr><tr style="background:14:40-14:55"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">休息</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">15'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f5f5f5</td></tr><tr style="background:14:55-15:55"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">⭐ 社心·强化课第1讲第二章</td><td style="padding:6px 8px">25 天没动；社心案例 50 分</td><td style="padding:6px 8px;color:#555;font-size:12px">60'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e8f5e9</td></tr><tr style="background:15:55-16:10"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">休息</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">15'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f5f5f5</td></tr><tr style="background:16:10-16:55"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">政治·救命课第3讲</td><td style="padding:6px 8px">政治 100 分 ROI 最高</td><td style="padding:6px 8px;color:#555;font-size:12px">45'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e8f5e9</td></tr><tr style="background:16:55-17:10"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">休息</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">15'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#f5f5f5</td></tr><tr style="background:17:10-17:40"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">⭐ 做题工具·第6章题（计时作答）</td><td style="padding:6px 8px">默写后立刻验证 = P2 输出强化</td><td style="padding:6px 8px;color:#555;font-size:12px">30'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#ffebee</td></tr><tr style="background:17:40-18:40"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">晚饭</td><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#555;font-size:12px">60'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#fff8e1</td></tr><tr style="background:18:40-19:20"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">墨墨 60 词</td><td style="padding:6px 8px">实测 0.442 分/词 ≈27min</td><td style="padding:6px 8px;color:#555;font-size:12px">40'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e8f5e9</td></tr><tr style="background:19:20-19:50"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">普心·第4章(感觉) 只做「看」</td><td style="padding:6px 8px">为明天默写打底，今天不硬背</td><td style="padding:6px 8px;color:#555;font-size:12px">30'</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e3f2fd</td></tr><tr style="background:19:50-"><td style="padding:6px 8px;white-space:nowrap;font-weight:600">加练（有余力）①政治第4讲 ②社心卡片20张</td><td style="padding:6px 8px">累了就停</td><td style="padding:6px 8px;color:#555;font-size:12px">—</td><td style="padding:6px 8px;text-align:right;white-space:nowrap">#e3f2fd</td></tr></tbody></table>
-  <div style="margin-top:8px;font-size:12px;color:#b71c1c">
-    ⭐ 今日硬指标：<b>第6章(记忆) A档 24 卡闭卷默写 ≥80%（≥20 卡写得出）</b>｜主观题 84% ⇒ <b>写得出来才算会，心里想＝假会</b>
-  </div>
-</div>
-
-<div class="wrap">
-
-  <div class="header">
-    <h1>347 备考仪表盘</h1>
-    <span class="sub">北师大 MAP · 心理与行为大数据方向</span>
-  </div>
-
-  <nav class="chip-nav" aria-label="页面锚点导航">
-    <a href="#today">📍 今天</a>
-    <a href="#decision">⚠️ 拍板</a>
-    <a href="#progress">📊 进度</a>
-    <a href="#commute">🎧 通勤</a>
-  </nav>
-
-  <!-- ================= 第 1 层 · 决策层（首屏） ================= -->
-  <h2 class="layer-tag layer-1">第 1 层 · 决策层：今天做什么 / 到什么程度 / 哪里卡住</h2>
-
-  <!-- B. 状态一句话 + Hero -->
-  <div class="panel" id="hero" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: #fff; border: none;">
-    <div style="font-size: 12px; opacity: .75; margin-bottom: 4px;">2026-11-01 · 周日</div>
-    <div style="font-size: 26px; font-weight: 700; margin-bottom: 10px;">距初试 <span id="countdown" style="color: #fbbf24;">69</span> 天</div>
-    <div style="background: rgba(255,255,255,.1); border-radius: 10px; padding: 12px 16px; margin-bottom: 12px; font-size: 14px;">
-      <div style="margin-bottom: 6px;font-size:15px;"><b>状态：</b><b style="color:#fbbf24;">P2 铺开 · 主观题输出强化期</b>（10/26–11/20）｜距初试 <b>48 天</b></div><div style="margin-bottom: 6px;font-size:14px;"><b>今日已完成：</b>答题营第1期 ✓｜<b>墨墨：</b>5/150（待补到 60）</div><div style="font-size:14px;"><b>明日主线：</b>普心第6章(记忆) 闭环 → 墨墨85词 → 政治第3讲 → 英语阅读技巧 → 社心第1讲 → 答题营第2期</div>
-      <details style="margin-top: 8px;">
-        <summary style="cursor: pointer; color: #fbbf24; font-size: 13px; list-style: none;">状态明细（全部事实·点开）</summary>
-        <div style="margin-top: 6px; font-size: 13px; opacity: .95; line-height: 1.7;"><b>进度实测（平台/CDP）：</b>普心强化 7/8 期已学完（14-16章 18%）｜社心强化 1-3章 82%（用户自述到第2章）｜研方法速成营 4期完+第5期78%｜答题营 1/8｜墨墨累计在学 809 词。<br><b>本轮策略：</b>①普心不重看视频，直接闭卷默写+做题 ②社心重点“背+举例”（案例50分）③研方法只做速成营（统计方差已弃、实验范式46期不重点）④英语走技巧+真题、保2000高频词</div>
-      </details>
-    </div>
-    <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; opacity: .85;">
-      <span>📍 数据截止：10/31 台账（00:15 补记·无记录）｜真源更新于 11/01 00:16（H0133 第 8 次触发·本次无实质内容变更）</span>
-      <span>🕐 生成时间：2026-11-01 22:30 · CLAH 心跳事件驱动重产（H0229 三处修正＋过期自检落地）</span>
-      <span>💡 打不开此页 → 刷新或 Ctrl+F5</span>
-    </div>
-  </div>
-
-  <!-- A. 今天做什么（任务卡四段式：对象/达标/预计） -->
-  <div class="panel today-module" id="today">
-    <div class="tm-header">
-      <div class="tm-date" data-plan-date="2026-11-01">📅 今天 · 11/01 周日<span class="track-tag">常规轨（普心闭环 · 墨墨 · 政治 · 英语技巧 · 社心 · 答题营）</span></div>
-      <div class="tm-mainline">今天干什么（每项：对象 → 达标 → 预计时长）</div>
-    </div>
-<div class="tm-block"><div class="tm-time">✅ 今日（11-01 周日）</div><div class="tm-task">答题营第1期 ✓｜墨墨 5/150（待补到 60）</div></div><div class="tm-block"><div class="tm-time">🌅 明日 08:20–09:40 · 普心第6章(记忆)</div><div class="tm-task">看15′ → 默 L1 24卡 35′ → 做题 30′</div><div class="tm-spec"><b>达标：</b>默写 ≥80%（≥20卡）＋做题 ≥70%｜<b>报：</b>「6章：默__% 做__%」</div></div><div class="tm-block"><div class="tm-time">🌇 明日其余</div><div class="tm-task">墨墨85词 · 政治第3讲 · 英语技巧课 · 社心第1讲 · 答题营第2期</div></div>
-</div>
-
-  <!-- C. 要你拍板 -->
-  <div class="panel" id="decision">
-    <h2>⚠️ 要你拍板（2 件）<span class="tag">只列真需要你的 · 拍完即删 · 每条带依据件＋有效条件（过期自检·H0229）</span></h2>
-    <div class="decision">
-      <div class="d-card" data-until="2026-10-27">
-        <div class="d-title">① 研招网正式报名（有效条件：10/27 前，逾期自动过期标红）</div>
-        <div class="d-adv"><b>依据件：</b>真源 §五②｜正式报名窗口已开（可改可补·最后窗口），错过无补救。<b>动作：</b>双保险＝知行每日提醒＋你自己手机日历设一条；完成后发一句"已报"即销项。</div>
-      </div>
-      <div class="d-card" data-until="2026-11-01">
-        <div class="d-title">② 阿范题翻封面一句话（有效条件：钉死前不排入计划）</div>
-        <div class="d-adv"><b>依据件：</b>真源 §五③｜阿范题＝晴天题册，具体对应哪一本待确认（候选：研究方法题册 347 院校真题整合版／北师研究方法模考卷一~三）。<b>动作：</b>下次汇报翻封面拍一句发我即可钉死。</div>
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <path d="M4 19V5l8 7 8-7v14" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/>
+        </svg>
+      </span>
+      <div class="brand-t">
+        <span class="bn">MAP <i>347</i></span>
+        <span class="bs">备考台</span>
       </div>
     </div>
-    <details class="fold">
-      <summary>🗂 已拍板记录（6）· 留痕不删<span class="cal">只列真需要你的 · 拍完即删</span></summary>
-      <div class="fold-body">
-        <div class="note-box" style="margin-top:0;">✅ 已销项（10/17·事实已满足·H0229）：1v1 拍板项——第 2 课时已收到、第 3 节已出（用户："第二节课都出来了为啥还要我拍板"）→ 拍板区不再列；有效期问题改为"下次上课顺口问学管"，已落入 1v1 排产行。</div>
-        <div class="note-box">✅ 已拍板销项（10-11）：英语词汇书分流——两本不是同一本（3500＝词根法／5500 例句法"300 句"）；<b>词根 3500 手册＝速览主用</b>（120 词/天口径不变），<b>例句手册＝查用</b>（墨墨反复忘记的词翻它找语境助记，不系统读——用户原话"没这么多时间看这么多"）。</div>
-        <div class="note-box">✅ 已拍板销项（10-09 16:06 口述）：政治救命课实际起点——用户答"第 1 讲已听完"（选项 a·实际进度=第 1 讲 专题一唯物论①）→ 三层表看课更正为 <b>4%</b>、6 讲从<b>第 2 讲</b>接排、机动层已更新；专题一 300 题按官方节奏（隔 5–6h/次日）做。</div>
-        <div class="note-box">✅ 已拍板销项（10-08）：300 题打印→不打印先看电子版（做题写答题本，已恢复排入）；英语二真题→课程内已齐（早年 02–09 精讲＋含真题版讲义），10-15 阅读计时材料就绪。</div>
-        <div class="note-box">✅ 已拍板销项（10-09 01:25）：阿范题钉位——研方法题源＝小红本《实验设计与方法 200 题》＋课程每日一题，不需外部题单；移山讲义=晴天内部讲义已钉 ✓。另：研招网正式报名 10/16–27 提醒双保险（页面行政块＋手机日历各一条）。</div>
-        <div class="note-box">📌 顺带知会（无需动作）：写者分工按主交接线裁决调整——<b>本页面（L2）改由 347 备考对话维护</b>，L1 驾驶舱仍归「问我」；真源已标「待用户确认·72h 内可否决」，不否决即生效。材料门禁已立：任务必带材料栏（D8）、⚠️需取回不排今天（D9）。</div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ================= 第 2 层 · 执行层 ================= -->
-  <h2 class="layer-tag layer-2">第 2 层 · 执行层：做到什么程度</h2>
-
-  <!-- E. 当天达标看板 -->
-  <div class="cards">
-    <div class="card">
-      <div class="label">墨墨（150 已定稿·10-10 校正）</div>
-      <div class="value">150<small> 词/天</small></div>
-      <div class="note">试跑 3 天实测 68/150/150 词·58/118/102min·≈41–52s/词·忘记率 9–20%；加词 ≤20/天 · 单次连续 ≤50min · 全天碎片 ≈1.5–2h（待学未清=正常不清零）；<b>数据获取＝官方 API 自动拉取（10-10 建成·与截图 100% 吻合，说「拉墨墨」即结算）</b></div>
-    </div>
-    <div class="card plain">
-      <div class="label">Anki（按到期量估时）</div>
-      <div class="value" style="font-size: 20px;">到期 0 → ≈5–8min</div>
-      <div class="note">989 卡全部新卡（零使用）· 新引入 20–30 张/天 · 公式：到期×10–15s</div>
-    </div>
-    <div class="card plain">
-      <div class="label">闭卷输出（D6 每天必有）</div>
-      <div class="value" style="font-size: 20px;">社心课后默写 3–5 张</div>
-      <div class="note">无输出不算完成 · 要点齐 ≥多数</div>
-    </div>
-    <div class="card plain">
-      <div class="label">缓冲余量（73 天）</div>
-      <div class="value" style="font-size: 20px;">≈107h（46%）</div>
-      <div class="note">可用 ≈234h vs 整块需求 ≈127h · 含出差预留 12 天 · 只用于吸收波动不加任务</div>
+    <div class="clock">
+      <span id="clkDate">11.01 周日</span>
+      <span class="csep" aria-hidden="true"></span>
+      <b id="clkTime">23:28</b>
     </div>
   </div>
+</header>
 
-  <!-- D. 三层进度表（分列，不显示单一 100%） -->
-  <div class="panel" id="progress">
-    <h2>科目三层进度 <span class="tag">看课/刷题/背诵三层分列 · 科目不显示单一百分比 · 加权口径 v1</span></h2>
-    <div style="font-size: 13px; color: #6b7280; margin-bottom: 14px;">
-      口径：层内等权 · 未记录层剔分母不估 0 · 估算带「≈」 · 综合列=已记录层均值（未记录层计 0 的保守口径，仅参考）
-    </div>
+<main id="main">
+  <div class="wrap">
 
-    <div class="subj">
-      <div class="row1"><span class="name"><i class="dot" style="background:#7C3AED;"></i>社心（80 分）<span class="st">方向科目 · 强化课第 1 讲完（1–2 章·10-09 自报）</span></span><span class="pct">≈ 6%</span></div>
-      <div style="display: flex; gap: 8px; font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-        <span>看课 ≈12%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #6b7280;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈5%</span>
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-main">
+        <div class="hero-top">
+          <span class="kicker"><i class="dot" aria-hidden="true"></i><span id="heroKicker">明早 08:20 · 首项</span></span>
+          <span class="hero-count" id="heroCount">明日 6 项</span>
+        </div>
+
+        <h1 class="hero-title" id="heroTitle"><span class="pre">普心 06 ·</span> 记忆</h1>
+        <p class="hero-meta" id="heroMeta">80 分 · 08:20–09:40</p>
+
+        <div class="goal" id="heroGoal">
+          <span class="goal-lab">达标</span>
+          <span class="gi"><span class="gi-l">默</span><b>≥80%</b><i>≥20 卡</i></span>
+          <span class="gi"><span class="gi-l">做</span><b>≥70%</b></span>
+          <span class="goal-rep"><span>报</span><b>6章：默 __% 做 __%</b></span>
+        </div>
+
+        <div class="nowline" id="nowline">
+          <span class="now-lab" id="nowLab">今晚</span>
+          <span class="now-txt" id="nowTxt">墨墨 <b>5</b><span class="ar">→</span><b class="goal-b">60</b></span>
+          <span class="now-meta" id="nowMeta">还差 55 · 复习 110–180/天</span>
+        </div>
+
+        <p class="creed"><span>口径</span>写得出来才算会 · 心里想等于假会</p>
       </div>
-      <div style="font-size: 13px; color: #1d4ed8; margin-bottom: 6px;">📊 课别（分列不计和）：强化课 <b>1/4 讲</b>[看]（第 1–2 章完·10-09 自报）｜ 基础课 <b>≈1.5/11 章</b>[听]（10-06 晚 122.7min）｜跨章题上界＝第 1–2 章（进度_当前）</div>
-      <div class="bar"><i style="width:6%; background:#7C3AED;"></i></div>
-    </div>
 
-    <div class="subj">
-      <div class="row1"><span class="name"><i class="dot" style="background:#1d4ed8;"></i>普心（90 分）<span class="st">一轮已过（背诵未启）</span></span><span class="pct">≈ 33%</span></div>
-      <div style="display: flex; gap: 8px; font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-        <span>看课 100%（全 16 章一轮·2–3 个月前）</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #6b7280;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #6b7280;">未记录（408 卡 10-08 导入）</span></span>
+      <aside class="hero-side">
+        <div class="side-block">
+          <span class="side-lab">阶段</span>
+          <p class="side-phase"><b>P2</b>铺开 · 主观题输出强化期</p>
+          <span class="side-win">10.26 — 11.20</span>
+        </div>
+
+        <div class="side-block" id="cd" role="img" aria-label="距初试还有 48 天">
+          <span class="side-lab">距初试</span>
+          <div class="cd"><span id="daysNum">48</span><span class="cd-u" id="cdUnit">天</span></div>
+          <span class="cd-date">2026.12.19 · 周六</span>
+        </div>
+
+        <div class="side-fact">
+          <span>主观题占比</span><b>84%</b>
+        </div>
+      </aside>
+    </section>
+
+    <section class="sec" id="board" aria-labelledby="boardTitle">
+      <div class="sec-head">
+        <div class="sh-l"><span class="idx">01</span><h2 id="boardTitle">明日执行板</h2></div>
+        <div class="sec-meta" id="boardMeta">11.02 周一 · 0 / 6 已勾</div>
       </div>
-      <div style="font-size: 13px; color: #b45309; margin-bottom: 6px;">⚠️ 看课 100%＝「一轮已过」≠掌握：二轮（408 卡＋闭卷默写）才是提分主力；综合 ≈33% 为保守口径</div>
-      <div class="bar"><i style="width:33%; background:#1d4ed8;"></i></div>
-    </div>
 
-    <div class="subj">
-      <div class="row1"><span class="name"><i class="dot" style="background:#059669;"></i>研方法（80 分）<span class="st">实验集训营完 · 统计专题 1 · 保命班接管刷题</span></span><span class="pct">≈ 14%</span></div>
-      <div style="display: flex; gap: 8px; font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-        <span>看课 ≈40%</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #6b7280;">未记录（保命班专题刷题 10-12 起·前测 25 题 10-11 前）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
+      <div class="board">
+        <div class="dayrail" id="dayrail" role="tablist" aria-label="日期"></div>
+        <div class="board-body" id="boardBody" role="tabpanel" aria-label="执行板内容">
+          <noscript><p class="noscript">需启用 JavaScript 以按日期渲染执行板。</p></noscript>
+        </div>
+        <div class="board-foot">
+          <span id="footL">核心 4.3 h · 顺序执行</span>
+          <span id="footR">求十得五 · 落 <b>2.5–3 h</b> 即达标</span>
+        </div>
+        <span class="sr-only" aria-live="polite" id="copyLive"></span>
       </div>
-      <div class="bar"><i style="width:14%; background:#059669;"></i></div>
-    </div>
+    </section>
 
-    <div class="subj">
-      <div class="row1"><span class="name"><i class="dot" style="background:#9333ea;"></i>英语二（100 分）<span class="st">墨墨 500 词入库 [实] · 150 已定稿 · 唯一持续项</span></span><span class="pct">≈ 9%</span></div>
-      <div style="display: flex; gap: 8px; font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-        <span>看课 <span style="color: #6b7280;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #6b7280;">未记录（阅读计时 10-15 起）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈9%</span>
+    <section class="sec" aria-labelledby="progressTitle">
+      <div class="sec-head">
+        <div class="sh-l"><span class="idx">02</span><h2 id="progressTitle">平台实测</h2></div>
+        <div class="sec-meta">截至 11.01 · 四条主线</div>
       </div>
-      <div class="bar"><i style="width:9%; background:#9333ea;"></i></div>
-    </div>
 
-    <div class="subj">
-      <div class="row1"><span class="name"><i class="dot" style="background:#ea580c;"></i>政治（100 分）<span class="st">救命课 2/24 讲（专题一唯物论②·10-21 01:03 口述·断档 11 天恢复）</span></span><span class="pct">≈ 8%</span></div>
-      <div style="display: flex; gap: 8px; font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-        <span>看课 4%（1/24 讲·10-09 用户确认[报]）</span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #6b7280;">未记录（300 题专题一题组待做·第 1 讲已听）</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 ≈3%</span>
-      </div>
-      <div class="bar"><i style="width:2%; background:#ea580c;"></i></div>
-    </div>
+      <div class="band">
+        <div class="brow">
+          <span class="b-name">普心强化</span>
+          <span class="b-track" aria-hidden="true"><i style="--w:87.5%"></i></span>
+          <span class="b-val"><b>7/8</b><em>期完成</em></span>
+        </div>
+        <div class="brow">
+          <span class="b-name">社心强化</span>
+          <span class="b-track" aria-hidden="true"><i style="--w:82%"></i></span>
+          <span class="b-val"><b>82%</b><em>第 2 章</em></span>
+        </div>
+        <div class="brow">
+          <span class="b-name">研方法集训</span>
+          <span class="b-track two" style="--a:44.4%;--b:53.1%" aria-hidden="true"><i></i></span>
+          <span class="b-val"><b>4/9</b><em>05 期 78%</em></span>
+        </div>
+        <div class="brow">
+          <span class="b-name">答题营</span>
+          <span class="b-track" aria-hidden="true"><i style="--w:12.5%"></i></span>
+          <span class="b-val"><b>1/8</b><em>07 期 11.03</em></span>
+        </div>
+        <div class="brow risk">
+          <span class="b-name"><i class="warn-dot" aria-hidden="true"></i>14–16 章</span>
+          <span class="b-track" aria-hidden="true"><i style="--w:18%"></i></span>
+          <span class="b-val"><b>18%</b><em>普心 · 另计</em></span>
+        </div>
 
-    <div class="subj">
-      <div class="row1"><span class="name"><i class="dot" style="background:#6b7280;"></i>综合写作（50 分）<span class="st">未启动 · 写作营待排</span></span><span class="pct">0%</span></div>
-      <div style="display: flex; gap: 8px; font-size: 13px; color: #6b7280; margin-bottom: 4px;">
-        <span>看课 <span style="color: #6b7280;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>刷题 <span style="color: #6b7280;">未记录</span></span> <span style="color: #e5e7eb;">|</span> <span>背诵 <span style="color: #6b7280;">未记录</span></span>
-      </div>
-      <div class="bar"><i style="width:1%; background:#6b7280;"></i></div>
-    </div>
-
-    <div class="note-box"><b>整体加权 ≈24.8%</b>＝(7×80＋100×90＋22×80＋9×100＋2×100＋0×50)÷500（加权口径 v1：未记录剔分母，Σ权重含全部 6 科）；上方各科「综合」为保守口径（未记录层计 0），两套口径并存、各自标注。</div>
-  </div>
-
-  <!-- F. 记忆闭环·可操作版 -->
-  <div class="panel">
-    <h2>🔁 记忆闭环 <span class="tag">每科：当前阶段 + 下一步动作 + 触发条件</span></h2>
-    <div class="today-line"><b>今日点哪个：</b>⭐研方法前测 25 题（今日上午必做）｜普心抽 5 张再现卡闭卷默写（注意模块）｜社心第 1 讲课后默写 3–5 张｜政治 300 题三档标记｜英语墨墨 150</div>
-    <details class="fold">
-      <summary>明细：六科当前阶段 / 下一步动作 / 触发条件（点开）</summary>
-      <div class="fold-body">
-        <table class="g-table">
-          <tr><th scope="col">科目</th><th scope="col">当前阶段</th><th scope="col">下一步动作</th><th scope="col">触发条件</th></tr>
-          <tr><td class="row-title">普心</td><td data-label="当前阶段">背 · 启动中</td><td data-label="下一步动作">10-08 导入 408 卡 → 晨间抽 5 张再现卡闭卷默写（≥4/5 要点齐）</td><td data-label="触发条件">卡导入完成</td></tr>
-          <tr><td class="row-title">社心</td><td data-label="当前阶段">学 · 第 2 讲（1–2 章已看完·10-09 自报）</td><td data-label="下一步动作">今日第 2 讲开跑 → 课后默写 3–5 张 → 第 1–2 章 L1 补做／L2 明日</td><td data-label="触发条件">本讲闭环完成</td></tr>
-          <tr><td class="row-title">研方法</td><td data-label="当前阶段">学 → 刷题化（<b>实统测保命班接管·具体日程已定稿</b>）</td><td data-label="下一步动作"><b>今日（10/17）前测 25 题</b>（不翻书测真实基线）→ 10/18 起实验专题一看课（日程表=`04_项目管理\347_保命班日程与1v1对齐_20261017.md`·四要素齐·保底 2 节+40 题）；每日一题降级为补充（防双份）</td><td data-label="触发条件">前测今日必做</td></tr>
-          <tr><td class="row-title">政治</td><td data-label="当前阶段">学 · 已启动（第 1 讲 ✅）</td><td data-label="下一步动作">第 2 讲（专题一唯物论②）＋ 专题一 300 题（隔 5–6h 已到点）→ 错题三档标记→A–E 归因→回提分手册；2 周听完 14 讲（碎片）</td><td data-label="触发条件">机动层/碎片</td></tr>
-          <tr><td class="row-title">英语</td><td data-label="当前阶段">背 · 墨墨 150 <b>✅已定稿</b>（10-10 校正）</td><td data-label="下一步动作">150 维持（新学 ≤20/天·复习由墨墨排·复习欠账 &gt;50 当天不加词）→ 阅读理论课 → 早年 02–09 真题 10-15 起计时</td><td data-label="触发条件">已定稿·转执行</td></tr>
-          <tr><td class="row-title">写作</td><td data-label="当前阶段">未启动</td><td data-label="下一步动作">写作营方法课排入 P1（未上课前不自行仿写）</td><td data-label="触发条件">排产落定</td></tr>
-        </table>
-        <div class="note-box">判定链统一收口主线：Anki 核心卡通过率 ＋ 闭卷默写 ＋ 300 题/每日一题；纪律：宁可 1 讲带闭环，不要 3 讲无闭环。</div>
-      </div>
-    </details>
-  </div>
-
-  <!-- 主观题输出卡 -->
-  <div class="panel">
-    <h2>✍️ 主观题输出 <span class="tag">今日 1 题 · 计时 · 写完用官方 prompt 自批</span></h2>
-    <div class="today-line"><b>今日点哪个：</b>社心简答 1 道（15 分档·对应今日所学章）——今日由「课后默写 3–5 张」承载；写完用《主观题 AI 批改提示词》自批（备齐 5 样发 AI 或发知行）</div>
-    <details class="fold">
-      <summary>明细：时间配比 / 批改入口 / 规范 5 条 / 批改报告 4 要素（点开）</summary>
-      <div class="fold-body">
-        <table class="g-table">
-          <tr><th scope="col">项目</th><th scope="col">内容</th></tr>
-          <tr><td class="row-title">今日题目</td><td>社心简答 1 道（15 分档·对应今日所学章）——今日已由「课后默写 3–5 张」承载；<b>周末</b>加论述/综合 1 道（25–35 分档，40min）</td></tr>
-          <tr><td class="row-title">时间配比</td><td>10 分题 <b>10–12min</b> ｜ 25 分题 <b>18–20min</b> ｜ 30 分题 <b>20–25min</b></td></tr>
-          <tr><td class="row-title">批改入口</td><td><code>347备考\主观题_AI批改提示词_晴天官方.md</code>——备齐 5 样（题目原文／题型+题分／参考答案带采分点／我的作答／自报用时）发 AI 或发知行 → 出批改报告</td></tr>
-          <tr><td class="row-title">规范 5 条</td><td>①时间控制 ②结构清晰 ③题型框架完整 ④连接词过渡 ⑤排版卷面（<b>每条 1 分</b>；评分双轨＝内容分＋规范分）</td></tr>
-          <tr><td class="row-title">批改报告 4 要素</td><td>①内容分（对照采分点）②规范分（5 条）③错误类型（知识缺口/框架缺失/时间超/卷面）④下一步补哪里</td></tr>
-        </table>
-        <div class="note-box">⚠️ <b>综合写作 50 分不用该提示词</b>——走《综合写作_方法论笔记_定稿.md》＋写作营路径（方法课→作业①→讲解①→…）。晴天【27答题营】<b>10/21 19:00 开营</b>（小鹅通-全年集训营专栏·有回放·讲义邮寄在途·开营后按官方日程跟课）→ 开讲后收割使用技巧并入本闭环。</div>
-      </div>
-    </details>
-  </div>
-
-  <!-- 通勤音频（辅助·对齐看板）+ 推荐收听 -->
-  <div class="panel" id="commute">
-    <h2>🎧 通勤音频（辅助 · 对齐看板）<span class="tag">不考核效果，重点在主线</span></h2>
-    <table class="g-table">
-      <tr><th scope="col">今日推荐听什么</th><th scope="col">对应主线</th><th scope="col">预计时长</th><th scope="col">已听/对齐状态</th></tr>
-      <tr><td class="row-title">社心基础课音轨（与今晚第 2 讲同章优先；未发布则重听第一二章精讲）</td><td data-label="对应主线">社心主线（第 2 讲）</td><td data-label="预计时长">≈60min</td><td data-label="已听/对齐状态">10-06 已听 122.7min（第一二章·精讲上）｜对齐 ✓</td></tr>
-      <tr><td class="row-title">社心背诵音频 第 1–2 期（条目化·当日所学考点）</td><td data-label="对应主线">社心第 1 讲考点</td><td data-label="预计时长">≈15min</td><td data-label="已听/对齐状态">未听｜待听</td></tr>
-    </table>
-    <div class="note-box">
-      <b>课程体量（实测校准 10-07）</b>：社心基础课 11 章 ≈1526min ｜ 强化课 4 段 ≈736min ｜ 背诵音频 38 期；<b>推荐原则：优先"与本周主线同章"的音轨</b>，不指向未发布内容。<br>
-      ①通勤/驾驶音频＝<b>辅助</b>：只要求「与规划对齐」，<b>不考核效果</b>（不抽查、不设通过率门槛、不折算有效时长）——目的＝多一次接触机会；②判定「对齐」＝听的章节 ∈ 本周主线章节；未对齐不算错，只作为明日推荐输入；③明日通勤可用 ≈60min，候选凑满即止（≤3 条）；④小程序选择题＝<b>可选练习</b>（题量依考纲与真题频率分布，各章不均，数道至数十道），不作检验工具；⑤L 驾驶三约束：不看屏／不计学习量／路况复杂暂停。
-    </div>
-  </div>
-
-  <!-- Anki 怎么用（速查卡 · 82 子牌组版） -->
-  <div class="panel">
-    <h2>🃏 Anki 怎么用 <span class="tag">989 卡已按课表重排为 82 子牌组（10-07）· 零分类 · 点当天那一个</span></h2>
-    <div class="today-line"><b>今日点哪个：</b>先清到期 → 点 <code>347备考::01_社心::C01–C02</code> ＋ <code>04_政治::L01 第1讲-唯物论①</code>（全日新卡 ≤20 张·框架卡优先·达标＝到期清零＋抽 5 张 ≥80%）</div>
-    <details class="fold">
-      <summary>明细：每天三步 / 分科记忆程度与逐卡动作 / 现状与配合（点开）</summary>
-      <div class="fold-body">
-        <table class="g-table">
-          <tr><th scope="col">每天三步</th><th scope="col">说明</th></tr>
-          <tr><td class="row-title">① 点开牌组树</td><td>打开 Anki → 左侧点开 <code>347备考</code>：<code>01_社心</code> 148（C01–C11 按章）｜<code>02_普心</code> 408（C01–C16 按章）｜<code>03_研究方法</code> 204（C01–C10 实验/统计/测量）｜<code>04_政治</code> 229（<b>L01–L13 按救命课讲次</b>）</td></tr>
-          <tr><td class="row-title">② 点当天子牌组</td><td>如今天点 <code>04_政治::L01 第1讲-唯物论①</code>（已讲→现在学）；<b>未讲到的子牌组不点</b>——牌组已替你分好，<b>不需要自己筛选/Bury</b>；政治对照：L02＝第2讲｜L03-05＝辩证法｜L06-07＝认识论｜L08-09＝唯物史观｜L10-13＝政经</td></tr>
-          <tr><td class="row-title">③ 按 SOP 结算</td><td>先看「到期」→ <b>先清到期再加新卡</b>（新卡配给＝框架卡优先，20/天为防过载上限·MAP 尺 10-14）→ 分 2–3 次（晨间/晚间/睡前）→ 达标＝到期清零＋抽 5 张 ≥80% → 欠账 &gt;50 张当天不加新卡</td></tr>
-        </table>
-        <table class="g-table" style="margin-top: 10px;">
-          <tr><th scope="col">科目/卡类</th><th scope="col">记忆程度</th><th scope="col">怎么答（逐卡动作）</th></tr>
-          <tr><td class="row-title">政治</td><td data-label="记忆程度"><b>辨析级</b></td><td data-label="怎么答（逐卡动作）">固定搭配一字不差＋能分辨对错＋同义替换；<b>不整段默写</b>（10-07 修正：旧"再现卡一律纸上默写"对政治过严，已作废）</td></tr>
-          <tr><td class="row-title">普心/社心/研方法（再现）</td><td data-label="记忆程度"><b>默写级</b></td><td data-label="怎么答（逐卡动作）"><b>闭卷在纸上写出</b>答案要点（定义＋分点）；不能只在心里想（心里想＝假会）；要点齐算过</td></tr>
-          <tr><td class="row-title">X再_ 再认</td><td data-label="记忆程度">认得级</td><td data-label="怎么答（逐卡动作）">看正面想起大意或能选出即过，不必逐字写；碎片/通勤刷</td></tr>
-          <tr><td class="row-title">X应_ 应用</td><td data-label="记忆程度">应用级</td><td data-label="怎么答（逐卡动作）">说/写出「规则＋一个案例」；周末集中与仿写同块</td></tr>
-        </table>
-        <div class="note-box">
-          <b>⚠️ 现状：989 卡全部新卡（截至 10-07 零使用）</b>——10-08 普心 408 卡随晨间块启动；科目配合：普心→晨间 H 块｜社心→随强化课同步｜研方法→10-12 起｜政治→随救命课讲次。重排前备份 <code>Anki2\账户 1\_备份_重排前_20261007_173757\</code>；卡面绑定音频秒数（开车听→到家刷同一张卡）；车上只听不刷（L 三约束）。
+        <div class="band-foot">
+          <span>口径 · 在学 809 · 60 只补缺口 · 复习 110–180/天</span>
+          <span>旁线 · 背诵逻辑 22% · 写作 0/4 未启动</span>
         </div>
       </div>
-    </details>
+    </section>
+
+    <section class="sec" aria-labelledby="rhythmTitle">
+      <div class="sec-head">
+        <div class="sh-l"><span class="idx">03</span><h2 id="rhythmTitle">节奏</h2></div>
+        <div class="sec-meta">输出优先</div>
+      </div>
+
+      <div class="duo">
+        <article class="card" aria-labelledby="loopTitle">
+          <div class="card-head">
+            <h3 id="loopTitle">学 · 验 · 调</h3>
+            <span>每轮闭环</span>
+          </div>
+
+          <div class="loop3">
+            <div class="l3"><b>学</b><span>看 15 分</span></div>
+            <span class="l3-arrow" aria-hidden="true">→</span>
+            <div class="l3 core"><em>核心</em><b>验</b><span>默 35 · 做 30</span></div>
+            <span class="l3-arrow" aria-hidden="true">→</span>
+            <div class="l3"><b>调</b><span>报数改下一轮</span></div>
+          </div>
+
+          <p class="card-foot"><span>输入 15 分 · 输出 65 分</span><b>↺ 按数修正</b></p>
+        </article>
+
+        <article class="card" aria-labelledby="weightTitle">
+          <div class="card-head">
+            <h3 id="weightTitle">章序权重</h3>
+            <span>真题画像</span>
+          </div>
+
+          <div class="weights">
+            <div class="wrow top">
+              <span class="wch">06</span>
+              <span class="wname">记忆<em id="wTag">明日</em></span>
+              <span class="wlv">最高</span>
+              <span class="wmeter" aria-label="最高"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+            </div>
+            <div class="wrow">
+              <span class="wch">04</span>
+              <span class="wname">感觉</span>
+              <span class="wlv">高</span>
+              <span class="wmeter" aria-label="高"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+            </div>
+            <div class="wrow">
+              <span class="wch">05</span>
+              <span class="wname">知觉</span>
+              <span class="wlv">中高</span>
+              <span class="wmeter" aria-label="中高"><i class="on"></i><i class="on"></i><i></i><i></i></span>
+            </div>
+            <div class="wrow">
+              <span class="wch">03</span>
+              <span class="wname">注意<em>只认不默</em></span>
+              <span class="wlv">最低</span>
+              <span class="wmeter" aria-label="最低"><i class="on"></i><i></i><i></i><i></i></span>
+            </div>
+          </div>
+
+          <p class="card-foot"><span>其余待确认 · 不平均用力</span></p>
+        </article>
+      </div>
+    </section>
+
   </div>
+</main>
 
-  <!-- G. 本周剩余 -->
-  <div class="panel">
-    <h2>本周主线 · P2 铺开（主观题输出强化期） <span class="tag">11/02 – 11/08 · 每天 3–4h｜求十得五：实落 2–3h 即达标</span></h2>
-    <ul class="week">
-      <li><div class="box"></div><div><span class="w-main"><b>P0 每天</b>：卡单 20 新卡＋默写 3–5（<code>Anki记忆系统\卡单\卡单_&lt;日期&gt;.md</code>·06:30 自动生成·<b>零记录起排①段为空</b>）｜墨墨 150 保签（API 真数自动拉取·累计 646 词[实]）｜社心主线（强化课<b>第 1 讲·第 2 章收口</b>〔用户最新自报〕；通勤音频轨已到第 5 章，听&gt;看需收口）｜每天闭卷输出 ≥25min｜政治碎片（<b>第 2 讲</b>·已停 6 天）</span><br><span class="w-note">重心＝「写得出来」：主观题 210/250≈84%，每日闭卷输出从<b>框架卡 369 池</b>抽题</span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>① ⭐保命班前测 25 题（10/17 上午必做）</b>（逾期 4 天·不翻书测真实基线）</span><br><span class="w-note">约 50min；日程表第 1 天=`04_项目管理\347_保命班日程与1v1对齐_20261017.md`；统计/测量/实验按 MAP 尺降深</span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>② 政治第 2 讲＋专题一 300 题</b>（逾期回补）</span><br><span class="w-note">政治已停 6 天；2 周听完 14 讲口径（每天碎片承载）</span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>③ 社心强化课第 1 讲收口</b>（方向科目·案例分析 50 分＝理论点名＋举例）</span><br><span class="w-note">社心＝方向科目（2026 考态度·第 4 章＋攻击·第 9 章），A 卡连<b>带一例</b></span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>④ 普心二轮</b>（卡单·注意模块先行＋周末摸底收口）</span><br><span class="w-note">新卡配给＝<b>框架卡优先</b>；20/15/10 仅为防过载上限非配给指标</span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>⑤ 1v1</b>：第 2 课时周末内看完（已收到待开看）＋<b>10/18 课前材料提交</b></span><br><span class="w-note">课后产出＝闭卷默写 3–5 张＋老师纠正点写进卡备注（对齐表表 2）；节次内容=未确认待开看</span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>⑥ 英语</b>：阅读计时＋真题 1 套感受风格（已启动项，周末落·不计时）</span><br><span class="w-note">路径＝阅读理论课→早年 02–09 真题；材料课程内已齐</span></div></li>
-      <li><div class="box"></div><div><span class="w-main"><b>⑦ 保命班日程 10/18 起按表走</b>：实验专题一看课 90–120min（预估）</span><br><span class="w-note">P1 内完成＝前测＋4 节；统计专题二挪 P2 首周；保底 2 节＋40 题</span></div></li>
-      <li><div class="box"></div><div><span class="w-main">行政：<b>正式报名 10/16–27</b>（已预报名·可改可补·最后窗口）</span><br><span class="w-note">缴费成功并生成 9 位报名号才算报名成功；定向就业协议是否需单位配合＝待用户确认</span></div></li>
-    </ul>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span>数据截止 <b>11.01 22:32</b></span>
+    <span class="sep" aria-hidden="true"></span>
+    <span>生成 <b><time id="genAt">2026.11.01 23:28</time></b></span>
+    <span class="sep" aria-hidden="true"></span>
+    <span>已脱敏 · 无姓名/编号</span>
+    <span class="stale" id="stale" hidden></span>
   </div>
-
-  <!-- 目标↔当前↔缺口对照 -->
-  <div class="panel">
-    <h2>🎯 目标 ↔ 当前 ↔ 缺口 <span class="tag">满分结构 vs 目标得分两列口径 · 当前按三层表保守推算</span></h2>
-    <table class="g-table">
-      <tr><th scope="col">科目</th><th scope="col">满分（结构）</th><th scope="col">目标得分</th><th scope="col">当前（保守推算）</th><th scope="col">缺口与行动</th></tr>
-      <tr><td class="row-title">政治</td><td data-label="满分（结构）">100</td><td data-label="目标得分"><b>65–70</b></td><td data-label="当前（保守推算）">≈1 分（≈1%）</td><td data-label="缺口与行动">≈64–69 → 救命课 14 讲 2 周听完＋300 题（碎片承载）</td></tr>
-      <tr><td class="row-title">英语二</td><td data-label="满分（结构）">100</td><td data-label="目标得分"><b>60–65</b></td><td data-label="当前（保守推算）">≈9 分（≈9%）</td><td data-label="缺口与行动">≈51–56 → 墨墨 150 持续＋阅读计时＋真题 10-15 起</td></tr>
-      <tr><td class="row-title">专业课 347</td><td data-label="满分（结构）">300＝<b>公共 220</b>（单选 40＝<b>20 题×2</b>／简答 60＝4×15／论述 70＝2×35／<b>综合写作 50</b>）＋<b>方向 80·单独命题</b>（简答 30＝2×15／案例 50＝1×50·<b>无选择题</b>·案例跨章＋设计方案第二问·㉝）·㉜ 北师 2026 回忆版实测</td><td data-label="目标得分"><b>215–225</b>（32–36／62–68／45–50／32–36／30–34）</td><td data-label="当前（保守推算）">≈45 分（社心≈3＋普心≈30＋研方法≈11＋写作 0）</td><td data-label="缺口与行动">≈170–180 → 普心二轮＋社心 4 讲闭环＋研方法刷题化＋写作营路径</td></tr>
-      <tr><td class="row-title"><b>总分</b></td><td data-label="满分（结构）"><b>500</b></td><td data-label="目标得分"><b>347–360</b>（不淘汰线 276）</td><td data-label="当前（保守推算）">≈55 分</td><td data-label="缺口与行动">≈292–305 → 三科同时提分</td></tr>
-    </table>
-    <div class="warn-box">⚠️ <b>算术红线：</b>若政治＋外语只到单科线（96 分）→ 专业课需 83.7%（不可能）→ <b>三科必须同时提分</b>。当前列＝三层表保守推算（未记录层计 0），仅供参考，随台账实测更新。</div>
-  </div>
-
-  <!-- 出差保底三件 -->
-  <div class="panel">
-    <h2>🧳 出差保底三件 <span class="tag">出差日可用 0.5–1h · 全部手机可做不需整块</span></h2>
-    <table class="g-table">
-      <tr><th scope="col">#</th><th scope="col">事项</th><th scope="col">说明</th></tr>
-      <tr><td data-label="序号">1</td><td data-label="事项"><b>墨墨保签</b>（150 学习量）</td><td data-label="说明">手机 APP；红线②最低配置之一</td></tr>
-      <tr><td data-label="序号">2</td><td data-label="事项"><b>Anki 到期清零</b></td><td data-label="说明">手机端；可只清到期、不加新卡</td></tr>
-      <tr><td data-label="序号">3</td><td data-label="事项"><b>音频输入</b>（社心基础课/背诵音频/政治救命课音轨）</td><td data-label="说明">提前离线下载；通勤/差旅路上听（L 档三约束）</td></tr>
-    </table>
-    <div class="note-box">出差期间「墨墨保签＋Anki 清零」即不算塌方（红线②口径保持）；加分可选：口述输出（对题目口述录音→回来发知行批改），保住"输出"不中断。</div>
-  </div>
-
-  <!-- ================= 第 3 层 · 参考层（折叠，不占每日视野） ================= -->
-  <h2 class="layer-tag layer-3">第 3 层 · 参考层：静态规则（折叠 · 看 1 次就够）</h2>
-
-  <details class="ref">
-    <summary>✍️ 答题规范（三步法＋月会硬规则）<span class="cal">校准日期 2026-10-07</span></summary>
-    <div class="ref-body">
-      ①<b>三步法</b>＝名词解释（先下定义，关键词要准）→ 主体内容（按要点展开，白话展开也要背）→ 结尾补充（论述补充字数占分，不只写踩分点）；②关键词要准＋白话展开也要背；③手写复盘练手速（默写计时，题量大）。<b>主页一句提醒：主观题＝定义→要点→补充。</b>
-    </div>
-  </details>
-
-  <details class="ref">
-    <summary>🔴 五条红线<span class="cal">校准日期 2026-10-07（②已带当前量微调）</span></summary>
-    <div class="ref-body">
-      ①<b>社心主线不可被挤占</b>——晚间固定层绝对优先；连续 2 天零推进→次日降为 60min＋只听不选讲。<br>
-      ②<b>最低配置不断更</b>——墨墨保签（<b>150 试跑口径</b>）＋Anki 到期清零（<b>按到期量实估</b>）＝不算塌方；断更一周＝塌方。<br>
-      ③<b>1v1 不做重复劳动</b>——只做录播做不了的事。<br>
-      ④<b>以题带点不通读</b>——禁止"重新过一遍教材"。<br>
-      ⑤<b>台账只记真实</b>——不美化不脑补；同日只一行权威记录。
-    </div>
-  </details>
-
-  <details class="ref">
-    <summary>📮 怎么汇报学习情况（新口径）<span class="cal">校准日期 2026-10-07</span></summary>
-    <div class="ref-body">
-      <b>随手发一条大白话即可</b>（如：单词墨墨 150 刷完／政治救命课第 X 讲／社心第 X 讲听到 YY:YY／默写 X 张）。<br>
-      知行固定四步：①记台账（只记真实）→ ②对比分析（对照当周任务）→ ③调整计划（明日 ≤3 条，默认生效可否决）→ ④呈现层取数。<br>
-      <b>监督（不发邮件）</b>：台账守夜（每天 00:15·对账昨日，只做台账）＋ 信箱巡检（08:00/20:00）；简报与点名邮件 10-07 起已取消。<b>当日达标口径＝24:00 前完成即达标不记塌方</b>（晚间学习窗口至 24:00·H0103）。<br>
-      <b>报名小卡（只读）</b>：找回密码＋绑长期手机号＝<b>已办</b>（用户 2026-10-07 确认）｜考生信息＋学历学籍校验＝<b>已办</b>（用户 2026-10-07 确认）｜预报名 <b>✅已完成（10-09）</b>｜正式报名 10/16–27（可改可补·最后窗口）｜网上确认 11 月上旬。<br>
-      <b>报名核对（自核 8 项·不用重填）</b>：①报考单位/专业/方向＝北师 MAP·大数据（PBD）②⭐就业方式＝<b>定向就业</b>（非全日制必选，错即作废）③报考点符合户籍/工作地 ④考试方式＝统考 ⑤照片已通过审核 ⑥缴费成功 ⑦<b>9 位报名号已生成并记下</b>（查分/准考证要用）⑧学籍学历校验已通过（未过需现场确认）。<span style="opacity:.75">→ 有一项不对，10/16–27 正式报名窗口可改；报名号＋缴费凭证建议截图存档。</span>
-    </div>
-  </details>
-
-  <details class="ref">
-    <summary><span>🗺 剩余 <span id="cd2">66</span> 天三阶段（v5 排产·MAP 尺改义 10-14）</span><span class="cal">当前 P1 筑基＝框架卡吃透期（MAP 尺）</span></summary>
-    <div class="ref-body">
-      <b>P1 筑基＝框架卡吃透期（10-06–10/25·19 天·MAP 尺）</b>：A 档框架卡优先（369 池）＋普心二轮＋社心新课＋政治启动（◀ 现在）<br>
-      <b>P2 铺开＝主观题输出强化期（10/26–11/20·主观题≈84%）</b>：框架卡默写计时＋案例应用＋研方法刷题＋写作营作业②③＋实验仿写＋英语阅读<br>
-      <b>P3 冲刺＝冲刺模考期（11/21–12/19）</b>：模考＋错题回炉＋主观题背诵
-    </div>
-  </details>
-
-  <div class="footer">
-    信息架构 v2 · 三层（决策/执行/参考）· 数据唯一来源：《考研备考真源.md》（本目录）· 模块准入三问：每天要看吗／驱动什么决策／数据从哪来<br>
-    监督：台账守夜（每天 00:15·对账昨日·不发邮件；24:00 前完成即达标不记塌方）＋ 信箱巡检（08:00/20:00）· 简报与点名邮件 2026-10-07 起已取消<br>
-    本页请勿手改，事件驱动重产（用户指令/信箱投递单触发·不上定时）· 呈现层 L2 由 347 备考对话维护（10-07 回移）· 重产日志见页首 HTML 注释 · 旧版归档 _报告工作区\归档_仪表盘_v5口径_20261007.html
-  </div>
-</div>
-
-<a class="back-today" href="#today">↑ 今天</a>
+</footer>
 
 <script>
-  // 倒计时：动态计算（口径统一：Hero 与参考层「剩余 N 天」均由此填充）
-  (function () {
-    var exam = new Date(2026, 11, 19);
-    var now = new Date();
-    var days = Math.ceil((exam - now) / 86400000);
-    if (days < 0) days = 0;
-    var topEl = document.getElementById('countdown');
-    if (topEl) topEl.innerHTML = days + '';
-    var cd2 = document.getElementById('cd2');
-    if (cd2) cd2.innerHTML = days + '';
-  })();
-  // 过期自检 v2（H0229 根治）：①今天块日期戳（data-plan-date）≠系统日期 → 红色告警条；②拍板区 data-until 过期 → 自动标红提示移出
-  (function () {
-    var today = new Date(); today.setHours(0, 0, 0, 0);
-    // ① 今天块日期戳比对
-    var tmDate = document.querySelector('.tm-date[data-plan-date]');
-    if (tmDate) {
-      var parts = tmDate.getAttribute('data-plan-date').split('-');
-      var pageDate = new Date(+parts[0], +parts[1] - 1, +parts[2]);
-      if (today.getTime() !== pageDate.getTime()) {
-        var hero = document.getElementById('hero');
-        if (hero) {
-          var b = document.createElement('div');
-          b.className = 'date-warn';
-          b.setAttribute('role', 'alert');
-          b.style.cssText = 'background:#dc2626;color:#fff;font-weight:700;';
-          b.innerHTML = '🚨 本页「今天」块日期为 <b>' + tmDate.getAttribute('data-plan-date') + '</b>，与系统日期不一致——本页已过期，今日安排以最新重产为准（请叫知行重产本页）';
-          hero.insertBefore(b, hero.firstChild);
-        }
+(function(){
+  "use strict";
+
+  var WD = ["周日","周一","周二","周三","周四","周五","周六"];
+  var EXAM = [2026,11,19];
+  var DATA_DAY = new Date(2026,10,1);
+  var genTime = new Date();
+
+  var DAYS = {
+    "2026-11-01": {
+      wd:"周日", kind:"log",
+      tasks:[
+        { id:"a1", n:"01", title:"答题营 01 期", meta:"已看 · 已收", fixed:true },
+        { id:"a2", n:"02", title:"墨墨 5 / 150", meta:"补到 60 · 还差 55",
+          now:{ html:'墨墨 <b>5</b><span class="ar">→</span><b class="goal-b">60</b>',
+                meta:"还差 55", sub:"复习 110–180/天" } }
+      ]
+    },
+    "2026-11-02": {
+      wd:"周一", kind:"plan",
+      focus:{
+        id:"b1", n:"01", title:"普心 06 · 记忆", time:"08:20",
+        meta:"80 分 · 08:20–09:40",
+        steps:[["看","15 分"],["默","24 卡 · 35 分"],["做","30 分"]],
+        pass:[["默","≥80%","≥20 卡"],["做","≥70%",""]],
+        report:{ pre:"6章：默" }
+      },
+      tasks:[
+        { id:"b2", n:"02", title:"墨墨 85 词", meta:"新 25 + 复 60 · 目标写 100", est:"≈25 分",
+          now:{ html:'墨墨 <b>85</b>', meta:"新 25 + 复 60", sub:"目标写 100" } },
+        { id:"b3", n:"03", title:"政治 · 救命课", meta:"第 3 讲", est:"≈40 分",
+          now:{ html:'政治 救命课 <b>3</b>', meta:"第 3 讲" } },
+        { id:"b4", n:"04", title:"英语 · 阅读技巧", meta:"第 1 讲", est:"≈35 分",
+          now:{ html:'英语 阅读技巧 <b>1</b>', meta:"第 1 讲" } },
+        { id:"b5", n:"05", title:"社心强化 01 讲", meta:"第 2 章收口", est:"≈40 分",
+          now:{ html:'社心强化 <b>01</b> 讲', meta:"第 2 章收口" } },
+        { id:"b6", n:"06", title:"答题营 02 期", meta:"「具体问」· 1 题", est:"≈40 分",
+          now:{ html:'答题营 <b>02</b> 期', meta:"「具体问」· 1 题" } }
+      ]
+    },
+    "2026-11-03": { wd:"周二", kind:"anchor", anchor:"答题营 07 期", note:"仅知节点 · 其余待排" },
+    "2026-11-04": { wd:"周三", kind:"gap", note:"本日未录入" },
+    "2026-11-05": { wd:"周四", kind:"anchor", anchor:"答题营 08 期", note:"仅知节点 · 其余待排" }
+  };
+
+  var state = loadState();
+  var selKey = null;
+  var lastToday = null;
+
+  function $(id){ return document.getElementById(id); }
+  function txt(id, v){ var e = $(id); if(e){ e.textContent = v; } }
+  function html(id, v){ var e = $(id); if(e){ e.innerHTML = v; } }
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+  function keyOf(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function parseKey(k){
+    var a = k.split("-");
+    return new Date(+a[0], +a[1]-1, +a[2]);
+  }
+  function addKey(k, n){
+    var d = parseKey(k);
+    d.setDate(d.getDate() + n);
+    return keyOf(d);
+  }
+  function diffDays(a, b){
+    return Math.round((
+      Date.UTC(a.getFullYear(), a.getMonth(), a.getDate()) -
+      Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())
+    ) / 86400000);
+  }
+  function fmtMD(k){ return k.slice(5,7) + "." + k.slice(8,10); }
+  function fmtFull(d){
+    return d.getFullYear() + "." + pad(d.getMonth()+1) + "." + pad(d.getDate()) +
+      " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  function cleanRep(v){ return String(v == null ? "" : v).replace(/[^\d]/g, "").slice(0,3); }
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem("map347.v4");
+      if(!raw){ return { done:{}, rep:{} }; }
+      var o = JSON.parse(raw);
+      return { done:(o && o.done) || {}, rep:(o && o.rep) || {} };
+    }catch(e){
+      return { done:{}, rep:{} };
+    }
+  }
+  function persist(){
+    try{
+      localStorage.setItem("map347.v4", JSON.stringify({ done:state.done, rep:state.rep }));
+    }catch(e){}
+  }
+
+  function taskList(d){
+    var a = [];
+    if(!d){ return a; }
+    if(d.focus){ a.push(d.focus); }
+    if(d.tasks){ a = a.concat(d.tasks); }
+    return a;
+  }
+  function isDone(k, t){ return !!t.fixed || !!state.done[k + "|" + t.id]; }
+  function doneCount(k, d){
+    var n = 0;
+    taskList(d).forEach(function(t){ if(isDone(k,t)){ n++; } });
+    return n;
+  }
+  function firstOpen(k, d){
+    var arr = taskList(d);
+    for(var i=0;i<arr.length;i++){
+      if(!isDone(k, arr[i])){ return arr[i]; }
+    }
+    return null;
+  }
+  function toggleTask(k, id){
+    var d = DAYS[k];
+    if(!d){ return; }
+    var arr = taskList(d), t = null;
+    for(var i=0;i<arr.length;i++){ if(arr[i].id === id){ t = arr[i]; break; } }
+    if(!t || t.fixed){ return; }
+    var key = k + "|" + id;
+    if(state.done[key]){ delete state.done[key]; }
+    else{ state.done[key] = true; }
+    persist();
+  }
+
+  /* ---------- hero ---------- */
+  function nextFocus(k, now){
+    for(var i=1;i<=7;i++){
+      var nk = addKey(k, i), d = DAYS[nk];
+      if(d && d.focus){
+        var lab = (i === 1) ? (now.getHours() >= 18 ? "明早" : "明日") : fmtMD(nk);
+        return { f:d.focus, key:nk, lab:lab };
       }
     }
-    // ② 拍板区有效条件：事实过期即标红（拍完即删的机械化兜底）
-    document.querySelectorAll('.d-card[data-until]').forEach(function (card) {
-      var p = card.getAttribute('data-until').split('-');
-      var until = new Date(+p[0], +p[1] - 1, +p[2]);
-      if (today.getTime() > until.getTime()) {
-        card.style.cssText = 'border:2px solid #dc2626;opacity:.75;';
-        var tag = document.createElement('div');
-        tag.style.cssText = 'color:#dc2626;font-weight:700;font-size:13px;margin-top:6px;';
-        tag.textContent = '⏰ 已过有效条件（' + card.getAttribute('data-until') + '）——本条应已移出拍板区，请提醒知行核销';
-        card.appendChild(tag);
-      }
+    return null;
+  }
+  function heroSubject(now){
+    var k = keyOf(now), d = DAYS[k];
+    if(d && d.focus && now.getHours() < 21){
+      var lab = isDone(k, d.focus) ? "今日 · 已收" : ("今日 " + d.focus.time + " · 首项");
+      return { f:d.focus, key:k, lab:lab };
+    }
+    var nf = nextFocus(k, now);
+    if(nf){ return { f:nf.f, key:nf.key, lab:nf.lab + " " + nf.f.time + " · 首项" }; }
+    return null;
+  }
+  function setHeroTitle(t){
+    var el = $("heroTitle");
+    if(!el){ return; }
+    var i = t.lastIndexOf(" · ");
+    if(i > 0){
+      el.innerHTML = '<span class="pre">' + esc(t.slice(0,i)) + " ·</span> " + esc(t.slice(i+3));
+    }else{
+      el.textContent = t;
+    }
+  }
+  function goalHTML(f){
+    var h = '<span class="goal-lab">达标</span>';
+    f.pass.forEach(function(p){
+      h += '<span class="gi"><span class="gi-l">' + p[0] + '</span><b>' + p[1] + '</b>' +
+        (p[2] ? '<i>' + p[2] + '</i>' : '') + '</span>';
     });
-    // ③ 全页日期扫描（H0239 扩检·10-17）：可见文本内所有 YYYY-MM-DD 不得早于今天（豁免：已拍板记录留痕折叠区；HTML 注释区天然豁免）
-    try {
-      var stale = [];
-      var re = /(\d{4})-(\d{2})-(\d{2})/g;
-      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-        acceptNode: function (n) {
-          var el = n.parentElement;
-          if (!el) return NodeFilter.FILTER_REJECT;
-          if (el.closest('details') && el.closest('details').querySelector('summary') &&
-              el.closest('details').querySelector('summary').textContent.indexOf('已拍板记录') >= 0) return NodeFilter.FILTER_REJECT;
-          if (el.closest('.date-warn')) return NodeFilter.FILTER_REJECT;
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      });
-      var node;
-      var CITE = /并入|定稿|归档|拍板|落地|更正|superseded|口径|依据件|沿旧|移交|裁决|实测|校准|确认|取消|自报|登记/;
-      while ((node = walker.nextNode())) {
-        var m; re.lastIndex = 0;
-        while ((m = re.exec(node.nodeValue))) {
-          var d = new Date(+m[1], +m[2] - 1, +m[3]);
-          if (d.getTime() >= today.getTime()) continue;
-          var host = node.parentElement ? node.parentElement.textContent : node.nodeValue;
-          var pos = host.indexOf(m[0]);
-          var ctx = pos >= 0 ? host.slice(Math.max(0, pos - 20), pos + 20) : node.nodeValue.slice(Math.max(0, m.index - 14), m.index + 14);
-          if (CITE.test(ctx)) continue; // 历史注记引用（定稿/并入/拍板日期）≠ 内容过期
-          stale.push(m[0]);
-        }
-      }
-      if (stale.length) {
-        var hero2 = document.getElementById('hero');
-        if (hero2) {
-          var b2 = document.createElement('div');
-          b2.className = 'date-warn';
-          b2.setAttribute('role', 'alert');
-          b2.style.cssText = 'background:#dc2626;color:#fff;font-weight:700;';
-          b2.innerHTML = '🚨 全页日期自检发现 <b>' + stale.length + '</b> 处过期日期（' + stale.slice(0, 5).join('、') + (stale.length > 5 ? '…' : '') + '）早于今天——本页部分内容已过期，请叫知行重产（H0239 全页扫日期自检）';
-          hero2.insertBefore(b2, hero2.firstChild);
-        }
-      }
-    } catch (e) { /* 扫描失败不阻断页面 */ }
-  })();
-</script>
+    h += '<span class="goal-rep"><span>报</span><b>' + f.report.pre + ' __% 做 __%</b></span>';
+    return h;
+  }
 
-<script>
-// 10月17日 hotfix：内嵌浏览器/滚动容器下 # 锚点可能失效 => 显式 scrollIntoView
-document.addEventListener('DOMContentLoaded', function(){
-  try{
-    document.querySelectorAll('.chip-nav a').forEach(function(a){
-      a.addEventListener('click', function(ev){
-        var href = a.getAttribute('href') || '';
-        if(href.charAt(0) !== '#') return;
-        var el = document.getElementById(href.slice(1));
-        if(!el) return;
-        ev.preventDefault();
-        try{ el.scrollIntoView({behavior:'smooth', block:'start'}); }
-        catch(e){ el.scrollIntoView(true); }
-        if(history && history.replaceState){ try{ history.replaceState(null,'',href); }catch(e){} }
-      });
+  function renderClock(now){
+    txt("clkDate", fmtMD(keyOf(now)) + " " + WD[now.getDay()]);
+    txt("clkTime", pad(now.getHours()) + ":" + pad(now.getMinutes()));
+  }
+
+  function renderHero(now){
+    var k = keyOf(now);
+    var days = diffDays(new Date(EXAM[0], EXAM[1], EXAM[2]), now);
+    if(days < 0){ days = 0; }
+    txt("daysNum", String(days));
+    txt("cdUnit", days > 0 ? "天" : "已考");
+    var cd = $("cd");
+    if(cd){ cd.setAttribute("aria-label", "距初试还有 " + days + " 天"); }
+
+    var sub = heroSubject(now);
+    var goalEl = $("heroGoal");
+
+    if(sub){
+      setHeroTitle(sub.f.title);
+      txt("heroKicker", sub.lab);
+      txt("heroMeta", sub.f.meta);
+      html("heroGoal", goalHTML(sub.f));
+      if(goalEl){ goalEl.hidden = false; }
+
+      var n = taskList(DAYS[sub.key]).length;
+      var dd = diffDays(parseKey(sub.key), parseKey(k));
+      var when = (dd === 0) ? "今日" : (dd === 1 ? "明日" : fmtMD(sub.key));
+      txt("heroCount", when + " " + n + " 项");
+    }else{
+      var node = null;
+      var td0 = DAYS[k];
+      if(td0 && td0.anchor){
+        node = { title:td0.anchor, lab:"今日 · 节点" };
+      }else{
+        for(var j=1;j<=14;j++){
+          var nk = addKey(k, j), nd = DAYS[nk];
+          if(nd && nd.anchor){
+            node = { title:nd.anchor, lab:(j === 1 ? "明日" : fmtMD(nk)) + " · 节点" };
+            break;
+          }
+        }
+      }
+      if(node){
+        setHeroTitle(node.title);
+        txt("heroKicker", node.lab);
+        txt("heroMeta", "仅知节点 · 其余待排");
+      }else{
+        setHeroTitle("本轮已收");
+        txt("heroKicker", "今晚 · 收工");
+        txt("heroMeta", "明早 08:20 再开");
+      }
+      txt("heroCount", "");
+      if(goalEl){ goalEl.hidden = true; }
+    }
+
+    var td = DAYS[k];
+    var open = null;
+    if(td){
+      var arr = taskList(td);
+      for(var i=0;i<arr.length;i++){
+        var t = arr[i];
+        if(isDone(k, t)){ continue; }
+        if(sub && t.id === sub.f.id){ continue; }
+        if(!t.now){ continue; }
+        open = t;
+        break;
+      }
+    }
+
+    var night = (now.getHours() >= 17 || now.getHours() < 5);
+    if(open && open.now){
+      txt("nowLab", night ? "今晚" : "待办");
+      html("nowTxt", open.now.html);
+      var m = open.now.meta || "";
+      if(open.now.sub){ m = m ? (m + " · " + open.now.sub) : open.now.sub; }
+      txt("nowMeta", m);
+    }else{
+      var total = td ? taskList(td).length : 0;
+      var doneN = td ? doneCount(k, td) : 0;
+      txt("nowLab", "今日");
+      if(total && doneN < total){
+        txt("nowTxt", "还差 " + (total - doneN) + " 项");
+        txt("nowMeta", "执行板待更新");
+      }else if(total){
+        txt("nowTxt", "已收 " + doneN + " / " + total);
+        txt("nowMeta", "明早 08:20 开跑");
+      }else{
+        txt("nowTxt", "未排");
+        txt("nowMeta", "执行板待更新");
+      }
+    }
+  }
+
+  function renderWeights(now){
+    var el = $("wTag");
+    if(!el){ return; }
+    var k = keyOf(now), d = DAYS[k];
+    if(d && d.focus && d.focus.title.indexOf("记忆") >= 0){
+      el.textContent = "今日";
+      return;
+    }
+    var nf = nextFocus(k, now);
+    if(nf && nf.f.title.indexOf("记忆") >= 0){
+      el.textContent = (diffDays(parseKey(nf.key), parseKey(k)) === 1) ? "明日" : fmtMD(nf.key);
+      return;
+    }
+    el.hidden = true;
+  }
+
+  function renderStale(now){
+    var el = $("stale");
+    if(!el){ return; }
+    var n = diffDays(now, DATA_DAY);
+    if(n > 0){
+      el.hidden = false;
+      el.textContent = "快照已过 " + n + " 天";
+    }else{
+      el.hidden = true;
+      el.textContent = "";
+    }
+  }
+
+  /* ---------- board ---------- */
+  function inRail(k, todayK){
+    var n = diffDays(parseKey(k), parseKey(todayK));
+    return n >= 0 && n < 5;
+  }
+  function defaultSel(todayK, now){
+    var d = DAYS[todayK];
+    if(d && d.kind === "plan" && now.getHours() < 21){ return todayK; }
+    if(d && d.kind === "anchor"){ return todayK; }
+    for(var i=1;i<=7;i++){
+      var nk = addKey(todayK, i), nd = DAYS[nk];
+      if(nd && (nd.kind === "plan" || nd.kind === "anchor")){ return nk; }
+    }
+    return todayK;
+  }
+  function railProgress(k, d){
+    if(!d || !(d.kind === "plan" || d.kind === "log")){ return null; }
+    var n = taskList(d).length;
+    if(!n){ return 0; }
+    return Math.round(doneCount(k, d) / n * 100);
+  }
+  function boardTitleFor(k, todayK, d){
+    if(d && (d.kind === "plan" || d.kind === "log")){
+      if(k === todayK){ return "今日执行板"; }
+      if(k === addKey(todayK, 1)){ return "明日执行板"; }
+      return fmtMD(k) + " 执行板";
+    }
+    return fmtMD(k) + " · " + (d && d.kind === "anchor" ? "节点" : "待排");
+  }
+  function checkHTML(k, t, done){
+    return '<button class="check" type="button" data-check="' + t.id + '" aria-pressed="' + done + '" aria-label="' +
+      (done ? "取消完成" : "标记完成") + "：" + t.title + '">' +
+      '<svg viewBox="0 0 12 12" fill="none" aria-hidden="true">' +
+      '<path d="M2.2 6.3l2.5 2.5L9.8 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg></button>';
+  }
+  function fixedCheck(){
+    return '<span class="check is-fixed" role="img" aria-label="已完成">' +
+      '<svg viewBox="0 0 12 12" fill="none" aria-hidden="true">' +
+      '<path d="M2.2 6.3l2.5 2.5L9.8 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg></span>';
+  }
+
+  function focusHTML(k, f, done){
+    var r = state.rep[k] || {};
+    var a = cleanRep(r.a), b = cleanRep(r.b);
+    var la = f.pass[0] ? f.pass[0][0] : "默";
+    var lb = f.pass[1] ? f.pass[1][0] : "做";
+    var pre = (f.report && f.report.pre) ? f.report.pre : "6章：默";
+    var chip = pre.split("：")[0] || "6章";
+    var steps = "", pass = "";
+
+    f.steps.forEach(function(s, i){
+      steps += '<div class="step' + (i === 1 ? " core" : "") + '"><span>' + s[0] + '</span><b>' + s[1] + '</b></div>';
     });
-  }catch(e){}
-});
+    f.pass.forEach(function(p){
+      pass += '<span class="pi"><span>' + p[0] + '</span><b>' + p[1] + '</b>' + (p[2] ? '<i>' + p[2] + '</i>' : '') + '</span>';
+    });
+
+    return '<article class="focus' + (done ? " is-done" : "") + '">' +
+      '<div class="focus-main">' +
+        '<div class="focus-head"><span class="f-n">' + f.n + '</span>' +
+        '<div class="f-ttl"><h3>' + f.title + '</h3><p>' + f.meta + '</p></div>' +
+        checkHTML(k, f, done) + '</div>' +
+        '<div class="steps">' + steps + '</div>' +
+        '<div class="pass"><span class="pass-lab">达标</span>' + pass + '</div>' +
+      '</div>' +
+      '<div class="report">' +
+        '<div class="rep-head"><span class="rep-lab">报数</span><span class="rep-ch">' + chip + '</span></div>' +
+        '<div class="rep-fields">' +
+          '<label class="rep-row"><span class="rlab">' + la + '</span>' +
+            '<input class="rep-in" type="text" inputmode="numeric" maxlength="3" autocomplete="off" spellcheck="false" data-f="a" value="' + a + '" placeholder="__" aria-label="默写正确率百分比">' +
+            '<span class="pct">%</span></label>' +
+          '<label class="rep-row"><span class="rlab">' + lb + '</span>' +
+            '<input class="rep-in" type="text" inputmode="numeric" maxlength="3" autocomplete="off" spellcheck="false" data-f="b" value="' + b + '" placeholder="__" aria-label="做题正确率百分比">' +
+            '<span class="pct">%</span></label>' +
+        '</div>' +
+        '<button class="copy" type="button" data-copy="' + f.id + '" aria-label="复制报数">' +
+          '<svg viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
+          '<rect x="5.2" y="5.2" width="6.6" height="6.6" rx="1.3" stroke="currentColor" stroke-width="1.1"/>' +
+          '<path d="M9 3.4V3a1.5 1.5 0 0 0-1.5-1.5H3A1.5 1.5 0 0 0 1.5 3v4.5A1.5 1.5 0 0 0 3 9h.4" stroke="currentColor" stroke-width="1.1"/>' +
+          '</svg><span>复制报数</span></button>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function rowHTML(k, t){
+    var done = isDone(k, t);
+    var est = t.est ? '<span class="r-est">' + t.est + '</span>' : '';
+    var meta = t.meta + (t.est ? '<span class="m-est"> · ' + t.est + '</span>' : '');
+    return '<div class="row' + (done ? " is-done" : "") + (t.est ? "" : " no-est") + '">' +
+      '<span class="r-n">' + t.n + '</span>' +
+      '<div class="r-main"><span class="r-ttl">' + t.title + '</span><span class="r-meta">' + meta + '</span></div>' +
+      est +
+      (t.fixed ? fixedCheck() : checkHTML(k, t, done)) +
+    '</div>';
+  }
+
+  function emptyHTML(k, d){
+    var wd = WD[parseKey(k).getDay()];
+    var nx = null;
+    for(var i=1;i<=14;i++){
+      var nk = addKey(k, i), nd = DAYS[nk];
+      if(nd && nd.anchor){ nx = { k:nk, title:nd.anchor }; break; }
+    }
+    if(d && d.kind === "anchor"){
+      return '<div class="empty"><span class="e-n">' + fmtMD(k) + ' ' + wd + '</span>' +
+        '<h3>' + d.anchor + '</h3><p>' + d.note + '</p>' +
+        '<p class="a-next">' + (nx ? ("下一节点 · " + fmtMD(nx.k) + " " + nx.title) : "下一节点待更新") + '</p></div>';
+    }
+    return '<div class="empty"><span class="e-n">' + fmtMD(k) + ' ' + wd + '</span>' +
+      '<h3>本日未录入</h3><p>执行板待更新 · 不沿用旧板</p>' +
+      '<p class="a-next">' + (nx ? ("最近节点 · " + fmtMD(nx.k) + " " + nx.title) : "暂无节点") + '</p></div>';
+  }
+
+  function renderBoard(now){
+    var todayK = keyOf(now);
+    if(!selKey || !inRail(selKey, todayK)){ selKey = defaultSel(todayK, now); }
+    if(!inRail(selKey, todayK)){ selKey = todayK; }
+
+    var d = DAYS[selKey];
+    var wd = WD[parseKey(selKey).getDay()];
+
+    txt("boardTitle", boardTitleFor(selKey, todayK, d));
+    var status = d
+      ? ((d.kind === "plan" || d.kind === "log")
+          ? (doneCount(selKey, d) + " / " + taskList(d).length + " 已勾")
+          : (d.kind === "anchor" ? "节点" : "待排"))
+      : "待排";
+    txt("boardMeta", fmtMD(selKey) + " " + wd + " · " + status);
+
+    var rail = "";
+    for(var i=0;i<5;i++){
+      var rk = addKey(todayK, i), rd = DAYS[rk];
+      var pr = railProgress(rk, rd);
+      rail += '<button class="day" type="button" role="tab" data-day="' + rk + '" aria-selected="' +
+        (rk === selKey ? "true" : "false") + '" aria-controls="boardBody" aria-label="' +
+        fmtMD(rk) + " " + WD[parseKey(rk).getDay()] + (pr === null ? "" : ("，完成 " + pr + "%")) + '">' +
+        '<b>' + fmtMD(rk) + '</b><span>' + WD[parseKey(rk).getDay()] + '</span>' +
+        '<span class="dbar" aria-hidden="true"><i style="--w:' + (pr === null ? 0 : pr) + '%"></i></span></button>';
+    }
+    $("dayrail").innerHTML = rail;
+
+    var body = "";
+    if(d && d.focus){
+      body = focusHTML(selKey, d.focus, isDone(selKey, d.focus));
+      var rows = "";
+      d.tasks.forEach(function(t){ rows += rowHTML(selKey, t); });
+      body += '<div class="rows">' + rows + '</div>';
+    }else if(d && d.tasks && d.tasks.length){
+      var rows2 = "";
+      d.tasks.forEach(function(t){ rows2 += rowHTML(selKey, t); });
+      body = '<div class="rows">' + rows2 + '</div>';
+    }else{
+      body = emptyHTML(selKey, d);
+    }
+    $("boardBody").innerHTML = body;
+
+    var footL, footR;
+    if(d && d.kind === "plan"){
+      footL = "核心 4.3 h · 顺序执行";
+      footR = "求十得五 · 落 <b>2.5–3 h</b> 即达标";
+    }else if(d && d.kind === "log"){
+      var left = taskList(d).filter(function(t){ return !isDone(selKey, t); }).length;
+      footL = left ? ("还差 " + left + " 项") : "今日收口";
+      footR = left ? "补完收口" : "明早 08:20 开跑";
+    }else{
+      footL = d ? "仅知节点" : "本日未录入";
+      footR = "执行板待更新";
+    }
+    html("footL", footL);
+    html("footR", footR);
+  }
+
+  function renderAll(now){
+    renderClock(now);
+    renderHero(now);
+    renderWeights(now);
+    renderBoard(now);
+    renderStale(now);
+  }
+
+  /* ---------- report copy ---------- */
+  function legacyCopy(t){
+    try{
+      var ta = document.createElement("textarea");
+      ta.value = t;
+      ta.setAttribute("readonly","");
+      ta.style.cssText = "position:fixed;top:-1000px;left:-1000px;opacity:0";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return !!ok;
+    }catch(e){
+      return false;
+    }
+  }
+  function copyText(t){
+    return new Promise(function(resolve){
+      function fallback(){ resolve(legacyCopy(t)); }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(t).then(function(){ resolve(true); }, fallback);
+      }else{
+        fallback();
+      }
+    });
+  }
+  function doCopy(k, btn){
+    var r = state.rep[k] || {};
+    var f = DAYS[k] && DAYS[k].focus;
+    var pre = (f && f.report && f.report.pre) ? f.report.pre : "6章：默";
+    var lb = (f && f.pass && f.pass[1]) ? f.pass[1][0] : "做";
+    var a = cleanRep(r.a) || "__";
+    var b = cleanRep(r.b) || "__";
+    var text = pre + a + "% " + lb + b + "%";
+    copyText(text).then(function(ok){
+      btn.classList.toggle("ok", ok);
+      var lab = btn.querySelector("span");
+      if(lab){ lab.textContent = ok ? "已复制" : "复制报数"; }
+      var live = $("copyLive");
+      if(live){ live.textContent = ok ? "报数已复制" : "复制失败，请手动选择"; }
+      setTimeout(function(){
+        if(lab){ lab.textContent = "复制报数"; }
+        btn.classList.remove("ok");
+      }, 1600);
+    });
+  }
+
+  $("board").addEventListener("click", function(e){
+    var cb = e.target.closest("[data-check]");
+    if(cb){
+      if(cb.dataset.busy){ return; }
+      cb.dataset.busy = "1";
+      cb.classList.add("pressed");
+      var wasFocus = document.activeElement === cb;
+      var id = cb.dataset.check;
+      var k = selKey;
+      setTimeout(function(){
+        toggleTask(k, id);
+        renderAll(new Date());
+        if(wasFocus){
+          var nb = document.querySelector('[data-check="' + id + '"]');
+          if(nb){ nb.focus(); }
+        }
+      }, 120);
+      return;
+    }
+    var cp = e.target.closest("[data-copy]");
+    if(cp){ doCopy(selKey, cp); }
+  });
+
+  $("board").addEventListener("input", function(e){
+    var el = e.target;
+    if(!el.classList || !el.classList.contains("rep-in")){ return; }
+    var v = el.value.replace(/[^\d]/g, "").slice(0,3);
+    if(v !== "" && parseInt(v,10) > 100){ v = "100"; }
+    if(v !== el.value){ el.value = v; }
+    if(!state.rep[selKey]){ state.rep[selKey] = { a:"", b:"" }; }
+    state.rep[selKey][el.dataset.f] = v;
+    persist();
+  });
+
+  $("dayrail").addEventListener("click", function(e){
+    var b = e.target.closest(".day");
+    if(!b){ return; }
+    selKey = b.dataset.day;
+    renderBoard(new Date());
+    if(e.detail === 0){
+      var nb = document.querySelector('.day[aria-selected="true"]');
+      if(nb){ nb.focus(); }
+    }
+  });
+
+  $("dayrail").addEventListener("keydown", function(e){
+    if(e.key !== "ArrowLeft" && e.key !== "ArrowRight"){ return; }
+    var tabs = Array.prototype.slice.call(this.querySelectorAll(".day"));
+    var i = tabs.indexOf(document.activeElement);
+    if(i < 0){ return; }
+    e.preventDefault();
+    var n = (i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[n].focus();
+    tabs[n].click();
+  });
+
+  function tick(){
+    var now = new Date();
+    renderClock(now);
+    var k = keyOf(now);
+    if(k !== lastToday){
+      lastToday = k;
+      selKey = defaultSel(k, now);
+      if(!inRail(selKey, k)){ selKey = k; }
+      renderAll(now);
+    }
+  }
+
+  var now0 = new Date();
+  lastToday = keyOf(now0);
+  selKey = defaultSel(lastToday, now0);
+  if(!inRail(selKey, lastToday)){ selKey = lastToday; }
+
+  var g = $("genAt");
+  if(g){
+    g.textContent = fmtFull(genTime);
+    g.setAttribute("datetime", keyOf(genTime) + "T" + pad(genTime.getHours()) + ":" + pad(genTime.getMinutes()));
+  }
+
+  renderAll(now0);
+  setInterval(tick, 30000);
+})();
 </script>
 </body>
 </html>
