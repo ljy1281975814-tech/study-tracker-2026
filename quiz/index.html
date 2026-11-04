@@ -2289,6 +2289,7 @@
   var BANK = JSON.parse(document.getElementById('bank').textContent);
   var META = BANK.meta;
   var ITEMS = BANK.items;
+var ITEM_MAP = {}; ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
   var BY = {}, CH = {}, ORDER = {};
   ITEMS.forEach(function (q) { if (!q.kp) q.kp = q.id; BY[q.id] = q; });
   BANK.chapters.forEach(function (c) { CH[c.s + c.c] = c; });
@@ -2525,7 +2526,16 @@
         out = out.concat(fresh.slice(0, Math.min(NEW_PER_DAY, room)).map(function (q) { return repFor(q).id; }));
       }
     }
-    try{ if(typeof ITEM_MAP==='object'&&ITEM_MAP){ out.sort(function(a,b){var ca=(ITEM_MAP[a]&&ITEM_MAP[a].card)||0,cb=(ITEM_MAP[b]&&ITEM_MAP[b].card)||0;return cb-ca;}); } }catch(e){} return out;
+    try{
+      var _isMinor = function(id){ var x=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[id]:null; return !!(x && x.kd==='次要卡'); };
+      out.sort(function(a,b){
+        var ma=_isMinor(a)?1:0, mb=_isMinor(b)?1:0;
+        if (ma!==mb) return ma-mb;                      /* 核心考点优先，次要卡后置 */
+        var xa=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[a]:null;
+        var xb=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[b]:null;
+        return ((xb&&xb.card)||0)-((xa&&xa.card)||0);    /* card 降序 = 考点一→九 */
+      });
+    }catch(e){} return out;
   }
 
   /* ---------------- 状态 ---------------- */
