@@ -2511,7 +2511,7 @@ var ITEM_MAP = {}; ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
     var due = dueItems();
     try {
       var _rank0 = function (q) { var v = (q && q.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); };
-      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; return ((a && a.card) || 0) - ((b && b.card) || 0); });
+      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; return ((b && b.card) || 0) - ((a && a.card) || 0); });
     } catch (e) {}
     var out = due.slice(0, MAXQ).map(function (q) { return repFor(q).id; });
     if (out.length < MAXQ) {
@@ -2536,7 +2536,7 @@ var ITEM_MAP = {}; ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
           fresh = fresh.slice().sort(function (a, b) {
             var ra = _rank(a), rb = _rank(b);
             if (ra !== rb) return ra - rb;
-            return ((a && a.card) || 0) - ((b && b.card) || 0);
+            return ((b && b.card) || 0) - ((a && a.card) || 0);
           });
         } catch (e) {}
         out = out.concat(fresh.slice(0, Math.min(NEW_PER_DAY, room)).map(function (q) { return repFor(q).id; }));
@@ -2549,7 +2549,7 @@ var ITEM_MAP = {}; ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
         if(ta!==tb) return ta-tb;                        /* A必背核心 > B理解 > C可降级 > 未知 */
         var xa=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[a]:null;
         var xb=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[b]:null;
-        return ((xa&&xa.card)||0)-((xb&&xb.card)||0);    /* card 升序 = 定义先行 */
+        return ((xb&&xb.card)||0)-((xa&&xa.card)||0);    /* card 升序 = 定义先行 */
       });
     }catch(e){} return out;
   }
