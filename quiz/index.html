@@ -2509,6 +2509,10 @@ var ITEM_MAP = {}; ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
   }
   function todayQueue() {
     var due = dueItems();
+    try {
+      var _rank0 = function (q) { var v = (q && q.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); };
+      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; return ((b && b.card) || 0) - ((a && a.card) || 0); });
+    } catch (e) {}
     var out = due.slice(0, MAXQ).map(function (q) { return repFor(q).id; });
     if (out.length < MAXQ) {
       var nc = nextChapter();
@@ -2523,6 +2527,18 @@ var ITEM_MAP = {}; ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
             });
         }
         var room = MAXQ - out.length;
+        /* ORDER_BEFORE_SLICE_20261104：先按 MAP 档位排序，再取题 */
+        try {
+          var _rank = function (q) {
+            var v = (q && q.tier) || '?';
+            return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3));
+          };
+          fresh = fresh.slice().sort(function (a, b) {
+            var ra = _rank(a), rb = _rank(b);
+            if (ra !== rb) return ra - rb;
+            return ((b && b.card) || 0) - ((a && a.card) || 0);
+          });
+        } catch (e) {}
         out = out.concat(fresh.slice(0, Math.min(NEW_PER_DAY, room)).map(function (q) { return repFor(q).id; }));
       }
     }
