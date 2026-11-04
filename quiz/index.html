@@ -2525,11 +2525,13 @@
         out = out.concat(fresh.slice(0, Math.min(NEW_PER_DAY, room)).map(function (q) { return repFor(q).id; }));
       }
     }
-    return out;
+    
+/* ORDER_SWITCH_20261104 */ if (!S.shuffle) { out.sort(function(a,b){ var ca=(ITEM_MAP[a]||{}).card||0, cb=(ITEM_MAP[b]||{}).card||0; return cb-ca; }); } else { for (var _i=out.length-1;_i>0;_i--){ var _j=Math.floor(Math.random()*(_i+1)); var _t=out[_i]; out[_i]=out[_j]; out[_j]=_t; } }
+return out;
   }
 
   /* ---------------- 状态 ---------------- */
-  var S = {
+  var S = { shuffle: false,
     view: 'home', sheet: null, session: null, pend: {}, wrong: 'open',
     toastT: null
   };
