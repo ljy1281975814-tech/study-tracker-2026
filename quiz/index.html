@@ -2288,7 +2288,7 @@
   /* ---------------- 数据 ---------------- */
   var BANK = JSON.parse(document.getElementById('bank').textContent);
   var META = BANK.meta;
-  var ITEMS = BANK.items;
+  var ITEMS = (BANK.diff || BANK.diff || []);  /* FIX_20261110: bank key is diff not items; old line caused quiz stuck at loading since 11-05 */
 var ITEM_MAP = {};
 /* ONEVONE_SCOPE_20261104：1v1 已讲范围（用户 2026-11-04 23:xx 明确）
    第1课 = 感觉(4)/知觉(5)/注意(3)/记忆(6)  ← 已学，可默写
