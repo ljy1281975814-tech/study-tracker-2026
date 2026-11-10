@@ -2435,11 +2435,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function isSeen(q) { var r = rec(q); return !!(r && (r.ok || r.bad || r.fuzzy)); }
   function answeredToday(q) { var r = rec(q); return !!(r && r.last === TODAY && r.lastOutcome); }
   // 已掌握不再「永久排除」：30 天后 due 到期就回来做一次抽查
-  function isDue(q) {
-    var r = rec(q);
-    if (!r || !r.due) return false;
-    return r.due <= TODAY;
-  }
+  function isDue(q) { var r = rec(q); /* FIX_20261110_USER: 未评定=当作不会=今天要学(不再要求先答完189题) */ if (!r || !r.due) return true; return r.due <= TODAY; }
   function accOf(q) {
     var r = rec(q);
     if (!r) return null;
