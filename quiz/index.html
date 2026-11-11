@@ -2297,6 +2297,8 @@ var ONEVONE = {"普心": [3, 4, 5, 6]};
 /* 模块顺序按 1v1 周表 §2.1：感觉(4)→知觉(5)→注意(3)→记忆(6) */
 var MOD_ORDER = {"普心4": 0, "普心5": 1, "普心3": 2, "普心6": 3};
 function _modRank(x){ if(!x) return 9; var k=x.s+x.c; return (k in MOD_ORDER)?MOD_ORDER[k]:9; }
+/* TEX_ORDER_20261111: 教材顺序 = 考点号升序（kd“考点一”→1）→ 组内 card 升序（定义→分类→编码）*/ var _TEXNUM = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10}; function _texRank(q){ if(!q) return 99; var kd=String(q.kd||''); var m=kd.match(/考点([一二三四五六七八九十])/); if(m && _TEXNUM[m[1]]) return _TEXNUM[m[1]]; if(kd.indexOf('次要卡')>=0) return 98; return 97; } function _cardAsc(q){ return (q && q.card) || 0; }
+
 function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 0); } ITEMS.forEach(function(x){ ITEM_MAP[x.id] = x; });
   var BY = {}, CH = {}, ORDER = {};
   ITEMS.forEach(function (q) { if (!q.kp) q.kp = q.id; BY[q.id] = q; });
@@ -2465,8 +2467,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return ITEMS.filter(function (q) { return isOpen(q.s, q.c); });
   }
   // 每个考点出一个代表：清单里已按「主条优先」排过序
-  function reps(list) {
-    var seen = {}, out = [];
+  function reps(list) { /* REPS_TIER_A_FIRST_20261111: 同考点代表优先选 A 档，再选 card 小 */ var best = {}; list.forEach(function (q) { var k = KP(q); var cur = best[k]; if (!cur) { best[k] = q; return; } var rk = function (x) { var v = (x && x.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); }; var rq = rk(q), rc = rk(cur); if (rq < rc) { best[k] = q; } else if (rq === rc && _cardAsc(q) < _cardAsc(cur)) { best[k] = q; } }); return Object.keys(best).map(function (k) { return best[k]; }); }, out = [];
     list.forEach(function (q) { var k = KP(q); if (seen[k]) return; seen[k] = 1; out.push(q); });
     return out;
   }
@@ -2515,7 +2516,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var due = dueItems();
     try {
       var _rank0 = function (q) { var v = (q && q.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); };
-      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; var ma = _modRank(a), mb = _modRank(b); if (ma !== mb) return ma - mb;  /* FIX_MODRANK_20261110: 模块序优先与仪表盘同源 */ return ((b && b.card) || 0) - ((a && a.card) || 0); });
+      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; var ma = _modRank(a), mb = _modRank(b); if (ma !== mb) return ma - mb;  /* FIX_MODRANK_20261110 */ var ta = _texRank(a), tb = _texRank(b); if (ta !== tb) return ta - tb;  /* TEX_ORDER_20261111: 考点升序 */ return _cardAsc(a) - _cardAsc(b); });  /* TEX_ORDER: 组内 card 升序(定义→分类→编码) */
     } catch (e) {}
     var out = due.slice(0, MAXQ).map(function (q) { return repFor(q).id; });
     if (out.length < MAXQ) {
