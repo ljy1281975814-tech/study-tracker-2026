@@ -2333,7 +2333,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   var INTERVALS = [3, 7, 15, 30, 60, 90];
   var STEP_LABEL = ['3 天复测', '7 天验证', '15 天巩固', '30 天结业'];
   var MASTER_DAYS = 30;
-  var NEW_PER_DAY = 15, MAXQ = (function(){ /* STAGE_MAXQ_20261110: 与仪表盘基础包同源 5/8/12/18/22 */ var ex = new Date(2026,11,19); var t = new Date(); t.setHours(0,0,0,0); var dl = Math.round((ex - t)/86400000); if (dl >= 38) return 5; if (dl >= 35) return 8; if (dl >= 29) return 12; if (dl >= 19) return 18; return 22; })();
+  var NEW_PER_DAY = 15, MAXQ = (function(){ /* RAMP_SYNC_20261111: 与仪表盘 progress_model.ramp 同源 */ var R = [["2026-11-11","2026-11-17",8],["2026-11-18","2026-11-27",18],["2026-11-28","2026-12-08",26],["2026-12-09","2026-12-18",34]]; var t = new Date(); t.setHours(0,0,0,0); for (var i=0;i<R.length;i++){ var a=new Date(R[i][0]), b=new Date(R[i][1]); if (t>=a && t<=b) return R[i][2]; } return 34; })();
   var TYPE_LABEL = { '单选': '单选题', '多选': '多选题', '填空': '填空题', '简答': '简答题', '论述': '论述题', '案例': '案例题' };
   /* D 侧叠加：题型档位（qt = jie 名词解释 / jian 简答 / lun 论述），仅对问答型生效 */
   var TIER_NAME = { jie: '名词解释', jian: '简答', lun: '论述' };
