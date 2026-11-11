@@ -3763,15 +3763,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   /* SELF_EVAL_20261111: 简答/论述/案例 不打字，看答案自评（用户：现在重点是记核心考点，作答后续开发） */
   (function () {
     var _origRender = null;
-    function _curQ() {
-      try {
-        if (!S.session) return null;
-        var ids = S.session.ids || S.session.queue || [];
-        var i = S.session.i || 0;
-        var id = ids[i];
-        return id ? ITEM_MAP[id] : null;
-      } catch (e) { return null; }
-    }
+    function _curQ() { try { return (typeof currentQ === 'function') ? currentQ() : null; } catch (e) { return null; } }
     function _apply() {
       var q = _curQ();
       if (!q || !q.se) return;
@@ -3794,11 +3786,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var box = document.getElementById('SE-BOX');
       if (box) box.innerHTML = '<b>' + (ok ? '✅ 记为会' : '❌ 记为不会，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对（不计分，避免自评不诚实）</div>';
       try {
-        if (typeof window._revealAnswer === 'function') window._revealAnswer();
-        else {
-          var b = document.querySelector('button[id*="reveal"], .btn-reveal, [onclick*="reveal"]');
-          if (b) b.click();
-        }
+        var b = document.querySelector('[data-act="reveal"]') || document.querySelector('.bar-primary') || document.querySelector('button[id*="reveal"]');
+        if (b) b.click();
       } catch (e) {}
     }
     function _tick() { setTimeout(_apply, 120); }
