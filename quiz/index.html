@@ -2306,7 +2306,7 @@ var ITEM_MAP = {};
    第2课 = 思维/语言/动机/情绪/学习        ← 未上，不默写 */
 var ONEVONE = {"普心": [3, 4, 5, 6]};
 /* 模块顺序按 1v1 周表 §2.1：感觉(4)→知觉(5)→注意(3)→记忆(6) */
-var MOD_ORDER = {"普心4": 0, "普心5": 1, "普心3": 2, "普心6": 3};
+var MOD_ORDER = {"普心4": 0, "研方法1": 1, "研方法2": 1, "研方法3": 1, "研方法4": 1, "研方法5": 1, "研方法6": 1, "研方法7": 1, "研方法8": 1, "研方法9": 1, "研方法10": 1, "普心5": 2, "普心3": 3, "普心6": 4};
 function _modRank(x){ if(!x) return 9; var k=x.s+x.c; return (k in MOD_ORDER)?MOD_ORDER[k]:9; }
 /* TEX_ORDER_20261111: 教材顺序 = 考点号升序（kd“考点一”→1）→ 组内 card 升序（定义→分类→编码）*/ var _TEXNUM = {'一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10}; function _texRank(q){ if(!q) return 99; var kd=String(q.kd||''); var m=kd.match(/考点([一二三四五六七八九十])/); if(m && _TEXNUM[m[1]]) return _TEXNUM[m[1]]; if(kd.indexOf('次要卡')>=0) return 98; return 97; } function _cardAsc(q){ return (q && q.card) || 0; }
 
