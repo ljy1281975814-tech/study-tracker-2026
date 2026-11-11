@@ -2467,9 +2467,18 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return ITEMS.filter(function (q) { return isOpen(q.s, q.c); });
   }
   // 每个考点出一个代表：清单里已按「主条优先」排过序
-  function reps(list) { /* REPS_TIER_A_FIRST_20261111: 同考点代表优先选 A 档，再选 card 小 */ var best = {}; list.forEach(function (q) { var k = KP(q); var cur = best[k]; if (!cur) { best[k] = q; return; } var rk = function (x) { var v = (x && x.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); }; var rq = rk(q), rc = rk(cur); if (rq < rc) { best[k] = q; } else if (rq === rc && _cardAsc(q) < _cardAsc(cur)) { best[k] = q; } }); return Object.keys(best).map(function (k) { return best[k]; }); }, out = [];
-    list.forEach(function (q) { var k = KP(q); if (seen[k]) return; seen[k] = 1; out.push(q); });
-    return out;
+  function reps(list) {
+    /* REPS_TIER_A_FIRST_20261111: 同考点代表优先选 A 档，再选 card 小（教材顺序） */
+    var best = {};
+    list.forEach(function (q) {
+      var k = KP(q), cur = best[k];
+      if (!cur) { best[k] = q; return; }
+      var rk = function (x) { var v = (x && x.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); };
+      var rq = rk(q), rc = rk(cur);
+      if (rq < rc) { best[k] = q; }
+      else if (rq === rc && (q.card || 0) < (cur.card || 0)) { best[k] = q; }
+    });
+    return Object.keys(best).map(function (k) { return best[k]; });
   }
   // 同卡二次回忆：上次已经用过主条，这次换简答（无空位）再回忆一遍
   function repFor(q) {
