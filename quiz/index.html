@@ -2250,7 +2250,7 @@
 </style>
 </head>
 <body>
-<div id="QUEUE-DIAG" style="position:fixed;left:8px;top:8px;z-index:99999;background:rgba(17,24,39,.95);color:#fff;font-size:12px;padding:6px 10px;border-radius:8px;max-width:92vw;line-height:1.5"></div>
+<div id="QUEUE-DIAG" style="position:fixed;left:8px;bottom:8px;z-index:9998;background:rgba(17,24,39,.92);color:#fff;font-size:12px;padding:6px 10px;border-radius:8px;max-width:92vw;line-height:1.5"></div>
 <div id="ROUND-BAND" style="position:sticky;top:0;z-index:99;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 14px;font-size:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
 
 <b id="ROUND-LABEL">第一轮 · 核心 A 档（可出 377 题）</b><span id="APP-VER" style="font-size:11px;color:#9ca3af;margin-left:6px">v1112-0920</span>
@@ -2504,8 +2504,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function isSeen(q) { var r = rec(q); return !!(r && (r.ok || r.bad || r.fuzzy)); }
   function answeredToday(q) { var r = rec(q); return !!(r && r.last === TODAY && r.lastOutcome); }
   // 已掌握不再「永久排除」：30 天后 due 到期就回来做一次抽查
-  function isDue(q) { var r = rec(q); /* DUE_RESTORE_20261112: 恢复原语义——只有做过且到期的才算"到期"；未做过的题归入"新题池"(isNew)，不再混进到期 */ if (!r || !r.due) return false; return r.due <= TODAY; }
-  function isNew(q) { var r = rec(q); /* NEW_POOL_20261112: 从未做过/未排期 */ return !r || !r.due; }
+  function isDue(q) { var r = rec(q); /* FIX_20261110_USER: 未评定=当作不会=今天要学(不再要求先答完189题) */ if (!r || !r.due) return true; return r.due <= TODAY; }
   function accOf(q) {
     var r = rec(q);
     if (!r) return null;
@@ -2572,23 +2571,6 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (r && r.lastId === prim.id && sorted[1] && sorted[1].id !== prim.id) return sorted[1];
     return prim;
   }
-  function newItems() {
-    /* NEW_POOL_20261112: 未做过的新题，按【考点号升序 → 卡号升序】= 教材顺序 */
-    var arr = available().filter(function (q) {
-      return !q.se && (ROUND_MODE !== 'A' || q.tier === 'A') && isNew(q) && !answeredToday(q);
-    });
-    arr = arr.sort(function (a, b) {
-      var ra = (a.tier === 'A' ? 0 : (a.tier === 'B' ? 1 : 2));
-      var rb = (b.tier === 'A' ? 0 : (b.tier === 'B' ? 1 : 2));
-      if (ra !== rb) return ra - rb;
-      var ma = _modRank(a), mb = _modRank(b);
-      if (ma !== mb) return ma - mb;
-      var ta = _texRank(a), tb = _texRank(b);
-      if (ta !== tb) return ta - tb;
-      return (a.card || 0) - (b.card || 0);
-    });
-    return arr;
-  }
   function dueItems() {
     return reps(available().filter(function (q) {
       return !q.se && (ROUND_MODE !== 'A' || q.tier === 'A') && isDue(q) && !answeredToday(q);  /* SE_EXCLUDE_20261111: 简答/论述/案例不出题 */
@@ -2622,51 +2604,57 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return best;
   }
   function todayQueue() {
-    /* TODAYQUEUE_V3_20261112: 到期复习优先，再按教材顺序补新题至 MAXQ */
     var due = dueItems();
-    var newsList = newItems(); var newN = newsList.length;
-    var news = newItems();
-    var picked = [], seen = {};
-    var room = MAXQ;
-    // ① 到期复习优先（按 due 升序，dueSort 已排好）
-    for (var i = 0; i < due.length && room > 0; i++) {
-      var q1 = due[i], k1 = KP(q1);
-      if (seen[k1]) continue;
-      seen[k1] = 1; picked.push(q1); room--;
-    }
-    // ② 不足则按教材顺序补新题
-    for (var j = 0; j < news.length && room > 0; j++) {
-      var q2 = news[j], k2 = KP(q2);
-      if (seen[k2]) continue;
-      seen[k2] = 1; picked.push(q2); room--;
-    }
-    // ③ 仍不足：原兜底（nextChapter）
-    var out = picked.map(function (q) { return repFor(q).id; });
+    try {
+      var _rank0 = function (q) { var v = (q && q.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); };
+      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; var ma = _modRank(a), mb = _modRank(b); if (ma !== mb) return ma - mb;  /* FIX_MODRANK_20261110 */ var ta = _texRank(a), tb = _texRank(b); if (ta !== tb) return ta - tb;  /* TEX_ORDER_20261111: 考点升序 */ return _cardAsc(a) - _cardAsc(b); });  /* TEX_ORDER: 组内 card 升序(定义→分类→编码) */
+    } catch (e) {}
+    var out = due.slice(0, MAXQ).map(function (q) { return repFor(q).id; });
     if (out.length < MAXQ) {
       var nc = nextChapter();
       if (nc) {
         var kps = chapterKps(nc.l.s, nc.l.c);
         var fresh = kps.filter(function (q) { return !isSeen(q) && !answeredToday(q); });
-        if (fresh.length) {
+        if (!fresh.length) {
+          fresh = kps.filter(function (q) { return !isDue(q) && !answeredToday(q); })
+            .sort(function (a, b) {
+              var aa = rec(a), bb = rec(b);
+              return ((aa && accOf(a)) || 0) - ((bb && accOf(b)) || 0);
+            });
+        }
+        var room = MAXQ - out.length;
+        /* ORDER_BEFORE_SLICE_20261104：先按 MAP 档位排序，再取题 */
+        try {
+          var _rank = function (q) {
+            var inS = (typeof _in1v1 === 'function') ? _in1v1(q) : true;
+            var v = (q && q.tier) || '?';
+            if (v === 'A') { if (inS) return (q && q.fk === '是') ? 0 : 1; return 2; }
+            return v === 'B' ? 3 : (v === 'C' ? 4 : 5);
+          };
           fresh = fresh.slice().sort(function (a, b) {
-            var ra = (typeof _rank0 === 'function') ? _rank0(a) : (a.tier === 'A' ? 0 : 1);
-            var rb = (typeof _rank0 === 'function') ? _rank0(b) : (b.tier === 'A' ? 0 : 1);
-            if (ra !== rb) return ra - rb;
+            var ra = _rank(a), rb = _rank(b); if (ra !== rb) return ra - rb;
             var ma = (typeof _modRank === 'function') ? _modRank(a) : 9;
             var mb = (typeof _modRank === 'function') ? _modRank(b) : 9;
-            if (ma !== mb) return ma - mb;
-            var ta = (typeof _texRank === 'function') ? _texRank(a) : 97;
-            var tb = (typeof _texRank === 'function') ? _texRank(b) : 97;
-            if (ta !== tb) return ta - tb;
-            return ((a && a.card) || 0) - ((b && b.card) || 0);
+            if (ma !== mb) return ma - mb; var ta2 = (typeof _texRank === 'function') ? _texRank(a) : 97; var tb2 = (typeof _texRank === 'function') ? _texRank(b) : 97; if (ta2 !== tb2) return ta2 - tb2;  /* FALLBACK_TEX_ORDER_20261112 */ return ((a && a.card) || 0) - ((b && b.card) || 0);
           });
-          fresh.forEach(function (q) {
-            if (out.length < MAXQ && !seen[KP(q)]) { seen[KP(q)] = 1; out.push(repFor(q).id); }
-          });
-        }
+        } catch (e) {}
+        out = out.concat(fresh.slice(0, Math.min(NEW_PER_DAY, room)).map(function (q) { return repFor(q).id; }));
       }
     }
-
+    try{
+      var _r=function(id){var x=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[id]:null;if(!x)return 5;
+        var inS=(typeof _in1v1==='function')?_in1v1(x):true; var t=x.tier||'?';
+        if(t==='A'){ if(inS) return (x.fk==='是')?0:1; return 2; }
+        if(t==='B') return 3; if(t==='C') return 4; return 5;};
+      out.sort(function(a,b){
+        var xa=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[a]:null;
+        var xb=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[b]:null;
+        var ra=_r(a), rb=_r(b); if(ra!==rb) return ra-rb;
+        var ma=(typeof _modRank==='function')?_modRank(xa):9, mb=(typeof _modRank==='function')?_modRank(xb):9;
+        if(ma!==mb) return ma-mb;
+        return ((xb&&xb.card)||0)-((xa&&xa.card)||0);
+      });
+    }catch(e){} return out;
   }
 
   /* ---------------- 状态 ---------------- */
@@ -2818,13 +2806,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var title, lead, cta, ctaArg;
     if (q.length) {
       title = nc ? '今天，先把<span>第' + nc.l.c + '章 ' + esc(nc.l.name) + '</span>过完' : '今天，先把到期题清掉';
-      lead = '今日队列 <b>' + q.length + ' 题</b>：待复习（真到期）<b>' + due.length + '</b> 题 + 新题 <b>' +
+      lead = '今日队列 <b>' + q.length + ' 题</b>：到期 <b>' + due.length + '</b> 题 + 本章新题 <b>' +
         Math.max(0, q.length - due.length) + '</b> 题。只放已学 ' + BANK.learned.length + ' 章（' + total +
         ' 个考点），未学章锁定。';
       cta = '开始今日答题'; ctaArg = 'daily';
     } else {
       title = '今天，已清空';
-      lead = '待复习题和新题都做完了（已答 <b>' + seenN + '/' + total + '</b> 个考点）。去错题本把错的再过一遍，或者等明天。';
+      lead = '到期题和新题都做完了（已答 <b>' + seenN + '/' + total + '</b> 个考点）。去错题本把错的再过一遍，或者等明天。';
       cta = '去错题本'; ctaArg = 'wrong';
     }
     return masthead() +
@@ -2837,7 +2825,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<p class="hero-foot">' + (last ? '上次学到：' + last : '还没开始，今天就是第一天') + '</p>' +
       '<div class="hero-facts">' +
       '<div class="hero-fact"><span>已学章</span><b>' + BANK.learned.length + ' 章</b></div>' +
-      '<div class="hero-fact"><span>待复习</span><b>' + due.length + ' 题</b></div>' + '<div class="hero-fact"><span>新题</span><b>' + (typeof newN === 'number' ? newN : 0) + ' 题</b></div>' +
+      '<div class="hero-fact"><span>到期</span><b>' + due.length + ' 题</b></div>' +
       '<div class="hero-fact"><span>错题</span><b>' + ws.rolling.length + ' 道</b></div>' +
       '</div></section>' +
       '<section class="shell">' +
@@ -2859,7 +2847,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<p class="advice-order">先清到期 ' + dueN + ' 题，再进本章；答对进 3 天滚动，再对 7 天，答错回 1 天。</p></div>';
   }
   function entriesHTML(due, ws, last) {
-    var sched = due.length ? '今天有 ' + due.length + ' 道待复习题' : ('今天待复习 0 道 · 新题 ' + (typeof newN === 'number' ? newN : 0) + ' 道');
+    var sched = due.length ? '今天有 ' + due.length + ' 道到期题' : '今天还没有要复习的题';
     return '<div class="entries">' +
       '<div class="entry-wrap"><button class="entry" data-act="start" data-arg="due">' +
       '<span class="entry-num">01</span><span class="entry-main"><span class="entry-title">滚动复习</span>' +
@@ -3880,26 +3868,6 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       fill();
       setTimeout(fill, 500); setTimeout(fill, 1500);
       window.addEventListener('hashchange', function () { setTimeout(fill, 300); });
-    })();
-  } catch (e) {}
-
-  /* TITLE_CARD_HINT_20261112: 答题页标题后追加「首卡XX」，便于立即判断排序是否生效 */
-  try {
-    (function () {
-      function tag() {
-        try {
-          if (!S.session) return;
-          var el = document.querySelector('.quiz-head-title b');
-          if (!el) return;
-          if (String(el.textContent).indexOf('首卡') >= 0) return;
-          var ids = S.session.ids || [];
-          var f = ids[0] ? BY[ids[0]] : null;
-          el.textContent = el.textContent + ' · 首卡' + (f ? (f.card || '?') : '?');
-        } catch (e) {}
-      }
-      tag(); setTimeout(tag, 300); setTimeout(tag, 1200);
-      window.addEventListener('hashchange', function () { setTimeout(tag, 250); });
-      document.addEventListener('click', function () { setTimeout(tag, 250); }, true);
     })();
   } catch (e) {}
 })();
