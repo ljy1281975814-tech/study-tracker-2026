@@ -2522,11 +2522,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   // 同卡二次回忆：上次已经用过主条，这次换简答（无空位）再回忆一遍
   function repFor(q) {
+    /* REPFOR_CARD_ASC_20261112: 代表取【card 升序第一条】＝教材顺序最先的考点条目。
+       原实现取 sib[0]，而 KP_ITEMS 把「主条(id===kp)」排在 card 之前 ⇒ 首题会跳到后置考点（如感觉编码卡83）。
+       本改动只影响「选哪条作代表」，保留二次回忆换条逻辑。 */
     var sib = KP_ITEMS[KP(q)] || [];
     if (sib.length < 2) return q;
     var r = rec(q);
-    var prim = sib[0];
-    if (r && r.lastId === prim.id && sib[1] && sib[1].id !== prim.id) return sib[1];
+    var sorted = sib.slice().sort(function (a, b) {
+      return (a.card || 0) - (b.card || 0) || (a.id < b.id ? -1 : 1);
+    });
+    var prim = sorted[0];
+    if (r && r.lastId === prim.id && sorted[1] && sorted[1].id !== prim.id) return sorted[1];
     return prim;
   }
   function dueItems() {
