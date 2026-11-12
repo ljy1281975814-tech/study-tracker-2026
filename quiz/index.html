@@ -2250,8 +2250,9 @@
 </style>
 </head>
 <body>
+<div id="QUEUE-DIAG" style="position:fixed;left:8px;bottom:8px;z-index:9998;background:rgba(17,24,39,.92);color:#fff;font-size:12px;padding:6px 10px;border-radius:8px;max-width:92vw;line-height:1.5"></div>
 <div id="ROUND-BAND" style="position:sticky;top:0;z-index:99;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 14px;font-size:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-<span id="QUEUE-DIAG" style="font-size:11px;color:#6b7280;margin-left:8px"></span>
+
 <b id="ROUND-LABEL">第一轮 · 核心 A 档（可出 377 题）</b><span id="APP-VER" style="font-size:11px;color:#9ca3af;margin-left:6px">v1112-0920</span>
 <span style="color:#92400e;font-size:13px">先过 A 档（可出 377），再补 B 档（可出 286）；A＝默写主线·含研方法单选／B＝再认·提词回忆；重要程度看每题标签）</span>
 <button onclick="_setRound('A')" style="min-height:40px;padding:6px 12px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer">只做 A</button>
@@ -2373,7 +2374,25 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return '揭晓后会标出<b>踩分关键词</b>，机器只负责标命中，对错由你按键确认。';
   }
 
-  var TODAY = todayKey(new Date()); /* ROUND_20261111 */ var ROUND_MODE = (function(){ try { return localStorage.getItem('dsh_round') || 'A'; } catch(e){ return 'A'; } })(); function _setRound(m){ ROUND_MODE = m; try { localStorage.setItem('dsh_round', m); } catch(e){} var lb = document.getElementById('ROUND-LABEL'); if (lb) lb.textContent = roundLabel(m); try { if (typeof window._afterRoundChange === 'function') window._afterRoundChange(m); } catch(e){} try { if (typeof render === 'function') render(); } catch(e){} var t = document.createElement('div'); t.textContent = (m === 'A') ? '已切换：第一轮只做核心 A 档' : '已切换：第二轮加 B 档'; t.style.cssText='position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 18px;border-radius:10px;font-size:15px;z-index:9999'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 1800); }
+  var TODAY = todayKey(new Date()); /* ROUND_20261111 */ var ROUND_MODE = (function(){ try { return localStorage.getItem('dsh_round') || 'A'; } catch(e){ return 'A'; } })(); function _setRound(m){
+    ROUND_MODE = m;
+    try { localStorage.setItem('dsh_round', m); } catch(e){}
+    var lb = document.getElementById('ROUND-LABEL');
+    if (lb) lb.textContent = (m === 'A') ? '第一轮 · 核心 A 档（291 题）' : '第二轮 · A+B 全档（669 题）';
+    try { if (typeof window._afterRoundChange === 'function') window._afterRoundChange(m); } catch(e){}
+    try { S.session = null; } catch(e){}
+    try { location.hash = '#home'; } catch(e){}
+    try { if (typeof render === 'function') render(); } catch(e){}
+    /* 明显反馈：全屏居中大字，2.2 秒 */
+    try {
+      var t = document.createElement('div');
+      t.textContent = (m === 'A') ? '已切换到【只做 A 档】' : '已切换到【A+B 全档】';
+      t.style.cssText = 'position:fixed;left:50%;top:45%;transform:translate(-50%,-50%);background:#111827;color:#fff;'
+        + 'padding:18px 28px;border-radius:14px;font-size:20px;font-weight:700;z-index:99999;box-shadow:0 10px 30px rgba(0,0,0,.35)';
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 2200);
+    } catch(e){}
+  }
 
   /* ---------------- 小工具 ---------------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -3830,24 +3849,26 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   })();
 
 
-  /* QUEUE_DIAG_20261112: 横幅显示「今日队列首题卡号」，便于用户截图定位排序是否生效 */
+  /* QUEUE_DIAG_20261112: 固定小条显示队列前 3 张卡号，答题页也可见 */
   try {
     (function () {
       function fill() {
         var el = document.getElementById('QUEUE-DIAG');
         if (!el) return;
         try {
-          var ids = todayQueue();
-          var first = ids && ids[0] ? BY[ids[0]] : null;
-          el.textContent = '｜队列首题: 卡' + (first ? (first.card || '?') : '?') +
-            '（共 ' + (ids ? ids.length : 0) + ' 题）· ' + (first ? String(first.stem || '').slice(0, 12) : '');
+          var ids = todayQueue() || [];
+          var cs = ids.slice(0, 3).map(function (id) { var q = BY[id]; return q ? (q.card || '?') : '?'; });
+          var f = ids[0] ? BY[ids[0]] : null;
+          el.innerHTML = '<b>队列</b> ' + ids.length + ' 题 ｜首3卡: ' + cs.join(' / ') +
+            (f ? ' ｜' + String(f.stem || '').slice(0, 14) : '') +
+            ' ｜<span style="color:#93c5fd">v1112-0920</span>';
         } catch (e) {
-          el.textContent = '｜队列诊断失败: ' + String(e).slice(0, 40);
+          el.textContent = '队列诊断失败: ' + String(e).slice(0, 60);
         }
       }
       fill();
-      setTimeout(fill, 400);
-      window.addEventListener('hashchange', function () { setTimeout(fill, 200); });
+      setTimeout(fill, 500); setTimeout(fill, 1500);
+      window.addEventListener('hashchange', function () { setTimeout(fill, 300); });
     })();
   } catch (e) {}
 })();
