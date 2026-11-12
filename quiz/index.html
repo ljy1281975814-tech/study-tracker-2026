@@ -2251,7 +2251,8 @@
 </head>
 <body>
 <div id="ROUND-BAND" style="position:sticky;top:0;z-index:99;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 14px;font-size:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-<b id="ROUND-LABEL">第一轮 · 核心 A 档（可出 377 题）</b><span id="APP-VER" style="font-size:11px;color:#9ca3af;margin-left:6px">v1111-2215</span>
+<span id="QUEUE-DIAG" style="font-size:11px;color:#6b7280;margin-left:8px"></span>
+<b id="ROUND-LABEL">第一轮 · 核心 A 档（可出 377 题）</b><span id="APP-VER" style="font-size:11px;color:#9ca3af;margin-left:6px">v1112-0920</span>
 <span style="color:#92400e;font-size:13px">先过 A 档（可出 377），再补 B 档（可出 286）；A＝默写主线·含研方法单选／B＝再认·提词回忆；重要程度看每题标签）</span>
 <button onclick="_setRound('A')" style="min-height:40px;padding:6px 12px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer">只做 A</button>
 <button onclick="_setRound('AB')" style="min-height:40px;padding:6px 12px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer">加 B 档</button>
@@ -3828,6 +3829,27 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     _tick();
   })();
 
+
+  /* QUEUE_DIAG_20261112: 横幅显示「今日队列首题卡号」，便于用户截图定位排序是否生效 */
+  try {
+    (function () {
+      function fill() {
+        var el = document.getElementById('QUEUE-DIAG');
+        if (!el) return;
+        try {
+          var ids = todayQueue();
+          var first = ids && ids[0] ? BY[ids[0]] : null;
+          el.textContent = '｜队列首题: 卡' + (first ? (first.card || '?') : '?') +
+            '（共 ' + (ids ? ids.length : 0) + ' 题）· ' + (first ? String(first.stem || '').slice(0, 12) : '');
+        } catch (e) {
+          el.textContent = '｜队列诊断失败: ' + String(e).slice(0, 40);
+        }
+      }
+      fill();
+      setTimeout(fill, 400);
+      window.addEventListener('hashchange', function () { setTimeout(fill, 200); });
+    })();
+  } catch (e) {}
 })();
 </script>
 </body>
