@@ -2251,8 +2251,8 @@
 </head>
 <body>
 <div id="ROUND-BAND" style="position:sticky;top:0;z-index:99;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:10px 14px;font-size:15px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-<b>第一轮 · 核心 A 档（378 题）</b><span id="APP-VER" style="font-size:11px;color:#9ca3af;margin-left:6px">v1111-2215</span>
-<span style="color:#92400e;font-size:13px">先过 A 档，再补 B 档 390 题（A＝默写主线·含研方法单选／B＝再认·提词回忆；重要程度看每题标签）</span>
+<b id="ROUND-LABEL">第一轮 · 核心 A 档（可出 377 题）</b><span id="APP-VER" style="font-size:11px;color:#9ca3af;margin-left:6px">v1111-2215</span>
+<span style="color:#92400e;font-size:13px">先过 A 档（可出 377），再补 B 档（可出 286）；A＝默写主线·含研方法单选／B＝再认·提词回忆；重要程度看每题标签）</span>
 <button onclick="_setRound('A')" style="min-height:40px;padding:6px 12px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer">只做 A</button>
 <button onclick="_setRound('AB')" style="min-height:40px;padding:6px 12px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer">加 B 档</button>
 </div>
@@ -2344,6 +2344,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   return (t < new Date(2026,10,11)) ? 8 : 34;
 })();
+  /* EFF_LABEL_20261112: 轮次标签统一读 tier_effective / total_effective，禁止写死数字 */
+  function roundLabel(m){
+    var M = (typeof META !== 'undefined' && META) ? META : {};
+    var e = M.tier_effective || M.tier || {}, t = M.total_effective;
+    if (m === 'A') return '第一轮 · 核心 A 档（可出 ' + (e.A != null ? e.A : '—') + ' 题）';
+    return '第二轮 · A+B 全档（可出 ' + (t != null ? t : ((e.A||0)+(e.B||0))) + ' 题）';
+  }
   var TYPE_LABEL = { '单选': '单选题', '多选': '多选题', '填空': '填空题', '简答': '简答题', '论述': '论述题', '案例': '案例题' };
   /* D 侧叠加：题型档位（qt = jie 名词解释 / jian 简答 / lun 论述），仅对问答型生效 */
   var TIER_NAME = { jie: '名词解释', jian: '简答', lun: '论述' };
@@ -2365,7 +2372,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return '揭晓后会标出<b>踩分关键词</b>，机器只负责标命中，对错由你按键确认。';
   }
 
-  var TODAY = todayKey(new Date()); /* ROUND_20261111 */ var ROUND_MODE = (function(){ try { return localStorage.getItem('dsh_round') || 'A'; } catch(e){ return 'A'; } })(); function _setRound(m){ ROUND_MODE = m; try { localStorage.setItem('dsh_round', m); } catch(e){} var lb = document.getElementById('ROUND-LABEL'); if (lb) lb.textContent = (m === 'A') ? '第一轮 · 核心 A 档（291 题）' : '第二轮 · A+B 全档（669 题）'; try { if (typeof window._afterRoundChange === 'function') window._afterRoundChange(m); } catch(e){} try { if (typeof render === 'function') render(); } catch(e){} var t = document.createElement('div'); t.textContent = (m === 'A') ? '已切换：第一轮只做核心 A 档' : '已切换：第二轮加 B 档'; t.style.cssText='position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 18px;border-radius:10px;font-size:15px;z-index:9999'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 1800); }
+  var TODAY = todayKey(new Date()); /* ROUND_20261111 */ var ROUND_MODE = (function(){ try { return localStorage.getItem('dsh_round') || 'A'; } catch(e){ return 'A'; } })(); function _setRound(m){ ROUND_MODE = m; try { localStorage.setItem('dsh_round', m); } catch(e){} var lb = document.getElementById('ROUND-LABEL'); if (lb) lb.textContent = roundLabel(m); try { if (typeof window._afterRoundChange === 'function') window._afterRoundChange(m); } catch(e){} try { if (typeof render === 'function') render(); } catch(e){} var t = document.createElement('div'); t.textContent = (m === 'A') ? '已切换：第一轮只做核心 A 档' : '已切换：第二轮加 B 档'; t.style.cssText='position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 18px;border-radius:10px;font-size:15px;z-index:9999'; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 1800); }
 
   /* ---------------- 小工具 ---------------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -3770,7 +3777,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var isHome = (h === '' || h === 'home');
       el.style.display = isHome ? 'flex' : 'none';
       var lb = document.getElementById('ROUND-LABEL');
-      if (lb) lb.textContent = (ROUND_MODE === 'A') ? '第一轮 · 核心 A 档（291 题）' : '第二轮 · A+B 全档（669 题）';
+      if (lb) lb.textContent = roundLabel(ROUND_MODE);
     }
     _syncBand();
     window.addEventListener('hashchange', _syncBand);
