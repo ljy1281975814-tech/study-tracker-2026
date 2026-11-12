@@ -2604,57 +2604,43 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return best;
   }
   function todayQueue() {
-    var due = dueItems();
-    try {
-      var _rank0 = function (q) { var v = (q && q.tier) || '?'; return v === 'A' ? 0 : (v === 'B' ? 1 : (v === 'C' ? 2 : 3)); };
-      due = due.slice().sort(function (a, b) { var ra = _rank0(a), rb = _rank0(b); if (ra !== rb) return ra - rb; var ma = _modRank(a), mb = _modRank(b); if (ma !== mb) return ma - mb;  /* FIX_MODRANK_20261110 */ var ta = _texRank(a), tb = _texRank(b); if (ta !== tb) return ta - tb;  /* TEX_ORDER_20261111: 考点升序 */ return _cardAsc(a) - _cardAsc(b); });  /* TEX_ORDER: 组内 card 升序(定义→分类→编码) */
-    } catch (e) {}
-    var out = due.slice(0, MAXQ).map(function (q) { return repFor(q).id; });
-    if (out.length < MAXQ) {
+    /* TODAYQUEUE_CLEAN_20261112: 明确实现——到期池优先，按【档位 → 模块 → 考点号 → 卡号】排序，再取 MAXQ。
+       与旧实现的差异：不再依赖嵌套 try/catch 与 repFor 换条，避免顺序被静默打乱。 */
+    var pool = dueItems();
+    var picked = [], seen = {};
+    // ① 排序（教材顺序）
+    pool = pool.slice().sort(function (a, b) {
+      var ra = (a.tier === 'A' ? 0 : (a.tier === 'B' ? 1 : 2));
+      var rb = (b.tier === 'A' ? 0 : (b.tier === 'B' ? 1 : 2));
+      if (ra !== rb) return ra - rb;
+      var ma = _modRank(a), mb = _modRank(b);
+      if (ma !== mb) return ma - mb;
+      var ta = _texRank(a), tb = _texRank(b);
+      if (ta !== tb) return ta - tb;
+      return (a.card || 0) - (b.card || 0);
+    });
+    // ② 取前 MAXQ（按 KP 去重，但保留排序位置；不再用 repFor 换条）
+    for (var i = 0; i < pool.length && picked.length < MAXQ; i++) {
+      var q = pool[i];
+      var k = KP(q);
+      if (seen[k]) continue;
+      seen[k] = 1;
+      picked.push(q);
+    }
+    // ③ 不足则从下一章按教材顺序补
+    if (picked.length < MAXQ) {
       var nc = nextChapter();
       if (nc) {
-        var kps = chapterKps(nc.l.s, nc.l.c);
-        var fresh = kps.filter(function (q) { return !isSeen(q) && !answeredToday(q); });
-        if (!fresh.length) {
-          fresh = kps.filter(function (q) { return !isDue(q) && !answeredToday(q); })
-            .sort(function (a, b) {
-              var aa = rec(a), bb = rec(b);
-              return ((aa && accOf(a)) || 0) - ((bb && accOf(b)) || 0);
-            });
+        var fresh = chapterItems(nc.l.s, nc.l.c).filter(function (q) {
+          return !q.se && !isSeen(q) && !answeredToday(q) && !seen[KP(q)];
+        });
+        for (var j = 0; j < fresh.length && picked.length < MAXQ; j++) {
+          seen[KP(fresh[j])] = 1;
+          picked.push(fresh[j]);
         }
-        var room = MAXQ - out.length;
-        /* ORDER_BEFORE_SLICE_20261104：先按 MAP 档位排序，再取题 */
-        try {
-          var _rank = function (q) {
-            var inS = (typeof _in1v1 === 'function') ? _in1v1(q) : true;
-            var v = (q && q.tier) || '?';
-            if (v === 'A') { if (inS) return (q && q.fk === '是') ? 0 : 1; return 2; }
-            return v === 'B' ? 3 : (v === 'C' ? 4 : 5);
-          };
-          fresh = fresh.slice().sort(function (a, b) {
-            var ra = _rank(a), rb = _rank(b); if (ra !== rb) return ra - rb;
-            var ma = (typeof _modRank === 'function') ? _modRank(a) : 9;
-            var mb = (typeof _modRank === 'function') ? _modRank(b) : 9;
-            if (ma !== mb) return ma - mb; var ta2 = (typeof _texRank === 'function') ? _texRank(a) : 97; var tb2 = (typeof _texRank === 'function') ? _texRank(b) : 97; if (ta2 !== tb2) return ta2 - tb2;  /* FALLBACK_TEX_ORDER_20261112 */ return ((a && a.card) || 0) - ((b && b.card) || 0);
-          });
-        } catch (e) {}
-        out = out.concat(fresh.slice(0, Math.min(NEW_PER_DAY, room)).map(function (q) { return repFor(q).id; }));
       }
     }
-    try{
-      var _r=function(id){var x=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[id]:null;if(!x)return 5;
-        var inS=(typeof _in1v1==='function')?_in1v1(x):true; var t=x.tier||'?';
-        if(t==='A'){ if(inS) return (x.fk==='是')?0:1; return 2; }
-        if(t==='B') return 3; if(t==='C') return 4; return 5;};
-      out.sort(function(a,b){
-        var xa=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[a]:null;
-        var xb=(typeof ITEM_MAP!=='undefined'&&ITEM_MAP)?ITEM_MAP[b]:null;
-        var ra=_r(a), rb=_r(b); if(ra!==rb) return ra-rb;
-        var ma=(typeof _modRank==='function')?_modRank(xa):9, mb=(typeof _modRank==='function')?_modRank(xb):9;
-        if(ma!==mb) return ma-mb;
-        return ((xb&&xb.card)||0)-((xa&&xa.card)||0);
-      });
-    }catch(e){} return out;
+    return picked.map(function (q) { return q.id; });
   }
 
   /* ---------------- 状态 ---------------- */
