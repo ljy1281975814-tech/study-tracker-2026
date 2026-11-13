@@ -2609,10 +2609,20 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       return !q.se && (ROUND_MODE !== 'A' || q.tier === 'A') && isDue(q) && !answeredToday(q);  /* SE_EXCLUDE_20261111: 简答/论述/案例不出题 */
     })).sort(dueSort);
   }
-  function dueSort(a, b) {
+/* DERIVED_20261113: 采纳 D0046 最小改法——只加派生函数，不动 isDue/队列构成 */
+  function isKnown(q) { var r = rec(q); return !!(r && (r.ok || r.bad || r.fuzzy)); }
+  function realDueItems() { return dueItems().filter(isKnown); }
+  function newItemsIn(ids) { return (ids || []).map(function (id) { return BY[id]; }).filter(function (q) { return q && !isKnown(q); }); }
+    function dueSort(a, b) {
+    /* DUESORT_FIX_20261113: 原实现在两题都未记录时 ra.due==rb.due==undefined ⇒ 恒 return 1
+       ⇒ 比较器不自洽（V8 结果依实现而定）。改为：due 空值统一当 '' 比较，再加教材顺序兜底。 */
     var ra = rec(a) || {}, rb = rec(b) || {};
-    if (ra.due !== rb.due) return ra.due < rb.due ? -1 : 1;
+    var da = (ra.due == null ? '' : String(ra.due)), db = (rb.due == null ? '' : String(rb.due));
+    if (da !== db) return da < db ? -1 : 1;
     if ((rb.wrong || 0) !== (ra.wrong || 0)) return (rb.wrong || 0) - (ra.wrong || 0);
+    var ta = (typeof _texRank === 'function') ? _texRank(a) : 97;
+    var tb = (typeof _texRank === 'function') ? _texRank(b) : 97;
+    if (ta !== tb) return ta - tb;
     return (a.card || 0) - (b.card || 0);
   }
   function nextChapter() {
@@ -2825,7 +2835,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var title, lead, cta, ctaArg;
     if (q.length) {
       title = nc ? '今天，先把<span>第' + nc.l.c + '章 ' + esc(nc.l.name) + '</span>过完' : '今天，先把到期题清掉';
-      lead = '今日队列 <b>' + q.length + ' 题</b>：到期 <b>' + due.length + '</b> 题 + 本章新题 <b>' +
+      lead = '今日队列 <b>' + q.length + ' 题</b>：待复习 <b>' + realDueItems().length + '</b> 题 + 新题 <b>' + newItemsIn(q).length + '</b> 题。' +
         Math.max(0, q.length - due.length) + '</b> 题。只放已学 ' + BANK.learned.length + ' 章（' + total +
         ' 个考点），未学章锁定。';
       cta = '开始今日答题'; ctaArg = 'daily';
@@ -2844,7 +2854,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<p class="hero-foot">' + (last ? '上次学到：' + last : '还没开始，今天就是第一天') + '</p>' +
       '<div class="hero-facts">' +
       '<div class="hero-fact"><span>已学章</span><b>' + BANK.learned.length + ' 章</b></div>' +
-      '<div class="hero-fact"><span>到期</span><b>' + due.length + ' 题</b></div>' +
+      '<div class="hero-fact"><span>待复习</span><b>' + realDueItems().length + ' 题</b></div>' + '<div class="hero-fact"><span>新题</span><b>' + newItemsIn(q).length + ' 题</b></div>' +
       '<div class="hero-fact"><span>错题</span><b>' + ws.rolling.length + ' 道</b></div>' +
       '</div></section>' +
       '<section class="shell">' +
@@ -2866,7 +2876,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<p class="advice-order">先清到期 ' + dueN + ' 题，再进本章；答对进 3 天滚动，再对 7 天，答错回 1 天。</p></div>';
   }
   function entriesHTML(due, ws, last) {
-    var sched = due.length ? '今天有 ' + due.length + ' 道到期题' : '今天还没有要复习的题';
+    var _rd = realDueItems().length; var sched = _rd ? '今天有 ' + _rd + ' 道待复习题' : '今天待复习 0 道';
     return '<div class="entries">' +
       '<div class="entry-wrap"><button class="entry" data-act="start" data-arg="due">' +
       '<span class="entry-num">01</span><span class="entry-main"><span class="entry-title">滚动复习</span>' +
@@ -3211,7 +3221,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var acc = total ? Math.round(ok / total * 100) : null;
     var ws = wrongStats();
     var wrongN = ws.rolling.length, masteredN = ws.mastered.length;
-    var dueN = dueItems().length;
+    var dueN = realDueItems().length;
     // 7 天柱
     var days = [];
     for (var i = 6; i >= 0; i--) {
