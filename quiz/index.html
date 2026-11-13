@@ -2846,8 +2846,10 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var title, lead, cta, ctaArg;
     if (q.length) {
       title = nc ? '今天，先把<span>第' + nc.l.c + '章 ' + esc(nc.l.name) + '</span>过完' : '今天，先把到期题清掉';
-      lead = '今日队列 <b>' + q.length + ' 题</b>：待复习 <b>' + realDueItems().length + '</b> 题 + 新题 <b>' + newItemsIn(q).length + '</b> 题。' +
-        Math.max(0, q.length - due.length) + '</b> 题。只放已学 ' + BANK.learned.length + ' 章（' + total +
+      /* LEAD_FIX_20261113: 上一版替换只换了前半句，残留 Math.max(0, q.length - due.length) 会渲染成
+         「…新题 8 题。0 题。只放已学…」的错句。改为队列内分解，保证 待复习 + 新题 === q.length（D0046 断言1）。 */
+      var _qNewN = newItemsIn(q).length, _qDueN = q.length - _qNewN;
+      lead = '今日队列 <b>' + q.length + ' 题</b>：待复习 <b>' + _qDueN + '</b> 题 + 新题 <b>' + _qNewN + '</b> 题。只放已学 ' + BANK.learned.length + ' 章（' + total +
         ' 个考点），未学章锁定。';
       cta = '开始今日答题'; ctaArg = 'daily';
     } else {
