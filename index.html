@@ -2110,6 +2110,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:10px">
   <span>今日完成率 <b id="PO-DPCT">—</b></span>
   <span>累计完成率 <b id="PO-CPCT">—</b></span>
+        </div>
+        <div id="PO-YDAY" style="margin-top:10px;padding:8px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px;color:#166534">昨日完成情况加载中…</div>
+        <div style="display:none">
   <span id="PO-DEBT"></span>
 </div>
 
@@ -2122,7 +2125,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 </section>
 <script>
 (function(){
-  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 856}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 35, "unit": "篇", "target": 38}, "政治": {"min": 30, "unit": "题", "target": 300}, "模拟考": {"min": 0, "unit": "次", "target": 2}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 18, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 26, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 34, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
+  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "题", "target": 300}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
   var KEY_DAILY = 'dsh.347.daily';
   var KEY_QUIZ  = 'dsh.347.quiz.v3';
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -2190,7 +2193,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var tTgt = {背:120, 题:ST.题, 课:1, 英语:1, 政治:8, 模拟考:ROWS[5][1]};
     var tDone = 0, tNeed = 0;
     ROWS.forEach(function(r){ var k=r[0], tgt=r[1]; if(tgt<=0) return; tNeed++; if((D[T][k]||0)>=tgt) tDone++; });
-    document.getElementById('PO-DPCT').textContent = tNeed? Math.round(tDone/tNeed*100)+'%（'+tDone+'/'+tNeed+' 项）' : '—';
+    // PO_DONE_RATIO_20261115: 按量计算，允许超 100%
+    var _dSum=0,_dNeed=0,_dDet=[];
+    ROWS.forEach(function(r){var k=r[0],tgt=r[1];if(tgt<=0)return;_dNeed++;var dn=D[T][k]||0;var rt=Math.min(3,dn/tgt);_dSum+=rt;if(dn>0)_dDet.push(k+' '+dn+'/'+tgt+(rt>1?'↑':''));});
+    var _dPct=_dNeed?(_dSum/_dNeed*100):0;
+    var _dEl=document.getElementById('PO-DPCT');
+    _dEl.textContent=_dNeed?(Math.round(_dPct)+'%'+(_dPct>100?'（超计划 +'+Math.round(_dPct-100)+'%）':'')):'—';
+    _dEl.style.color=_dPct>=100?'#059669':(_dPct>=60?'#d97706':'#dc2626');
+    _dEl.title=_dDet.join(' ｜ ')||'今日未记录';
     // 事件进度：题次（做题 + 今日打勾的题）
     doneQ = quizN + (D[T]['题']||0);
     var ePct = TARGET_Q>0 ? Math.min(100, doneQ/TARGET_Q*100) : 0;
@@ -2209,6 +2219,48 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     else if(match > 0){ mEl.textContent = '匹配度 超前 +'+match.toFixed(1)+'%'; mEl.style.color='#059669'; }
     else { mEl.textContent = '匹配度 落后 '+match.toFixed(1)+'%'; mEl.style.color='#dc2626'; }
     document.getElementById('PO-STEP').textContent = '今日配额 · '+ST.step+'期';
+// PO_YDAY_20261115: 昨日完成情况
+      // 口径：优先读对账快照({"2026-11-14": {"pct": 0.0, "items": [{"k": "墨墨", "done": 0, "tgt": 120, "src": "无记录"}, {"k": "答题", "done": 0, "tgt": 8, "src": "未读到"}, {"k": "课程", "done": 0, "tgt": 1, "src": "未读到"}, {"k": "英语", "done": 0, "tgt": 2, "src": "未读到"}, {"k": "政治", "done": 0, "tgt": 8, "src": "未读到"}], "step": "起步", "minutes_momo": 0, "generated": "2026-11-15 01:21:34", "note": "墨墨自动读；答题/打勾需浏览器开着用 CDP 读；课程/英语/政治取打勾值"}})；无快照则直接用 localStorage 的 D[昨天] 现算
+      try {
+        var _yEl = document.getElementById('PO-YDAY');
+        if (_yEl) {
+          var _TG2 = {背:120, 题:1, 课:1, 英语:2, 政治:8};
+          var _nameMap = {背:'墨墨', 题:'答题', 课:'课程', 英语:'英语', 政治:'政治'};
+          var _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+          var _yk = _yd.getFullYear() + '-' + String(_yd.getMonth()+1).padStart(2,'0') + '-' + String(_yd.getDate()).padStart(2,'0');
+          var _fromSnap = ({"2026-11-14": {"pct": 0.0, "items": [{"k": "墨墨", "done": 0, "tgt": 120, "src": "无记录"}, {"k": "答题", "done": 0, "tgt": 8, "src": "未读到"}, {"k": "课程", "done": 0, "tgt": 1, "src": "未读到"}, {"k": "英语", "done": 0, "tgt": 2, "src": "未读到"}, {"k": "政治", "done": 0, "tgt": 8, "src": "未读到"}], "step": "起步", "minutes_momo": 0, "generated": "2026-11-15 01:21:34", "note": "墨墨自动读；答题/打勾需浏览器开着用 CDP 读；课程/英语/政治取打勾值"}} && {"2026-11-14": {"pct": 0.0, "items": [{"k": "墨墨", "done": 0, "tgt": 120, "src": "无记录"}, {"k": "答题", "done": 0, "tgt": 8, "src": "未读到"}, {"k": "课程", "done": 0, "tgt": 1, "src": "未读到"}, {"k": "英语", "done": 0, "tgt": 2, "src": "未读到"}, {"k": "政治", "done": 0, "tgt": 8, "src": "未读到"}], "step": "起步", "minutes_momo": 0, "generated": "2026-11-15 01:21:34", "note": "墨墨自动读；答题/打勾需浏览器开着用 CDP 读；课程/英语/政治取打勾值"}}[_yk]) ? {"2026-11-14": {"pct": 0.0, "items": [{"k": "墨墨", "done": 0, "tgt": 120, "src": "无记录"}, {"k": "答题", "done": 0, "tgt": 8, "src": "未读到"}, {"k": "课程", "done": 0, "tgt": 1, "src": "未读到"}, {"k": "英语", "done": 0, "tgt": 2, "src": "未读到"}, {"k": "政治", "done": 0, "tgt": 8, "src": "未读到"}], "step": "起步", "minutes_momo": 0, "generated": "2026-11-15 01:21:34", "note": "墨墨自动读；答题/打勾需浏览器开着用 CDP 读；课程/英语/政治取打勾值"}}[_yk] : null;
+          var _p2 = 0, _items = [], _src2 = '';
+          if (_fromSnap && _fromSnap.items && _fromSnap.items.length) {
+            _p2 = Number(_fromSnap.pct || 0);
+            _items = _fromSnap.items.map(function(it){ return {k: it.k, done: it.done, tgt: it.tgt}; });
+            _src2 = '对账快照';
+          } else {
+            // 从 localStorage 现算
+            var _dY = D[_yk] || {};
+            var _s2 = 0, _n2 = 0;
+            ['背','题','课','英语','政治'].forEach(function(k){
+              var tgt = (typeof ROWS !== 'undefined') ? 0 : 0;
+              var t = (k==='背') ? 120 : (k==='题') ? (ST && ST.题 ? ST.题 : 8) : (k==='课'?1:(k==='英语'?2:8));
+              var dq = _dY[k] || 0;
+              _s2 += Math.min(3, dq / t);
+              _n2++;
+              _items.push({k: _nameMap[k], done: dq, tgt: t});
+            });
+            _p2 = _n2 ? (_s2 / _n2 * 100) : 0;
+            _src2 = 'localStorage 打勾';
+          }
+          var _c2 = _p2 >= 100 ? '#059669' : (_p2 >= 60 ? '#d97706' : '#dc2626');
+          var _li2 = _items.map(function(it){
+            var ok = it.done >= it.tgt;
+            return '<span style="display:inline-block;margin-right:10px">' + it.k + ' <b style="color:' + (ok?'#059669':'#374151') + '">' + it.done + '</b>/' + it.tgt + '</span>';
+          }).join('');
+          _yEl.innerHTML = '<div style="font-weight:600;margin-bottom:4px">📅 ' + _yk + ' 完成度 '
+            + '<b style="color:' + _c2 + ';font-size:16px">' + Math.round(_p2) + '%</b>'
+            + (_p2 > 100 ? ' <span style="color:#059669">(超计划 +' + Math.round(_p2 - 100) + '%)</span>' : '')
+            + ' <span style="font-size:11px;color:#9ca3af">（' + _src2 + '）</span></div>'
+            + '<div style="font-size:12px">' + (_li2 || '无记录') + '</div>';
+        }
+      } catch(e) {}
   }
   render();
   var lbl = document.getElementById('PO-CPCT');
