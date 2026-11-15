@@ -2492,7 +2492,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     kw.forEach(function (k) {
       var nk = normTxt(k);
       if (!nk) return;
-      if (t.indexOf(nk) >= 0 || (t.length >= 3 && nk.indexOf(t) >= 0)) hit++;
+      // ① 连续子串匹配（原逻辑）
+      if (t.indexOf(nk) >= 0 || (t.length >= 3 && nk.indexOf(t) >= 0)) { hit++; return; }
+      // ② KW_COVERAGE_20261116: 分词覆盖率兜底（D0059 修法B）
+      //    精炼短语（如「愿望需要」）跨词压缩后，用户照答案写「愿望和需要」连续匹配失败；
+      //    拆 2 字单元算覆盖率，≥60% 即算踩中。
+      if (nk.length <= 3) return;
+      var units = [];
+      for (var i = 0; i < nk.length - 1; i++) units.push(nk.substr(i, 2));
+      var uh = 0;
+      for (var j = 0; j < units.length; j++) {
+        if (t.indexOf(units[j]) >= 0) uh++;
+      }
+      if (uh / units.length >= 0.6) hit++;
     });
     return { hit: hit, total: kw.length };
   }
