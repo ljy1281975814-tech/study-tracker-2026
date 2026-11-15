@@ -2021,7 +2021,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     }
     return o;
   }
-  function saveOwn(o){ try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){} }
+  function saveOwn(o){
+    try { localStorage.setItem(KEY, JSON.stringify(o)); return true; }
+    catch(e){ console.warn('[MOTIV] 保存失败（可能空间满/隐私模式）：', e && e.name); return false; }   // V7
+  }
 
   // ⭐ 单一事实源：真实答题题次（quiz.v3 的 progress.days[dd].a）
   function quizDays(){
@@ -2075,13 +2078,19 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       rows.push({ k:g.k, nm:g.nm, ico:g.ico, ro:g.ro, done:v, tgt:g.t, ok:ok });
     }
     var need = Math.ceil(rq.list.length * PASS);
-    // A4_20261115: pass 必须含「题达标」（否则点 3 次自报门就能过线，题 1/5 可完全不做）
-    var quizRow = null;
-    for(var z=0;z<rows.length;z++){ if(rows[z].k === '题'){ quizRow = rows[z]; break; } }
-    var quizOK = !quizRow || quizRow.done >= quizRow.tgt;   // 无题要求的日子(不该发生)不拦
-    return { s:s, rq:rq, rows:rows, hit:hit, need:need, quizOK:quizOK,
+    // V1_20261115: 完成度 = 「答题达标率」（唯一不可伪造指标）
+    var quizRow = null, selfHit = 0;
+    for(var z=0;z<rows.length;z++){
+      if(rows[z].k === '题'){ quizRow = rows[z]; }
+      else if(rows[z].ok){ selfHit++; }        // 自报项（不是真实数据）
+    }
+    var quizOK = !quizRow || quizRow.done >= quizRow.tgt;
+    var quizPct = (quizRow && quizRow.tgt > 0) ? Math.min(100, quizRow.done / quizRow.tgt * 100) : 0;
+    return { s:s, rq:rq, rows:rows, hit:hit, need:need, quizOK:quizOK, selfHit:selfHit,
+             quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
              pass: rq.list.length>0 && hit>=need && quizOK, next:next, extra:extra,
-             pct: rq.list.length ? (hit / rq.list.length * 100) : 0 };
+             pct: quizPct,                    // ⭐ V1：只算答题
+             selfPct: rq.list.length ? (selfHit / Math.max(1, rq.list.length-1) * 100) : 0 };
   }
 
   // 缺口 = ramp 欠账（B 的处方）
@@ -2122,8 +2131,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
     else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
     else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>今日全项达标</b> —— 收工是正收益。';
-    else if(cur.pass) msg = '达标 <b>'+cur.hit+'/'+cur.rq.list.length+'</b>（过线 '+cur.need+' 项 + 题已达标）。想全项还差 '+(cur.rq.list.length-cur.hit)+'：'+nx;
-    else if(cur.hit > 0) msg = '达标 <b>'+cur.hit+'/'+cur.rq.list.length+'</b>（过线需 '+cur.need+'），还差 <b>'+(cur.need-cur.hit)+'</b> 项。下一步：'+nx;
+    else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+(cur.quizRowDone)+'/'+(cur.quizRowTgt)+'</b>）；自报项 <b>'+cur.selfHit+'</b> 项，凑到 '+cur.need+' 项即过线。下一步：'+nx;
+    else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' · 自报'+cur.selfHit+'项 · 合计达标'+cur.hit+'/'+cur.rq.list.length+'）。';
+    else if(cur.hit > 0) msg = '答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> ｜ 自报 <b>'+cur.selfHit+'</b> 项 ｜ 合计达标 '+cur.hit+'/'+cur.rq.list.length+'（过线需 '+cur.need+'）。下一步：'+nx;
     else msg = '下一步：'+nx;
     if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
@@ -2134,9 +2144,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     // 缺口 = ramp 欠账
     var df = deficitOf(o, QD, T);
     var dleft = Math.max(1, Math.round((pd(END)-pd(T))/864e5) + 1);
-    var gTxt = '📐 计划应做 <b>'+df.planned+'</b> ｜ 实做 <b>'+df.actual+'</b> ｜ '
+    // V4_20261115: 加「距 614 还差多少」
+    var _sumQ2 = 0; for(var _d in QD){ _sumQ2 += QD[_d]; }
+    var _left614 = Math.max(0, TOTAL_Q - _sumQ2);
+    var gTxt = '📐 距目标 <b>'+TOTAL_Q+'</b> 题次还差 <b>'+_left614+'</b> ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
       + (df.deficit > 0
-          ? '<span class="mv-bad">欠 '+df.deficit+' 题</span>（剩 '+dleft+' 天 ⇒ 之后每天多补 '+Math.ceil(df.deficit/dleft)+' 题即回轨）'
+          ? '<span class="mv-bad">欠 '+df.deficit+'</span>（剩 '+dleft+' 天 ⇒ 每天多补 '+Math.ceil(df.deficit/dleft)+' 即回轨）'
           : '<span class="mv-good">不欠账 ✓</span>');
     if($id('mv-gap').innerHTML !== gTxt) $id('mv-gap').innerHTML = gTxt;
 
@@ -2152,15 +2165,16 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       var g2 = GATES[m], row = null;
       for(var k2=0;k2<cur.rows.length;k2++){ if(cur.rows[k2].k===g2.k) row = cur.rows[k2]; }
       if(!row){
+        if(g2.k === '模考') continue;   // V5_20261115: 非模考日完全不显示（删噪音）
         gh += '<button type="button" class="mv-gate off" disabled><span class="gi">'+g2.ico+'</span><span class="gn">'+g2.nm+'</span><span class="gx">不要求</span></button>';
         continue;
       }
       var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':'');
-      var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（自动，来自做题系统）')
-                       : (g2.nm + ' ' + row.done + '/' + row.tgt + (row.ok ? '，点一下取消' : '，点一下记完成'));
+      var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
+                       : (g2.nm + ' ' + row.done + '/' + row.tgt + '（自报）' + (row.ok ? '，点一下清空' : '，点一下填数量'));
       gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
             ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?'✅':g2.ico)+'</span><span class="gn">'+g2.nm+
-            '</span><span class="gx">'+row.done+'/'+row.tgt+'</span></button>';
+            '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">自报</i>')+'</span></button>';
     }
     $id('mv-gates').innerHTML = gh;
     // P1_20261115: 焦点保持（在下一帧恢复，避免被 60s 重绘打断）
@@ -2179,15 +2193,15 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         lastM = m2;
         cells += '<div class="mv-mtag" role="presentation">'+(m2+1)+'月</div>';
       }
+      // V3_20261115: 跑道以「答题达标」为主（真实），自报项只作辅助显示
       if(c2 > T) s3 = 'fut';
-      else if(c2 === T) s3 = st2.pass ? 'pass' : 'now';
-      else if(st2.pass) s3 = (st2.hit === st2.rq.list.length) ? 'perfect' : 'pass';
-      else if(st2.hit > 0) s3 = 'part';
-      else if(st2.rows && st2.rows.some(function(r){ return r.done > 0; })) s3 = 'part';  // P0_20261115: 有任何进展就是 part，不是 miss
+      else if(c2 === T) s3 = (st2.quizOK && st2.selfHit > 0) ? 'pass' : 'now';
+      else if(st2.quizOK && st2.hit >= st2.need) s3 = (st2.hit === st2.rq.list.length) ? 'perfect' : 'pass';
+      else if(st2.quizOK || st2.selfHit > 0) s3 = 'part';
       else s3 = 'miss';
       var isMock = MOCK.indexOf(c2) >= 0;
       var lb = c2 === T ? '今' : String(pd(c2).getDate());
-      cells += '<div class="mv-cell '+s3+(isMock?' mock':'')+'" role="listitem" title="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日 '+st2.hit+'/'+st2.rows.length+' 项'
+      cells += '<div class="mv-cell '+s3+(isMock?' mock':'')+'" role="listitem" aria-label="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日，答题'+st2.quizRowDone+'/'+st2.quizRowTgt+'，自报'+st2.selfHit+'项，'+(s3==='perfect'?'全项达标':s3==='pass'?'达标':s3==='part'?'有进展':s3==='now'?'今天':s3==='fut'?'未到':'未完成')+'" title="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日 '+st2.hit+'/'+st2.rows.length+' 项'
             + (isMock?'（模考日）':'')+'">'+lb+'</div>';
       c2 = sh(c2, 1);
     }
@@ -2314,9 +2328,20 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         }
         if(_bad > 0) throw new Error('有 ' + _bad + ' 处非法值（日期格式/数字/范围 0-999）');
         var n = Object.keys(j.days).length;
-        if(!confirm('将导入 '+n+' 天记录，覆盖当前数据。确定？')) return;
-        j._seeded = 1;
-        saveOwn(j); render(); alert('导入成功（'+n+' 天）');
+        // V8_20261115: 改 merge（不覆盖），冲突时保留较新（数值更大）的
+        var _cur = loadOwn();
+        var _merged = 0, _kept = 0;
+        for(var _dd in j.days){
+          var _src = j.days[_dd] || {};
+          var _dst = _cur.days[_dd] = _cur.days[_dd] || {};
+          for(var _kk in _src){
+            var _sv = +_src[_kk] || 0, _dv = +_dst[_kk] || 0;
+            if(_sv > _dv){ _dst[_kk] = _sv; _merged++; } else { _kept++; }
+          }
+        }
+        if(!confirm('导入将合并 '+n+' 天（改 ' + _merged + ' 项，保留现有 ' + _kept + ' 项）。确定？')) return;
+        _cur._seeded = 1;
+        saveOwn(_cur); render(); alert('合并完成（改 ' + _merged + ' 项）');
       } catch(e){ alert('导入失败：' + e.message); }
     };
     rd.readAsText(f);
@@ -2395,7 +2420,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       '.mv-btn:focus-visible{outline:2px solid #059669;outline-offset:2px}',
       '.mv-tip{flex-basis:100%;margin:4px 0 0;font-size:11.5px;color:#4b5563;line-height:1.5}',
       '.mv-foot{margin:12px 0 0;font-size:11.5px;line-height:1.6;color:#4b5563}',
-      '@media (max-width:420px){.mv-gates{grid-template-columns:repeat(3,minmax(0,1fr))}.mv-ringbox{width:88px;height:88px}.mv-ring{width:88px;height:88px}}',
+      '@media (max-width:420px){.mv-gates{grid-template-columns:repeat(2,minmax(0,1fr))}.mv-ringbox{width:88px;height:88px}.mv-ring{width:88px;height:88px}}',   // V11_20261115: 3→2 列，避免挤
       '@media (prefers-reduced-motion:reduce){.mv-ring-fg{transition:none}}'
     ].join('\n');
     document.head.appendChild(st);
