@@ -1941,7 +1941,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
   <div id="mv-gates" class="mv-gates" role="group" aria-label="今日项目"></div>
 
-  <div id="mv-runway" class="mv-runway" role="list" aria-label="跑道 11-11 至 12-18"></div>
+  <details class="mv-runway-wrap">
+    <summary class="mv-runway-summary" id="mv-runway-summary">📅 38 格跑道（点开看）</summary>
+    <div id="mv-runway" class="mv-runway" role="list" aria-label="跑道 11-11 至 12-18"></div>
+  </details>
   <div id="mv-badges" class="mv-badges"></div>
 
   <details class="mv-more">
@@ -2256,12 +2259,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     }
     $id('mv-runway').innerHTML = cells;
 
-    // 徽章
+    // 徽章（BADGE_FIX_20261115：分母=已过天数，达标≥1 即亮 ⇒ 首个徽章今天可得）
     var bh = '';
     for(var p2=0;p2<RAMP.length;p2++){
-      var rr = RAMP[p2], ln = 0, tot = 0, dd3;
-      for(dd3=rr.from; dd3<=rr.to; dd3=sh(dd3,1)){ tot++; if(dayOf(o,QD,dd3).pass) ln++; }
-      bh += '<span class="'+(ln===tot?'on':'')+'">'+(ln===tot?'🎖 ':'○ ')+rr.step+' '+ln+'/'+tot+'</span>';
+      var rr = RAMP[p2], ln = 0, passed = 0, dd3;
+      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; if(dayOf(o,QD,dd3).pass) ln++; }
+      var started = (rr.from <= T);
+      var on = started && ln >= 1;   // 有过达标记录即亮（不要求整期全过）
+      bh += '<span class="'+(on?'on':'')+'">'+(on?'🎖 ':'○ ')+rr.step+' '+ln+'/'+passed+'</span>';
     }
     $id('mv-badges').innerHTML = bh;
 
@@ -2287,6 +2292,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var dl = Math.round((pd(EXAM)-pd(T))/864e5);
     $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · '+cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天';   // W7b
     $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 格';
+    var _sum = $id('mv-runway-summary');
+    if(_sum){ _sum.textContent = '📅 38 格跑道 · 达标 ' + lit + ' 天（点开看）'; }   // B2_20261115
     prefillWords();   // P1_20261115
   }
 
@@ -2452,6 +2459,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       '.mv-gate:hover{border-color:#6b7280}',
       '.mv-gate:focus-visible{outline:2px solid #059669;outline-offset:2px}',
       '.mv-runway{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:5px;margin-top:10px}',
+      '.mv-runway-wrap{margin-top:12px;border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px}',
+      '.mv-runway-summary{cursor:pointer;font-size:12px;color:#4b5563;font-weight:600;list-style:none}',
+      '.mv-runway-summary::-webkit-details-marker{display:none}',
       '.mv-mtag{grid-column:1/-1;font-size:11px;color:#6b7280;font-weight:700;margin-top:4px}',
       '.mv-cell{height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid #d1d5db;background:#fcfcfd;color:#4b5563;position:relative}',
       '.mv-cell.fut{background:#fcfcfd;color:#4b5563;border-style:dashed}',
