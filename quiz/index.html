@@ -2344,6 +2344,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   var INTERVALS = [3, 7, 15, 30, 60, 90];
   var STEP_LABEL = ['3 天复测', '7 天验证', '15 天巩固', '30 天结业'];
   var MASTER_DAYS = 30;
+  var MASTER_STREAK = 2;   /* MEMORY_LOGIC_20261116: 连续认识次数，达此值自动掌握 */
   var NEW_PER_DAY = 15, MAXQ = (function(){
   /* RAMP_SYNC_V2_20261111: 与仪表盘 ramp 同源；用【数字年月日】构造本地 Date，避免 new Date("YYYY-MM-DD") 按 UTC 解析导致区间漏判 */
   var R = [[[2026,11,11],[2026,11,17],8],[[2026,11,18],[2026,11,27],12],[[2026,11,28],[2026,12,8],18],[[2026,12,9],[2026,12,18],24]];   /* RAMP_DOWN_20261114: 18→12 / 26→18 / 34→24（线下练习量已大，且已学章仅167题可出）*/
@@ -2631,7 +2632,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   function dueItems() {
     return reps(available().filter(function (q) {
-      return !q.se && (ROUND_MODE !== 'A' || q.tier === 'A') && isDue(q) && !answeredToday(q);  /* SE_EXCLUDE_20261111: 简答/论述/案例不出题 */
+      return !q.se && (ROUND_MODE !== 'A' || q.tier === 'A') && isDue(q);  /* MEMORY_LOGIC_20261116: 去掉answeredToday, 未掌握(interval=0)当天可再现 */
     })).sort(dueSort);
   }
 /* DERIVED_20261113: 采纳 D0046 最小改法——只加派生函数，不动 isDue/队列构成 */
@@ -2770,8 +2771,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var k = KP(q);
     var r = progress.q[k] || { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
     r.ok = r.ok || 0; r.bad = r.bad || 0; r.fuzzy = r.fuzzy || 0; r.wrong = r.wrong || 0;
-    // 同一天同一个考点只记一次（改判除外）：幂等闸门
-    if (r.last === TODAY && r.lastOutcome && !(detail && detail.regrade)) {
+    // MEMORY_LOGIC_20261116: 已掌握当天不再重复；未掌握当天可多次（墨墨式反复直到熟悉）
+    if (r.last === TODAY && r.lastOutcome && r.mastered && !(detail && detail.regrade)) {
       return { locked: true, r: r };
     }
     var wasMastered = !!r.mastered;
@@ -2795,12 +2796,15 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       else { r.fuzzy++; r.streak = 0; r.interval = 7; r.mastered = true; }
     } else if (outcome === 'ok') {
       r.ok++; r.streak = (r.streak || 0) + 1;
-      r.interval = INTERVALS[Math.min(r.streak - 1, INTERVALS.length - 1)];
-      r.mastered = false;
+      if (r.streak >= MASTER_STREAK) {
+        r.mastered = true; r.masteredAt = TODAY; r.interval = INTERVALS[0];   // 连续2次认识→掌握，3天后复习
+      } else {
+        r.mastered = false; r.interval = 0;   // 当天再确认一次
+      }
     } else if (outcome === 'bad') {
-      r.bad++; r.wrong++; r.streak = 0; r.interval = 1; r.mastered = false;
+      r.bad++; r.wrong++; r.streak = 0; r.interval = 0; r.mastered = false;   // 忘→当天再现
     } else {
-      r.fuzzy++; r.streak = 0; r.interval = wasMastered ? 7 : 1; r.mastered = wasMastered;
+      r.fuzzy++; r.streak = 0; r.interval = 0; r.mastered = false;   // 模糊→当天再现
     }
     r.lastOutcome = outcome;
     r.lastId = q.id;
@@ -2810,10 +2814,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (detail && detail.text) r.draft = detail.text; else if (!detail || !detail.regrade) delete r.draft;
     if (detail && detail.sel) r.lastSel = detail.sel;
     progress.q[k] = r;
-    if (!(detail && detail.regrade)) {
+    if (!(detail && detail.regrade) && !r._countedToday) {
       var d = progress.days[TODAY] || { a: 0, c: 0, w: 0 };
       d.a++; if (outcome === 'ok') d.c++; if (outcome === 'bad') d.w++;
       progress.days[TODAY] = d;
+      r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
     }
     saveProgress();
     return { locked: false, r: r, wasMastered: wasMastered };
