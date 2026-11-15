@@ -1824,7 +1824,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     </nav>
 
     <div class="issue">
-      <span P26.11.06 <b>周一</b></span>
+      <span>26.11.06 <b>周一</b></span>
       <span class="issue-d">D—34</span>
     </div>
   </div>
@@ -1840,7 +1840,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         </div>
 
         <div class="countline" role="img" aria-label="距 2026 年 12 月 19 日初试还有 34 天，截至 2026-11-15">
-          <b>34</b></span>
+          <b class="count-num">34</b></span>
           <span class="count-unit">
             <b>天</b>
             <span>至 12.19</span>
@@ -2021,12 +2021,26 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     }
     return o;
   }
+  function _toast(msg){
+    var d = document.getElementById('mv-toast');
+    if(!d){ d = document.createElement('div'); d.id = 'mv-toast';
+      d.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#7f1d1d;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:none;max-width:92vw';
+      document.body.appendChild(d); }
+    d.textContent = msg; d.style.display = 'block';
+    clearTimeout(d._t); d._t = setTimeout(function(){ d.style.display = 'none'; }, 4000);
+  }
   function saveOwn(o){
     try { localStorage.setItem(KEY, JSON.stringify(o)); return true; }
-    catch(e){ console.warn('[MOTIV] 保存失败（可能空间满/隐私模式）：', e && e.name); return false; }   // V7
+    catch(e){
+      // W6_20261115: 失败必须可见（A 实测只 console.warn = 用户视角静默丢数据）
+      console.warn('[MOTIV] 保存失败：', e && e.name);
+      _toast('⚠️ 保存失败（浏览器空间满/隐私模式）：这次记录没存上');
+      return false;
+    }
   }
 
   // ⭐ 单一事实源：真实答题题次（quiz.v3 的 progress.days[dd].a）
+  var QD_ACC = {};   // W1_20261115: {日期: {a,c}} 供正确率用
   function quizDays(){
     // A1_20261115: 真实 quiz.v3 结构是**顶层** {v, q, days, unlocked, updated}
     //   （quiz/index.html:2502 blank() ⇒ progress.days 是 progress 对象的属性，
@@ -2036,10 +2050,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       var q = JSON.parse(localStorage.getItem(KEY_Q) || '{}') || {};
       var days = q.days || (q.progress && q.progress.days) || {};
       var out = {};
+      QD_ACC = {};
       for(var d in days){
         var v = days[d];
         var n = (v && typeof v.a === 'number') ? v.a : (typeof v === 'number' ? v : null);
-        if(n !== null && isFinite(n) && n >= 0) out[d] = n;
+        var cn = (v && typeof v.c === 'number') ? v.c : 0;
+        if(n !== null && isFinite(n) && n >= 0){ out[d] = n; QD_ACC[d] = {a:n, c:cn}; }
       }
       // 最后兜底：只有当「顶层/包装层都没有 days」时，才用 q[*].last 估算（且不覆盖已有）
       if(!Object.keys(out).length && q.q){
@@ -2078,19 +2094,41 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       rows.push({ k:g.k, nm:g.nm, ico:g.ico, ro:g.ro, done:v, tgt:g.t, ok:ok });
     }
     var need = Math.ceil(rq.list.length * PASS);
-    // V1_20261115: 完成度 = 「答题达标率」（唯一不可伪造指标）
-    var quizRow = null, selfHit = 0;
+    // X1+X2+X3_20261115: 完成度 = 达标项/要求项（含墨墨真实数）
+    //   达标判定分两种：答题/墨墨=真实可验证；其他=自报（能达标但不参与 pass）
+    var quizRow = null, inkRow = null, selfHit = 0, realHit = 0;
     for(var z=0;z<rows.length;z++){
       if(rows[z].k === '题'){ quizRow = rows[z]; }
-      else if(rows[z].ok){ selfHit++; }        // 自报项（不是真实数据）
+      else if(rows[z].k === '背'){ inkRow = rows[z]; }
     }
-    var quizOK = !quizRow || quizRow.done >= quizRow.tgt;
-    var quizPct = (quizRow && quizRow.tgt > 0) ? Math.min(100, quizRow.done / quizRow.tgt * 100) : 0;
-    return { s:s, rq:rq, rows:rows, hit:hit, need:need, quizOK:quizOK, selfHit:selfHit,
+    var qa = QD_ACC[s] || null;
+    var acc = (qa && qa.a > 0) ? (qa.c / qa.a) : null;
+    var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
+    var qualityOK = (acc !== null && acc >= 0.6);
+    // 答题「达标」= 出席 + 正确率≥60%
+    var quizOK = quizAttend && qualityOK;
+    // 墨墨「达标」= 真实填的数量 ≥ 目标（默认 120）
+    var inkOK = !!(inkRow && inkRow.done >= inkRow.tgt);
+    // 重新计算 hit（用新的达标定义）
+    var hit2 = 0;
+    for(var z2=0;z2<rows.length;z2++){
+      var r2 = rows[z2], ok2;
+      if(r2.k === '题') ok2 = quizOK;
+      else if(r2.k === '背') ok2 = inkOK;
+      else ok2 = r2.ok;                          // 自报
+      if(ok2){ hit2++; if(r2.k === '题' || r2.k === '背') realHit++; else selfHit++; }
+      rows[z2].ok = ok2;                          // 回写，让门显示一致
+    }
+    var pct2 = rows.length ? (hit2 / rows.length * 100) : 0;
+    return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
+             quizAttend:quizAttend, quizOK:quizOK, inkOK:inkOK, selfHit:selfHit, realHit:realHit,
              quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
-             pass: rq.list.length>0 && hit>=need && quizOK, next:next, extra:extra,
-             pct: quizPct,                    // ⭐ V1：只算答题
-             selfPct: rq.list.length ? (selfHit / Math.max(1, rq.list.length-1) * 100) : 0 };
+             acc:acc, qualityOK:qualityOK,
+             // X3: pass = 真实部分全达标（答题质量 + 墨墨）
+             pass: rq.list.length>0 && quizOK && inkOK,
+             next:next, extra:extra,
+             pct: pct2,
+             selfPct: 0 };
   }
 
   // 缺口 = ramp 欠账（B 的处方）
@@ -2131,9 +2169,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
     else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
     else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>今日全项达标</b> —— 收工是正收益。';
-    else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+(cur.quizRowDone)+'/'+(cur.quizRowTgt)+'</b>）；自报项 <b>'+cur.selfHit+'</b> 项，凑到 '+cur.need+' 项即过线。下一步：'+nx;
-    else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' · 自报'+cur.selfHit+'项 · 合计达标'+cur.hit+'/'+cur.rq.list.length+'）。';
-    else if(cur.hit > 0) msg = '答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> ｜ 自报 <b>'+cur.selfHit+'</b> 项 ｜ 合计达标 '+cur.hit+'/'+cur.rq.list.length+'（过线需 '+cur.need+'）。下一步：'+nx;
+    else if(cur.quizOK && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满，但<b>正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+'</b> 低于 60% ⇒ 不计入达标。先复盘错题，再补正确率。';
+    else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；自报项 <b>'+cur.selfHit+'</b> 项。';
+    else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 自报'+cur.selfHit+'项 · 合计达标'+cur.hit+'/'+cur.rq.list.length+'）。';
+    else if(cur.hit > 0) msg = '答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b>'+(cur.acc!==null?'（对 '+Math.round(cur.acc*100)+'%）':'')+' ｜ 自报 <b>'+cur.selfHit+'</b> 项 ｜ 合计达标 '+cur.hit+'/'+cur.rq.list.length+'（过线需 '+cur.need+'）。下一步：'+nx;
     else msg = '下一步：'+nx;
     if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
@@ -2144,13 +2183,19 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     // 缺口 = ramp 欠账
     var df = deficitOf(o, QD, T);
     var dleft = Math.max(1, Math.round((pd(END)-pd(T))/864e5) + 1);
+    if(T > EXAM) dleft = 0;   // W7：考后不再算"剩 N 天" 
     // V4_20261115: 加「距 614 还差多少」
-    var _sumQ2 = 0; for(var _d in QD){ _sumQ2 += QD[_d]; }
+    var _sumQ2 = 0;
+    for(var _d in QD){ if(_d >= START) _sumQ2 += QD[_d]; }   // W3：只算 START 之后（避免双算）
     var _left614 = Math.max(0, TOTAL_Q - _sumQ2);
-    var gTxt = '📐 距目标 <b>'+TOTAL_Q+'</b> 题次还差 <b>'+_left614+'</b> ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
+    var gTxt = (T > EXAM)
+      ? ('🎓 初试已结束 ｜ 全程实做 <b>' + df.actual + '</b> 题次')   // W7c：考后不再报欠账
+      : ('📐 距目标 <b>'+TOTAL_Q+'</b> 题次还差 <b>'+_left614+'</b> ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
       + (df.deficit > 0
           ? '<span class="mv-bad">欠 '+df.deficit+'</span>（剩 '+dleft+' 天 ⇒ 每天多补 '+Math.ceil(df.deficit/dleft)+' 即回轨）'
-          : '<span class="mv-good">不欠账 ✓</span>');
+          : '<span class="mv-good">不欠账 ✓</span>'));
+
+    
     if($id('mv-gap').innerHTML !== gTxt) $id('mv-gap').innerHTML = gTxt;
 
     // 昨日：有数据才报，没数据说"未记录"（不抹成 0）
@@ -2178,10 +2223,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     }
     $id('mv-gates').innerHTML = gh;
     // P1_20261115: 焦点保持（在下一帧恢复，避免被 60s 重绘打断）
-    if(act){
+    // W5_20261115: 只在「刚点过门」时恢复焦点，且输入框聚焦时绝不抢
+    if(_lastGate){
       requestAnimationFrame(function(){
-        var nb = document.querySelector('#mv-gates button[data-gate="'+act+'"]');
-        if(nb && document.activeElement !== nb) nb.focus();
+        var ae = document.activeElement;
+        if(ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA')) return;   // 正在输入，不抢
+        var nb = document.querySelector('#mv-gates button[data-gate="'+_lastGate+'"]');
+        if(nb && ae !== nb) nb.focus();
+        _lastGate = null;   // ⭐ 用完清空，避免永久劫持
       });
     }
 
@@ -2236,7 +2285,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       c4 = sh(c4,-1);
     }
     var dl = Math.round((pd(EXAM)-pd(T))/864e5);
-    $id('mv-sub').textContent = 'D-'+dl+' · '+cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天';
+    $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · '+cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天';   // W7b
     $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 格';
     prefillWords();   // P1_20261115
   }
@@ -2260,7 +2309,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var unit = (k === '背') ? '个词' : (k === '课' ? '节' : (k === '英' ? '篇' : '题'));
     var ans = window.prompt(g.nm + '：今天实际完成多少' + unit + '？（目标 ' + tgt + '）', String(tgt));
     if(ans === null) return;
-    var v = Math.max(0, Math.min(999, Math.round(+ans || 0)));
+    // X8_20261115: 上限按项收紧，防 999 荒谬
+    var _cap = (k === '背') ? 500 : (k === '课' ? 5 : (k === '英' ? 10 : 50));
+    var v = Math.max(0, Math.min(_cap, Math.round(+ans || 0)));
     rec[k] = v;
     saveOwn(o);
     render();
@@ -2287,9 +2338,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
   // 墨墨真实词数
   $id('mv-savewords') && $id('mv-savewords').addEventListener('click', function(){
-    var v = +($id('mv-words').value || 0);
-    if(!(v >= 0)) v = 0;
-    v = Math.min(500, Math.max(0, Math.round(v)));   // B2_20261115: clamp 0-500
+    var raw = $id('mv-words').value;
+    if(raw === '' || raw === null || raw === undefined){ _toast('⚠️ 请先填今天的词数（空值不会清零）'); return; }   // X7
+    var v = +raw;
+    if(!isFinite(v) || v < 0){ _toast('⚠️ 请输入 0-500 的数字'); return; }
+    v = Math.min(500, Math.max(0, Math.round(v)));
     var o = loadOwn(), T = studyDay();
     o.days[T] = o.days[T] || {};
     o.days[T]['背'] = v;
@@ -2420,6 +2473,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       '.mv-btn:focus-visible{outline:2px solid #059669;outline-offset:2px}',
       '.mv-tip{flex-basis:100%;margin:4px 0 0;font-size:11.5px;color:#4b5563;line-height:1.5}',
       '.mv-foot{margin:12px 0 0;font-size:11.5px;line-height:1.6;color:#4b5563}',
+      '.mv-self{display:inline-block;font-style:normal;font-size:9px;line-height:1.4;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:3px;padding:0 3px;margin-left:3px;vertical-align:1px}',
       '@media (max-width:420px){.mv-gates{grid-template-columns:repeat(2,minmax(0,1fr))}.mv-ringbox{width:88px;height:88px}.mv-ring{width:88px;height:88px}}',   // V11_20261115: 3→2 列，避免挤
       '@media (prefers-reduced-motion:reduce){.mv-ring-fg{transition:none}}'
     ].join('\n');
@@ -2433,7 +2487,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 <div class="ts-shell" id="TASK-SHELL" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div></div><p style="margin:12px 0 0;font-size:13px;color:#9ca3af">阶段2：每天 12 题 × 40 天 ⇒ 足量覆盖 614 题次（题库共 851 道）（底线 A 档需 7.3 题/天）</p></div>
 <!--TS-SHELL:END-->
 
-<div aria-hidden="true" data-dup="1" class="ts-shell" id="TASK-SHELL-dup" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div>
+<div data-dup="1" class="ts-shell" id="TASK-SHELL-dup" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div>
 
 
 
