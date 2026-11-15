@@ -1802,6 +1802,7 @@
 body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .hero,.shell,footer{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 </style>
+<style id="mv-dup-fix">/* A2b_20261115: #TASK-SHELL-dup 内含 .timeline，不能整块隐藏；只隐藏重复的标题与勾选列表 */#TASK-SHELL-dup > h3, #TASK-SHELL-dup > label, #TASK-SHELL-dup > p, #TASK-SHELL-dup > div:not(:has(.timeline)) { display:none !important; }</style>
 </head>
 <body>
 <a class="skip" href="#today">跳到今日执行线</a>
@@ -1839,7 +1840,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         </div>
 
         <div class="countline" role="img" aria-label="距 2026 年 12 月 19 日初试还有 34 天，截至 2026-11-15">
-          c</span>
+          <b>34</b></span>
           <span class="count-unit">
             <b>天</b>
             <span>至 12.19</span>
@@ -1917,11 +1918,467 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
           <span>求十得五 · 实落 2.5–3h</span>
         </div>
       </header>
+<!--MOTIV:BEGIN-->
+<section id="MOTIV" class="mv-wrap" aria-labelledby="mv-h2">
+  <h2 id="mv-h2" class="mv-h">🔥 末路灯带 <span id="mv-sub" class="mv-sub"></span><span id="mv-chip" class="mv-chip"></span></h2>
+
+  <div class="mv-top">
+    <div class="mv-ringbox">
+      <svg viewBox="0 0 104 104" class="mv-ring" role="progressbar" aria-labelledby="mv-h2"
+           aria-valuemin="0" aria-valuemax="100" id="mv-ringsvg" aria-valuenow="0">
+        <circle cx="52" cy="52" r="44" class="mv-ring-bg"></circle>
+        <circle id="mv-ring" cx="52" cy="52" r="44" class="mv-ring-fg"></circle>
+      </svg>
+      <div class="mv-ringtxt"><b id="mv-pct">—</b><i>今日达标</i></div>
+    </div>
+    <div class="mv-side">
+      <p id="mv-coach" class="mv-coach" aria-live="polite"></p>
+      <p id="mv-extra" class="mv-extra"></p>
+      <p id="mv-gap" class="mv-gap" aria-live="polite"></p>
+      <p id="mv-yday" class="mv-yday"></p>
+    </div>
+  </div>
+
+  <div id="mv-gates" class="mv-gates" role="group" aria-label="今日项目"></div>
+
+  <div id="mv-runway" class="mv-runway" role="list" aria-label="跑道 11-11 至 12-18"></div>
+  <div id="mv-badges" class="mv-badges"></div>
+
+  <details class="mv-more">
+    <summary>墨墨真实词数 / 导出 / 导入</summary>
+    <div class="mv-more-body">
+      <label class="mv-lbl">今天墨墨新词数
+        <input id="mv-words" type="number" min="0" max="500" step="1" class="mv-input" inputmode="numeric" placeholder="今天的新词数">
+      </label>
+      <button id="mv-savewords" type="button" class="mv-btn">记下</button>
+      <button id="mv-export" type="button" class="mv-btn">导出</button>
+      <button id="mv-import" type="button" class="mv-btn">导入</button>
+      <input id="mv-file" type="file" accept="application/json" hidden>
+      <p class="mv-tip">墨墨词数无法自动读取（在另一台设备/App），所以请你填一次真实数字。答题题数自动从做题系统读，不用填。</p>
+    </div>
+  </details>
+
+  <p class="mv-foot">
+    口径：达标 = 实际 ≥ 目标；完成度 = 达标项 ÷ 要求项（0–100%，不虚报）；超额单独显示；
+    答题题数只读做题系统（不可手点，防伪造）；学习日按 04:00 切（你 00:15 收工不算次日）。
+  </p>
+</section>
+<script>
+(function(){
+  'use strict';
+  // MOTIV_V3_20261115
+  var KEY = 'dsh.347.motiv.v3', KEY_OLD = 'dsh.347.daily', KEY_Q = 'dsh.347.quiz.v3';
+  var EXAM = '2026-12-19', START = '2026-11-11', END = '2026-12-18';
+  var TOTAL_Q = 614, CUTOFF = 4;
+  var RAMP = [
+    { step:'起步', from:'2026-11-11', to:'2026-11-17', q:8  },
+    { step:'铺开', from:'2026-11-18', to:'2026-11-27', q:12 },
+    { step:'加速', from:'2026-11-28', to:'2026-12-08', q:18 },
+    { step:'冲刺', from:'2026-12-09', to:'2026-12-18', q:24 }
+  ];
+  // 六项；'题' 只读（从 quiz 读），item 其它可点
+  var GATES = [
+    { k:'背',   nm:'墨墨新词', t:40, ico:'🔤', ro:false },
+    { k:'题',   nm:'答题',     t:0,  ico:'✍️', ro:true  },
+    { k:'课',   nm:'课',       t:1,  ico:'🎬', ro:false },
+    { k:'英',   nm:'阅读',     t:2,  ico:'📖', ro:false },
+    { k:'政',   nm:'政治',     t:8,  ico:'🏛️', ro:false },
+    { k:'模考', nm:'模考',     t:0,  ico:'🧪', ro:false }
+  ];
+  var MOCK = ['2026-11-24','2026-12-01'];
+  var PASS = 0.6;
+  var ALIAS = { '英语':'英', '政治':'政', '模拟考':'模考', '背':'背', '题':'题', '课':'课', '英':'英', '政':'政', '模考':'模考' };
+  // seed：墨墨真实历史（墨墨日报_历史.jsonl 实测）
+  var SEED = { '2026-11-11':{背:16}, '2026-11-12':{背:98}, '2026-11-13':{背:120}, '2026-11-14':{背:131} };
+
+  function pad(n){ return n<10?'0'+n:''+n; }
+  function dk(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function pd(s){ var p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2], 12); }
+  function sh(s,n){ var d=pd(s); d.setDate(d.getDate()+n); return dk(d); }
+  function $id(x){ return document.getElementById(x); }
+  function studyDay(){ return dk(new Date(Date.now() - CUTOFF*3600e3)); }
+
+  function loadOwn(){
+    var o = null;
+    try { o = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){}
+    if(!o || typeof o !== 'object') o = {};
+    o.days = o.days || {};
+    // 首次：seed 墨墨历史 + 从旧 daily 迁移（key 映射）
+    if(!o._seeded){
+      for(var d in SEED){ o.days[d] = o.days[d] || {}; for(var k in SEED[d]){ if(!o.days[d][k]) o.days[d][k] = SEED[d][k]; } }
+      try {
+        var old = JSON.parse(localStorage.getItem(KEY_OLD) || '{}') || {};
+        for(var d2 in old){
+          var src = old[d2] || {}, tgt = o.days[d2] = o.days[d2] || {};
+          for(var k2 in src){
+            var mapped = ALIAS[k2] || k2;
+            if(typeof src[k2] === 'number' && src[k2] > 0 && !tgt[mapped]) tgt[mapped] = src[k2];
+          }
+        }
+      } catch(e){}
+      o._seeded = 1;
+      saveOwn(o);
+    }
+    return o;
+  }
+  function saveOwn(o){ try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){} }
+
+  // ⭐ 单一事实源：真实答题题次（quiz.v3 的 progress.days[dd].a）
+  function quizDays(){
+    // A1_20261115: 真实 quiz.v3 结构是**顶层** {v, q, days, unlocked, updated}
+    //   （quiz/index.html:2502 blank() ⇒ progress.days 是 progress 对象的属性，
+    //     localStorage 存的是 progress 本身 ⇒ days 在顶层）
+    //   之前的 q.progress.days 只在「导出 JSON」里存在 ⇒ 永远读不到，回退到 q[*].last 去重（题数错）
+    try {
+      var q = JSON.parse(localStorage.getItem(KEY_Q) || '{}') || {};
+      var days = q.days || (q.progress && q.progress.days) || {};
+      var out = {};
+      for(var d in days){
+        var v = days[d];
+        var n = (v && typeof v.a === 'number') ? v.a : (typeof v === 'number' ? v : null);
+        if(n !== null && isFinite(n) && n >= 0) out[d] = n;
+      }
+      // 最后兜底：只有当「顶层/包装层都没有 days」时，才用 q[*].last 估算（且不覆盖已有）
+      if(!Object.keys(out).length && q.q){
+        for(var id in q.q){ var r = q.q[id]; if(r && r.last) out[r.last] = (out[r.last]||0) + 1; }
+      }
+      return out;
+    } catch(e){ return {}; }
+  }
+
+  function stageOf(s){
+    for(var i=0;i<RAMP.length;i++){ if(s>=RAMP[i].from && s<=RAMP[i].to) return RAMP[i]; }
+    return s < RAMP[0].from ? RAMP[0] : RAMP[RAMP.length-1];
+  }
+  function reqOf(s){
+    var st = stageOf(s), out = [];
+    for(var i=0;i<GATES.length;i++){
+      var g = GATES[i], t = g.t;
+      if(g.k === '题') t = st.q;
+      if(g.k === '模考') t = MOCK.indexOf(s) >= 0 ? 1 : 0;
+      if(t > 0) out.push({ k:g.k, nm:g.nm, t:t, ico:g.ico, ro:g.ro });
+    }
+    return { st:st, list:out };
+  }
+  function dayOf(o, QD, s){
+    var rq = reqOf(s), rec = o.days[s] || {}, rows = [], hit = 0, next = null, extra = 0;
+    for(var i=0;i<rq.list.length;i++){
+      var g = rq.list[i], v = +(rec[g.k] || 0);
+      if(g.k === '题'){ v = QD[s] || 0; }
+      var ok = v >= g.t;
+      if(ok) hit++; else if(!next) next = g;
+      if(v > g.t && s === studyDay()){
+        // A3_20261115: 「背」的超额基准用 120（真实日量），不是 40（新词通关线）
+        var _base = (g.k === '背') ? 120 : g.t;
+        if(v > _base) extra += (v - _base);
+      }
+      rows.push({ k:g.k, nm:g.nm, ico:g.ico, ro:g.ro, done:v, tgt:g.t, ok:ok });
+    }
+    var need = Math.ceil(rq.list.length * PASS);
+    // A4_20261115: pass 必须含「题达标」（否则点 3 次自报门就能过线，题 1/5 可完全不做）
+    var quizRow = null;
+    for(var z=0;z<rows.length;z++){ if(rows[z].k === '题'){ quizRow = rows[z]; break; } }
+    var quizOK = !quizRow || quizRow.done >= quizRow.tgt;   // 无题要求的日子(不该发生)不拦
+    return { s:s, rq:rq, rows:rows, hit:hit, need:need, quizOK:quizOK,
+             pass: rq.list.length>0 && hit>=need && quizOK, next:next, extra:extra,
+             pct: rq.list.length ? (hit / rq.list.length * 100) : 0 };
+  }
+
+  // 缺口 = ramp 欠账（B 的处方）
+  function deficitOf(o, QD, T){
+    var planned = 0, actual = 0, d = START;
+    while(d <= T){
+      planned += stageOf(d).q;
+      actual += (QD[d] || 0);
+      d = sh(d, 1);
+    }
+    return { planned:planned, actual:actual, deficit: Math.max(0, planned - actual) };
+  }
+
+  function render(){
+    if(!$id('MOTIV')) return;
+    var T = studyDay();                       // ⭐ 每次重算（修 04:00 后错日）
+    var o = loadOwn(), QD = quizDays();
+    var cur = dayOf(o, QD, T), y = sh(T,-1), yst = dayOf(o, QD, y);
+
+    // 环：完成度 = 达标项/要求项（不虚报）
+    var pct = cur.pct;
+    var pEl = $id('mv-pct'), ring = $id('mv-ring'), svg = $id('mv-ringsvg');
+    if(pEl.textContent !== Math.round(pct)+'%') pEl.textContent = Math.round(pct)+'%';
+    var col = pct>=100 ? '#059669' : (pct>=60 ? '#b45309' : '#b91c1c');
+    pEl.style.color = col;
+    var C = 2*Math.PI*44;
+    ring.style.stroke = col;
+    ring.style.strokeDashoffset = String(C - C*Math.min(pct,100)/100);
+    if(svg) svg.setAttribute('aria-valuenow', String(Math.round(Math.min(pct,100))));
+
+    // 教练句：100% 必须 pass && hit===need（B 的处方）
+    var nx = cur.next ? (cur.next.ico+' '+cur.next.nm+' '+cur.next.t) : '';
+    var msg;
+    if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
+    else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>今日全项达标</b> —— 收工是正收益。';
+    else if(cur.pass) msg = '达标 <b>'+cur.hit+'/'+cur.rq.list.length+'</b>（过线 '+cur.need+' 项 + 题已达标）。想全项还差 '+(cur.rq.list.length-cur.hit)+'：'+nx;
+    else if(cur.hit > 0) msg = '达标 <b>'+cur.hit+'/'+cur.rq.list.length+'</b>（过线需 '+cur.need+'），还差 <b>'+(cur.need-cur.hit)+'</b> 项。下一步：'+nx;
+    else msg = '下一步：'+nx;
+    if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
+
+    // 超额（真实多做的量，单独显示，不进完成度）
+    var ext = cur.extra > 0 ? ('⚡ 超额 +'+cur.extra+'（真实多做的，不计入完成度以免虚报；⚠️ 超额只算本项，不抵其他项欠账）') : '';
+    if($id('mv-extra').textContent !== ext) $id('mv-extra').textContent = ext;
+
+    // 缺口 = ramp 欠账
+    var df = deficitOf(o, QD, T);
+    var dleft = Math.max(1, Math.round((pd(END)-pd(T))/864e5) + 1);
+    var gTxt = '📐 计划应做 <b>'+df.planned+'</b> ｜ 实做 <b>'+df.actual+'</b> ｜ '
+      + (df.deficit > 0
+          ? '<span class="mv-bad">欠 '+df.deficit+' 题</span>（剩 '+dleft+' 天 ⇒ 之后每天多补 '+Math.ceil(df.deficit/dleft)+' 题即回轨）'
+          : '<span class="mv-good">不欠账 ✓</span>');
+    if($id('mv-gap').innerHTML !== gTxt) $id('mv-gap').innerHTML = gTxt;
+
+    // 昨日：有数据才报，没数据说"未记录"（不抹成 0）
+    var yHas = yst.rows.some(function(r){ return r.done > 0; });
+    var yTxt = '📅 昨天 '+y+' ' + (yHas ? '<b>'+Math.round(yst.pct)+'%</b>（达标 '+yst.hit+'/'+yst.rows.length+'）' : '<span class="mv-dim">未记录</span>');
+    if($id('mv-yday').innerHTML !== yTxt) $id('mv-yday').innerHTML = yTxt;
+
+    // 门（题只读；其它可点；保持焦点）
+    var act = _lastGate || (document.activeElement ? document.activeElement.getAttribute('data-gate') : null);
+    var gh = '';
+    for(var m=0;m<GATES.length;m++){
+      var g2 = GATES[m], row = null;
+      for(var k2=0;k2<cur.rows.length;k2++){ if(cur.rows[k2].k===g2.k) row = cur.rows[k2]; }
+      if(!row){
+        gh += '<button type="button" class="mv-gate off" disabled><span class="gi">'+g2.ico+'</span><span class="gn">'+g2.nm+'</span><span class="gx">不要求</span></button>';
+        continue;
+      }
+      var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':'');
+      var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（自动，来自做题系统）')
+                       : (g2.nm + ' ' + row.done + '/' + row.tgt + (row.ok ? '，点一下取消' : '，点一下记完成'));
+      gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
+            ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?'✅':g2.ico)+'</span><span class="gn">'+g2.nm+
+            '</span><span class="gx">'+row.done+'/'+row.tgt+'</span></button>';
+    }
+    $id('mv-gates').innerHTML = gh;
+    // P1_20261115: 焦点保持（在下一帧恢复，避免被 60s 重绘打断）
+    if(act){
+      requestAnimationFrame(function(){
+        var nb = document.querySelector('#mv-gates button[data-gate="'+act+'"]');
+        if(nb && document.activeElement !== nb) nb.focus();
+      });
+    }
+
+    // 跑道（加月份分隔）
+    var cells = '', c2 = START, lastM = '';
+    while(c2 <= END){
+      var st2 = dayOf(o, QD, c2), s3, m2 = pd(c2).getMonth();
+      if(m2 !== lastM){
+        lastM = m2;
+        cells += '<div class="mv-mtag" role="presentation">'+(m2+1)+'月</div>';
+      }
+      if(c2 > T) s3 = 'fut';
+      else if(c2 === T) s3 = st2.pass ? 'pass' : 'now';
+      else if(st2.pass) s3 = (st2.hit === st2.rq.list.length) ? 'perfect' : 'pass';
+      else if(st2.hit > 0) s3 = 'part';
+      else if(st2.rows && st2.rows.some(function(r){ return r.done > 0; })) s3 = 'part';  // P0_20261115: 有任何进展就是 part，不是 miss
+      else s3 = 'miss';
+      var isMock = MOCK.indexOf(c2) >= 0;
+      var lb = c2 === T ? '今' : String(pd(c2).getDate());
+      cells += '<div class="mv-cell '+s3+(isMock?' mock':'')+'" role="listitem" title="'+c2+' 达标 '+st2.hit+'/'+st2.rows.length+' 项'
+            + (isMock?'（模考日）':'')+'">'+lb+'</div>';
+      c2 = sh(c2, 1);
+    }
+    $id('mv-runway').innerHTML = cells;
+
+    // 徽章
+    var bh = '';
+    for(var p2=0;p2<RAMP.length;p2++){
+      var rr = RAMP[p2], ln = 0, tot = 0, dd3;
+      for(dd3=rr.from; dd3<=rr.to; dd3=sh(dd3,1)){ tot++; if(dayOf(o,QD,dd3).pass) ln++; }
+      bh += '<span class="'+(ln===tot?'on':'')+'">'+(ln===tot?'🎖 ':'○ ')+rr.step+' '+ln+'/'+tot+'</span>';
+    }
+    $id('mv-badges').innerHTML = bh;
+
+    // chip
+    var streak = 0, lit = 0, c3 = START, total = 0;
+    while(c3 <= END){
+      total++;
+      if(c3 <= T){
+        var d3 = dayOf(o,QD,c3);
+        if(d3.pass){ lit++; if(c3 === T || streak > 0 || c3 === START) streak += 0; }
+      }
+      c3 = sh(c3,1);
+    }
+    // 连击：从今天往前数连续 pass
+    streak = 0;
+    var c4 = T;
+    while(c4 >= START){
+      var d4 = dayOf(o,QD,c4);
+      if(d4.pass) streak++;
+      else if(c4 !== T) break;
+      c4 = sh(c4,-1);
+    }
+    var dl = Math.round((pd(EXAM)-pd(T))/864e5);
+    $id('mv-sub').textContent = 'D-'+dl+' · '+cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天';
+    $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 格';
+    prefillWords();   // P1_20261115
+  }
+
+  // 门点击（题门只读 → 跳 quiz）
+  var _lastGate = null;   // P0_20261115: 记住刚点的门，用于重绘后恢复焦点
+  $id('mv-gates') && $id('mv-gates').addEventListener('click', function(ev){
+    var b = ev.target.closest('button[data-gate]');
+    if(!b) return;
+    var k = b.getAttribute('data-gate');
+    _lastGate = k;
+    if(b.getAttribute('data-ro') === '1'){ location.href = 'quiz/'; return; }
+    var o = loadOwn(), T = studyDay();
+    var rq = reqOf(T), tgt = 0;
+    for(var i=0;i<rq.list.length;i++){ if(rq.list[i].k === k) tgt = rq.list[i].t; }
+    var rec = o.days[T] = o.days[T] || {};
+    var cur = +(rec[k] || 0);
+    if(cur >= tgt){
+      rec[k] = 0;                       // 已达标 → 点一下取消
+    } else if(k === '背'){
+      // B3_20261115: 背门只记「做过」= 目标值；真实词数必须走输入框的「记下」按钮
+      rec[k] = tgt;
+    } else {
+      rec[k] = tgt;
+    }
+    saveOwn(o);
+    render();
+  });
+
+  // P1_20261115: 墨墨输入框预填当天已有值（避免用户不填 ⇒ 背门永远 0/40）
+  function prefillWords(){
+    var w = $id('mv-words');
+    if(!w || document.activeElement === w) return;
+    var o = loadOwn(), T = studyDay(), v = (o.days[T] || {})['背'];
+    if(v === undefined){
+      // P0_20261115: 今天还没填 ⇒ 取最近一次的真实词数（让他知道"上次我是 131"）
+      var ks = Object.keys(o.days).sort().reverse();
+      for(var i=0;i<ks.length;i++){
+        if(ks[i] < T && o.days[ks[i]] && typeof o.days[ks[i]]['背'] === 'number'){ v = o.days[ks[i]]['背']; break; }
+      }
+    }
+    // B3_20261115: 预填改 placeholder（不写 value）——避免点「背」门把昨天的 131 一键记成今天
+    if(v !== undefined){
+      w.placeholder = '上次 ' + v + ' 词';
+      w.title = '上次你填了 ' + v + ' 词；今天请重填（点门只记「做过」，不写词数）';
+    }
+  }
+
+  // 墨墨真实词数
+  $id('mv-savewords') && $id('mv-savewords').addEventListener('click', function(){
+    var v = +($id('mv-words').value || 0);
+    if(!(v >= 0)) v = 0;
+    v = Math.min(500, Math.max(0, Math.round(v)));   // B2_20261115: clamp 0-500
+    var o = loadOwn(), T = studyDay();
+    o.days[T] = o.days[T] || {};
+    o.days[T]['背'] = v;
+    saveOwn(o);
+    render();
+  });
+
+  // 导出 / 导入（带校验）
+  $id('mv-export') && $id('mv-export').addEventListener('click', function(){
+    var a = document.createElement('a');
+    a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(loadOwn(), null, 1));
+    a.download = 'map347-' + studyDay() + '.json';
+    a.click();
+  });
+  $id('mv-import') && $id('mv-import').addEventListener('click', function(){ $id('mv-file').click(); });
+  $id('mv-file') && $id('mv-file').addEventListener('change', function(ev){
+    var f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      try {
+        var j = JSON.parse(rd.result);
+        if(!j || typeof j !== 'object' || !j.days || typeof j.days !== 'object') throw new Error('缺少 days');
+        var n = Object.keys(j.days).length;
+        if(!confirm('将导入 '+n+' 天记录，覆盖当前数据。确定？')) return;
+        j._seeded = 1;
+        saveOwn(j); render(); alert('导入成功（'+n+' 天）');
+      } catch(e){ alert('导入失败：' + e.message); }
+    };
+    rd.readAsText(f);
+  });
+
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) render(); });
+  window.addEventListener('storage', function(e){ if(e.key === KEY || e.key === KEY_Q) render(); });
+  setInterval(function(){ if(!document.hidden) render(); }, 60000);
+  render();
+
+  // 样式
+  if(!document.getElementById('mv-style')){
+    var st = document.createElement('style');
+    st.id = 'mv-style';
+    st.textContent = [
+      '.mv-wrap{margin:16px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;font-size:13px;color:#111827;font-variant-numeric:tabular-nums}',
+      
+      '.mv-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 12px;font-size:17px}',
+      '.mv-sub{font-size:12px;font-weight:400;color:#4b5563}',
+      '.mv-chip{margin-left:auto;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}',
+      '.mv-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}',
+      '.mv-ringbox{position:relative;width:104px;height:104px;flex:0 0 auto}',
+      '.mv-ring{width:104px;height:104px;transform:rotate(-90deg)}',
+      '.mv-ring-bg{fill:none;stroke:#f3f4f6;stroke-width:12}',
+      '.mv-ring-fg{fill:none;stroke:#059669;stroke-width:12;stroke-linecap:round;stroke-dasharray:276.5;stroke-dashoffset:276.5;transition:stroke-dashoffset .6s ease,stroke .3s}',
+      '.mv-ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}',
+      '.mv-ringtxt b{font-size:24px;font-weight:800;line-height:1}',
+      '.mv-ringtxt i{font-size:11px;color:#4b5563;font-style:normal;margin-top:2px}',
+      '.mv-side{flex:1;min-width:200px}',
+      '.mv-coach{margin:0;font-size:14px;line-height:1.6;color:#111827}',
+      '.mv-extra{margin:6px 0 0;font-size:12.5px;color:#b45309;font-weight:600;min-height:1em}',
+      '.mv-gap{margin:6px 0 0;font-size:12.5px;line-height:1.7;color:#374151}',
+      '.mv-yday{margin:4px 0 0;font-size:12px;color:#4b5563}',
+      '.mv-dim{color:#6b7280}',
+      '.mv-good{color:#047857;font-weight:700}',
+      '.mv-bad{color:#b91c1c;font-weight:700}',
+      '.mv-gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px;margin-top:14px}',
+      '.mv-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:58px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;color:#374151;font-size:11.5px;line-height:1.2;cursor:pointer;padding:4px 2px;font-family:inherit}',
+      '.mv-gate .gi{font-size:15px}.mv-gate .gn{font-weight:700}.mv-gate .gx{font-size:10.5px;font-weight:700;color:#4b5563}',
+      '.mv-gate.ok{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}.mv-gate.ok .gx{color:#047857}',
+      '.mv-gate.next{background:#fffbeb;border-color:#d97706;color:#92400e;box-shadow:0 0 0 3px rgba(217,119,6,.14)}',
+      '.mv-gate.ro{background:#eff6ff;border-color:#93c5fd;color:#1e40af}.mv-gate.ro .gx{color:#1d4ed8}',
+      '.mv-gate.off{opacity:.6;cursor:default;color:#6b7280;border-color:#e5e7eb}',
+      '.mv-gate:hover{border-color:#6b7280}',
+      '.mv-gate:focus-visible{outline:2px solid #059669;outline-offset:2px}',
+      '.mv-runway{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:5px;margin-top:10px}',
+      '.mv-mtag{grid-column:1/-1;font-size:11px;color:#6b7280;font-weight:700;margin-top:4px}',
+      '.mv-cell{height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;border:1px solid #d1d5db;background:#fcfcfd;color:#4b5563;position:relative}',
+      '.mv-cell.fut{background:#fcfcfd;color:#4b5563;border-style:dashed}',
+      '.mv-cell.now{border:2px solid #059669;background:#fff;color:#047857;font-weight:800}',
+      '.mv-cell.pass{border-color:#6ee7b7;background:#ecfdf5;color:#065f46;font-weight:700}',
+      '.mv-cell.perfect{border-color:#059669;background:#059669;color:#fff;font-weight:700}',
+      '.mv-cell.part{border-color:#fcd34d;background:#fffbeb;color:#92400e}',
+      '.mv-cell.miss{border-color:#fca5a5;background:#fef2f2;color:#b91c1c}',
+      '.mv-cell.mock::after{content:"";position:absolute;inset:auto 0 2px 0;height:3px;border-radius:2px;background:#d97706}',
+      '.mv-badges{display:flex;gap:6px;margin-top:10px;font-size:11px;color:#4b5563;flex-wrap:wrap}',
+      '.mv-badges span{padding:2px 8px;border:1px solid #d1d5db;border-radius:99px}',
+      '.mv-badges span.on{color:#065f46;border-color:#6ee7b7;background:#ecfdf5;font-weight:700}',
+      '.mv-more{margin-top:12px;font-size:12px}',
+      '.mv-more summary{cursor:pointer;color:#4b5563}',
+      '.mv-more-body{padding:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}',
+      '.mv-lbl{font-size:12px;color:#374151;display:flex;gap:6px;align-items:center}',
+      '.mv-input{width:90px;min-height:36px;padding:0 8px;border:1px solid #d1d5db;border-radius:8px;font:inherit}',
+      '.mv-btn{min-height:36px;padding:0 12px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#111827;font:inherit;cursor:pointer}',
+      '.mv-btn:focus-visible{outline:2px solid #059669;outline-offset:2px}',
+      '.mv-tip{flex-basis:100%;margin:4px 0 0;font-size:11.5px;color:#4b5563;line-height:1.5}',
+      '.mv-foot{margin:12px 0 0;font-size:11.5px;line-height:1.6;color:#4b5563}',
+      '@media (max-width:420px){.mv-gates{grid-template-columns:repeat(3,minmax(0,1fr))}.mv-ringbox{width:88px;height:88px}.mv-ring{width:88px;height:88px}}',
+      '@media (prefers-reduced-motion:reduce){.mv-ring-fg{transition:none}}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
+})();
+</script>
+<!--MOTIV:END-->
+
 <!--TS-SHELL:BEGIN-->
-<div class="ts-shell" id="TASK-SHELL" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div></div><p style="margin:12px 0 0;font-size:13px;color:#9ca3af">阶段2：每天 12 题 × 40 天 ⇒ 足量覆盖 851 题（底线 A 档需 7.3 题/天）</p></div>
+<div class="ts-shell" id="TASK-SHELL" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div></div><p style="margin:12px 0 0;font-size:13px;color:#9ca3af">阶段2：每天 12 题 × 40 天 ⇒ 足量覆盖 614 题次（题库共 851 道）（底线 A 档需 7.3 题/天）</p></div>
 <!--TS-SHELL:END-->
 
-<div class="ts-shell" id="TASK-SHELL" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div>
+<div aria-hidden="true" data-dup="1" class="ts-shell" id="TASK-SHELL-dup" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/461（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/851（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div>
 
 
 
@@ -2126,6 +2583,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   打勾记录存在本机浏览器（localStorage），换设备不同步。
 </div>
 </section>
+
+
 <script>
 (function(){
   var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "题", "target": 300}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
