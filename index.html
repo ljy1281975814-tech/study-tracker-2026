@@ -248,7 +248,7 @@
     display:block;
     color:var(--red);
     font-family:"Helvetica Neue",Arial,var(--sans);
-    font-size:clamp(132px,18.4vw,248px);
+    font-size:clamp(96px,12.5vw,170px);
     font-weight:700;
     line-height:.76;
     letter-spacing:-.085em;
@@ -276,7 +276,7 @@
   }
   .hero-title{
     margin-top:clamp(12px,2vw,22px);
-    font-size:clamp(38px,4.9vw,66px);
+    font-size:clamp(32px,3.8vw,48px);
     font-weight:700;
     line-height:1.06;
     letter-spacing:-.055em;
@@ -296,7 +296,7 @@
     background:var(--red);
   }
   .hero-lead{
-    margin-top:clamp(16px,2vw,25px);
+    margin-top:clamp(8px,1.2vw,14px);
     max-width:560px;
     color:var(--ink-2);
     font-size:18px;
@@ -310,7 +310,7 @@
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:0;
-    margin-top:clamp(22px,3vw,36px);
+    margin-top:clamp(12px,1.6vw,20px);
     border-top:1px solid var(--line);
     border-bottom:1px solid var(--line);
   }
@@ -1910,23 +1910,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
   <section class="section" id="today" aria-labelledby="today-title">
     <div class="shell">
-      <header class="section-head">
-        <span class="sec-index" aria-hidden="true">01</span>
-        <div class="sec-title">
-          <h2 id="today-title">今日执行线</h2>
-          <p>11.02 快照 · 首项优先，其余按剩余精力排</p>
-        </div>
-        <div class="sec-side">
-          <b>计划核心 4.3h</b>
-          <span>求十得五 · 实落 2.5–3h</span>
-        </div>
-      </header>
-<!--TS-SHELL:BEGIN-->
-<div class="ts-shell" id="TASK-SHELL" style="display:none;margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/447（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/859（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div></div><p style="margin:12px 0 0;font-size:13px;color:#6b7280">阶段2：每天 12 题 × 40 天 ⇒ 足量覆盖 859 题（底线 A 档需 7.3 题/天）</p></div>
-<!--TS-SHELL:END-->
-
-<!--MOTIV:BEGIN-->
-<section id="MOTIV" class="mv-wrap" aria-labelledby="mv-h2">
+      <section id="MOTIV" class="mv-wrap" aria-labelledby="mv-h2">
   <h2 id="mv-h2" class="mv-h">🔥 末路灯带 <span id="mv-sub" class="mv-sub"></span><span id="mv-chip" class="mv-chip"></span></h2>
 
   <div class="mv-top">
@@ -1973,6 +1957,23 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     答题题数只读做题系统（不可手点，防伪造）；学习日按 04:00 切（你 00:15 收工不算次日）。
   </p>
 </section>
+      <header class="section-head">
+        <span class="sec-index" aria-hidden="true">01</span>
+        <div class="sec-title">
+          <h2 id="today-title">今日执行线</h2>
+          <p>11.02 快照 · 首项优先，其余按剩余精力排</p>
+        </div>
+        <div class="sec-side">
+          <b>计划核心 4.3h</b>
+          <span>求十得五 · 实落 2.5–3h</span>
+        </div>
+      </header>
+<!--TS-SHELL:BEGIN-->
+<div class="ts-shell" id="TASK-SHELL" style="display:none;margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/447（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/859（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div></div><p style="margin:12px 0 0;font-size:13px;color:#6b7280">阶段2：每天 12 题 × 40 天 ⇒ 足量覆盖 859 题（底线 A 档需 7.3 题/天）</p></div>
+<!--TS-SHELL:END-->
+
+<!--MOTIV:BEGIN-->
+
 <script>
 (function(){
   'use strict';
@@ -2173,7 +2174,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _dispPct = Math.round(pct);
     if(_dispPct >= 100 && !cur.pass) _dispPct = 99;   // V33: 绿100%仅当pass，防119/120假达标
     if(pEl.textContent !== _dispPct+'%') pEl.textContent = _dispPct+'%';
-    var col = (pct>=100 && cur.pass) ? '#059669' : (pct>=30 ? '#b45309' : '#b91c1c');   // V33: 绿仅当pass
+    var col = cur.pass ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK) ? '#b45309' : '#b91c1c');   // V40: 环颜色=有进展判据(与chip一致,修71vs72断层)
     pEl.style.color = col;
     var C = 2*Math.PI*44;
     ring.style.stroke = col;
@@ -2215,7 +2216,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       ? ('🎓 初试已结束 ｜ 全程实做 <b>' + df.actual + '</b> 题次')   // W7c：考后不再报欠账
       : ('📐 距目标 <b>'+TOTAL_Q+'</b> 题次还差 <b>'+_left614+'</b> ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
       + (df.deficit > 0
-          ? '<span class="mv-bad">欠 '+df.deficit+'</span>（⭐ 今天保底：墨墨120 + 答题8 = 有进展，不追总数）'
+          ? '<span class="mv-bad">欠 '+df.deficit+'</span>（⭐ 今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展，不追总数）'
           : '<span class="mv-good">不欠账 ✓</span>'));
 
     
