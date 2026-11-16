@@ -2259,7 +2259,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       if(c2 > T) s3 = 'fut';
       else if(c2 === T) s3 = st2.pass ? 'pass' : 'now';   // V11_20261116: 用 pass(答题质量+墨墨)判今日格，消除自报变绿/真实反而不绿的矛盾
       else if(st2.quizOK && st2.hit >= st2.need) s3 = (st2.hit === st2.rq.list.length) ? 'perfect' : 'pass';
-      else if(st2.quizOK || st2.selfHit > 0) s3 = 'part';
+      else if(st2.quizOK || st2.selfHit > 0 || st2.inkOK) s3 = 'part';   // V14_20261116: inkOK(墨墨达标)也算「有进展」，墨墨-only日不判红 miss
       else s3 = 'miss';
       var isMock = MOCK.indexOf(c2) >= 0;
       var lb = c2 === T ? '今' : String(pd(c2).getDate());
@@ -2530,7 +2530,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <div class="carry" aria-label="上一条记录与墨墨数据">
         <span class="carry-label">11.01 收口</span>
         <span class="carry-item"><b>答题营 01 期</b> ✓ 已完成</span>
-        <span class="carry-item"><b>墨墨 46 / 150</b><small>11.02 06:30 API：finished 12 / 150（11-02 当日进行中·非日结）</small></span>
+        <span class="carry-item"><b>墨墨 46 词（11.02 快照）</b><small>11.02 06:30 API：finished 12（App 目标 150 ≠ 本页过关线 120）</small></span>
         <span class="carry-item"><b>墨墨累计在学 809 词</b><small>只认平台数字，不凭印象</small></span>
       </div>
 
@@ -2578,7 +2578,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
               <h3 class="t-title">墨墨 <span>120 词</span></h3>
               <span class="tag">每日</span>
             </div>
-            <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12 / 150（11-02 当日进行中·非日结），累计 809。</span></p>
+            <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.02 快照），累计 809。</span></p>
           </div>
           <label class="check">
             <input type="checkbox" data-task-check="momo" aria-label="标记 墨墨120词 完成">
@@ -2652,15 +2652,13 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       </div>
 
       <div class="timeline-foot">
-        <span class="timeline-count"><b id="doneCount">0 / 6</b><span>已勾选</span></span>
-        <span class="timeline-note">勾选只存在本机，用于看今天是否收口，不改动原始记录。</span>
-        <button class="text-btn" id="resetChecks" type="button">重置勾选</button>
+        <span class="timeline-note">本区为「计划参考」（历史快照），今日完成度以 🔥 末路灯带为准。</span>
       </div>
 
       <div class="report" aria-labelledby="report-title">
         <div>
           <p class="report-kicker" id="report-title">输出报数 / 唯一有效凭证</p>
-          <p class="report-format" id="reportPreview">6章：默 __% 做 __%</p>
+          <p class="report-format" id="reportPreview">第4章：默 __% 做 __%</p>
           <p class="report-note">默写正确率 ≥80%（≥20/20 卡）· 做题正确率 ≥70%。</p>
         </div>
         <form class="report-form" id="reportForm">
