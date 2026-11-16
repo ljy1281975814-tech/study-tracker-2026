@@ -2373,7 +2373,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var store = {};
     try{ store = JSON.parse(localStorage.getItem('dsh.347.report.v1')||'{}') || {}; }catch(e){ store = {}; }
     var r = store[day];
-    if(!r || (r.mo==='' && r.do==='')){ el.innerHTML = '📝 <span style="color:#57534e">今日还没报数</span>（默写/做题% 在下方报数区填）'; return; }
+    if(!r || (r.mo==='' && r.do==='')){ el.innerHTML = '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>'; return; }
     var mo = parseInt(r.mo||'', 10), doP = parseInt(r.do||'', 10);
     var parts = [];
     if(!isNaN(mo)) parts.push((mo>=80?'✅':'⚠️')+' 默写 '+mo+'%'+(mo>=80?'':'（需≥80）'));
