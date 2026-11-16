@@ -2275,8 +2275,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    var _rr = _rs[_rday];
    if(_rr){ var _mo=(_rr.mo!==''&&_rr.mo!==undefined)?(parseInt(_rr.mo,10)||0)/100:null; var _do2=(_rr.do!==''&&_rr.do!==undefined)?(parseInt(_rr.do,10)||0)/100:null; if(_mo!==null&&_do2!==null){_mp=Math.max(0,Math.min(1,(_mo+_do2)/2));} else if(_mo!==null){_mp=Math.max(0,Math.min(1,_mo));} else if(_do2!==null){_mp=Math.max(0,Math.min(1,_do2));} }
   }catch(e){}
-  var _denom = (_mp >= 0) ? 3 : 2;
-  var _num = _qp + _ip + (_mp >= 0 ? _mp : 0);
+  var _hasReal = (quizRow && quizRow.done > 0) || (inkRow && inkRow.done > 0); var _mpEff = (_mp >= 0 && _hasReal) ? _mp : -1; var _denom = (_mpEff >= 0) ? 3 : 2;
+  var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
   var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK:reportOK, reportPartial:reportPartial, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
@@ -2399,7 +2399,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    }
    var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':' self');
    var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
-            : (g2.nm + ' ' + row.done + '/' + row.tgt + '（自报）' + (row.ok ? '，点一下清空' : '，点一下填数量'));
+            : (g2.nm + ' ' + row.done + '/' + row.tgt + (g2.k==='背' ? '（手动填）' : '（自报）') + (row.ok ? '，点一下清空' : '，点一下填数量'));
    gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
       ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?(row.ro?'✅':'☑'):g2.ico)+'</span><span class="gn">'+g2.nm+
       '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">自报</i>')+'</span></button>';
