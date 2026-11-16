@@ -1867,7 +1867,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  .mv-report{margin:8px 0 0;font-size:15px;line-height:1.6;color:#374151}.mv-report a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
  
  /* V69: 低高度桌面（1366x768 等）压缩 hero，让环进首屏 */
- @media (max-height: 800px) and (min-width: 900px){
+ @media (max-height: 920px) and (min-width: 900px){
   .count-num{font-size:clamp(68px,9vw,112px)!important}
   .hero-main{padding-top:6px!important;padding-bottom:6px!important}
   .hero-top{padding-bottom:4px!important}
@@ -1916,6 +1916,32 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-gate.next.ro .gn{color:#f2efe7!important}
   .mv-gate.next.ro .gx{color:#f2efe7!important}
   .mv-gate.next.ro .mv-self{color:#f2efe7!important;background:rgba(242,239,231,.18)!important;border-color:rgba(242,239,231,.45)!important}
+
+  /* V106(G1): 首屏可执行 + 断点修复 */
+  @media (min-width: 900px){
+    .count-num{font-size:clamp(96px,12vw,132px)!important}
+    .hero-title{font-size:clamp(30px,3.4vw,40px)!important;margin-top:8px!important}
+    .hero-main{padding-top:18px!important;padding-bottom:14px!important}
+    .hero-lead{margin-top:10px!important;font-size:16px!important}
+    .hero-facts{margin-top:10px!important}
+    .section{padding:10px 0!important}
+    .mv-focus-today{display:inline-block!important;margin:0 8px 0 0!important}
+    .mv-minimal{display:inline-block!important;margin:0!important}
+  }
+  @media (min-width: 720px) and (max-width: 900px){
+    .hero-lead,.hero-facts{display:none!important}
+    .side-top,.phase-desc{display:none!important}
+    .focus-desc,.focus-pass,.focus-foot{display:none!important}
+    .count-num{font-size:clamp(88px,13vw,120px)!important}
+    .hero-main{padding-top:12px!important;padding-bottom:10px!important}
+    .section{padding:8px 0!important}
+  }
+  @media (max-width: 360px){
+    .side-top,.phase-title,.phase-desc,.hero-lead{display:none!important}
+    .count-num{font-size:clamp(64px,18vw,96px)!important}
+    #MOTIV .mv-coach{font-size:12px!important}
+    #MOTIV .mv-gap{font-size:10px!important}
+  }
 </style>
 
 
