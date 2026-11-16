@@ -2273,7 +2273,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var bh = '';
     for(var p2=0;p2<RAMP.length;p2++){
       var rr = RAMP[p2], ln = 0, passed = 0, dd3;
-      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; if(dayOf(o,QD,dd3).pass) ln++; }
+      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK) ln++; }   // V16: 有进展(pass||墨墨达标)也算，不只pass
       var started = (rr.from <= T);
       var on = started && ln >= 1;   // 有过达标记录即亮（不要求整期全过）
       bh += '<span class="'+(on?'on':'')+'">'+(on?'🎖 ':'○ ')+rr.step+' '+ln+'/'+passed+'</span>';
@@ -2286,7 +2286,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       total++;
       if(c3 <= T){
         var d3 = dayOf(o,QD,c3);
-        if(d3.pass){ lit++; }   // R12_20261115: 去掉 streak += 0 死代码
+        if(d3.pass || d3.inkOK){ lit++; }   // V16: 有进展天数（pass 或墨墨达标）
       }
       c3 = sh(c3,1);
     }
@@ -2295,15 +2295,15 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var c4 = T;
     while(c4 >= START){
       var d4 = dayOf(o,QD,c4);
-      if(d4.pass) streak++;
+      if(d4.pass || d4.inkOK) streak++;   // V16: 墨墨-only 日也算连击（不再空账本）
       else if(c4 !== T) break;
       c4 = sh(c4,-1);
     }
     var dl = Math.round((pd(EXAM)-pd(T))/864e5);
     $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · '+cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天';   // W7b
-    $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 格';
+    $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 天有进展';
     var _sum = $id('mv-runway-summary');
-    if(_sum){ _sum.textContent = '📅 38 格跑道 · 达标 ' + lit + ' 天（点开看）'; }   // B2_20261115
+    if(_sum){ _sum.textContent = '📅 38 格跑道 · ' + lit + ' 天有进展（点开看）'; }   // V16
     prefillWords();   // P1_20261115
   }
 
