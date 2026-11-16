@@ -2807,7 +2807,15 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     document.getElementById('PO-DPCT').textContent = '见 🔥 末路灯带';   // PO_MERGE_20261115: 今日完成度唯一口径在 MOTIV
     // P0_20261116: 事件进度改【累计题次】——与末路灯带"实做 X"同源，不再只算今天
     doneQ = quizTotal;
-    var ePct = TARGET_Q>0 ? Math.min(100, doneQ/TARGET_Q*100) : 0;
+    // V51: 单一进度模型 —— 计划应做（到今天的累计 ramp 题数）
+    var _planQ = 0;
+    for(var _ri=0;_ri<PM.ramp.length;_ri++){
+      var _rr = PM.ramp[_ri];
+      var _rf = parseMD(_rr.from), _rt = parseMD(_rr.to);
+      var _rtc = new Date(Math.min(_rt.getTime(), _sd.getTime()));
+      if(_rtc >= _rf){ _planQ += (Math.round((_rtc - _rf)/864e5) + 1) * _rr.题; }
+    }
+    var ePct = _planQ>0 ? Math.min(100, doneQ/_planQ*100) : 0;
     // 时间进度
     var totalDays = PM.total_days;
     var _sd = new Date(Date.now() - 4*3600e3); _sd.setHours(0,0,0,0);
@@ -2818,13 +2826,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     document.getElementById('PO-DAYS').textContent = '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
     document.getElementById('PO-TPCT').textContent = tPct.toFixed(1)+'%';
     document.getElementById('PO-TBAR').style.width = tPct+'%';
-    document.getElementById('PO-EPCT').textContent = ePct.toFixed(1)+'%（'+doneQ+'/'+TARGET_Q+' 题次）';
+    document.getElementById('PO-EPCT').textContent = ePct.toFixed(1)+'%（实做 '+doneQ+' / 计划应做 '+_planQ+' 题次）';   // V51: 同口径
     document.getElementById('PO-EBAR').style.width = ePct+'%';
-    var match = ePct - tPct;
+    var _diffQ = doneQ - _planQ;
     var mEl = document.getElementById('PO-MATCH');
-    if(Math.abs(match) < 5){ mEl.textContent = '匹配度 持平 ('+match.toFixed(1)+'%)'; mEl.style.color='#059669'; }
-    else if(match > 0){ mEl.textContent = '匹配度 超前 +'+match.toFixed(1)+'%'; mEl.style.color='#059669'; }
-    else { mEl.textContent = '距计划 '+match.toFixed(1)+'%'; mEl.style.color='#4b5563'; }
+    if(_diffQ >= 0){ mEl.textContent = '比计划 +'+_diffQ+' 题次'; mEl.style.color='#059669'; }
+    else { mEl.textContent = '比计划 '+_diffQ+' 题次（欠 '+Math.abs(_diffQ)+'）'; mEl.style.color='#4b5563'; }   // V51: 同口径题次差
     document.getElementById('PO-STEP').textContent = '今日配额 · '+ST.step+'期';
   }
   render();
