@@ -2248,7 +2248,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
                        : (g2.nm + ' ' + row.done + '/' + row.tgt + '（自报）' + (row.ok ? '，点一下清空' : '，点一下填数量'));
       gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
-            ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?'✅':g2.ico)+'</span><span class="gn">'+g2.nm+
+            ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?(row.ro?'✅':'☑'):g2.ico)+'</span><span class="gn">'+g2.nm+
             '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">自报</i>')+'</span></button>';
     }
     $id('mv-gates').innerHTML = gh;
