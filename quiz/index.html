@@ -2254,8 +2254,8 @@
 <div id="ROUND-BAND" style="position:sticky;top:0;z-index:99;background:#fff7ed;border-bottom:1px solid #fed7aa;padding:8px 14px;font-size:14px">
   <!-- 完整版：未选过时显示 -->
   <div id="ROUND-FULL" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <b id="ROUND-LABEL">第一轮 · 核心 A 档（291 题）</b>
-    <span style="color:#92400e;font-size:12px">先过 A 档（可出 377），再补 B 档（可出 286）；A = 默写主线·含研方法单选 / B = 再认·提词回忆</span>
+    <b id="ROUND-LABEL">第一轮 · 核心 A 档</b>
+    <span style="color:#92400e;font-size:12px">先过 A 档（默写主线·含研方法单选），再补 B 档（再认·提词回忆）</span>
     <button onclick="_setRound('A')" style="min-height:38px;padding:6px 14px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer;font-size:14px">只做 A</button>
     <button onclick="_setRound('AB')" style="min-height:38px;padding:6px 14px;border:1px solid #fdba74;border-radius:9px;background:#fff;cursor:pointer;font-size:14px">加 B 档</button>
   </div>
@@ -2355,7 +2355,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   var STEP_LABEL = ['次日复测', '3 天验证', '7 天巩固', '14 天巩固', '考前收口'];
   var MASTER_DAYS = 30;
   var MASTER_STREAK = 2;   /* MEMORY_LOGIC_20261116: 连续认识次数，达此值自动掌握 */
-  var NEW_PER_DAY = 15, MAXQ = (function(){
+  var NEW_PER_DAY = 8, MAXQ = (function(){   /* V111(G7): 与 MAXQ 同源(起步8) */
   /* RAMP_SYNC_V2_20261111: 与仪表盘 ramp 同源；用【数字年月日】构造本地 Date，避免 new Date("YYYY-MM-DD") 按 UTC 解析导致区间漏判 */
   var R = [[[2026,11,11],[2026,11,17],8],[[2026,11,18],[2026,11,27],12],[[2026,11,28],[2026,12,8],18],[[2026,12,9],[2026,12,18],24]];   /* RAMP_DOWN_20261114: 18→12 / 26→18 / 34→24（线下练习量已大，且已学章仅167题可出）*/
   var t = new Date(); t.setHours(0,0,0,0);
@@ -2404,7 +2404,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     try { localStorage.setItem('dsh_round', m); localStorage.setItem('dsh_round_chosen', '1'); } catch(e){}
     try { if (typeof window._syncRoundBand === 'function') window._syncRoundBand(); } catch(e){}
     var lb = document.getElementById('ROUND-LABEL');
-    if (lb) lb.textContent = (m === 'A') ? '第一轮 · 核心 A 档（291 题）' : '第二轮 · A+B 全档（669 题）';
+    if (lb) lb.textContent = roundLabel(m);
     try { if (typeof window._afterRoundChange === 'function') window._afterRoundChange(m); } catch(e){}
     try { S.session = null; } catch(e){}
     try { location.hash = '#home'; } catch(e){}
@@ -2711,7 +2711,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function todayQueue() {
     /* TODAYQUEUE_CLEAN_20261112: 明确实现——到期池优先，按【档位 → 模块 → 考点号 → 卡号】排序，再取 MAXQ。
        与旧实现的差异：不再依赖嵌套 try/catch 与 repFor 换条，避免顺序被静默打乱。 */
-    var pool = dueItems();
+    var pool = realDueItems();   /* V111(G7): 只取已学到期的复习题，不把未见过题当到期 */
     var picked = [], seen = {};
     // ① 排序（教材顺序）
     pool = pool.slice().sort(function (a, b) {
