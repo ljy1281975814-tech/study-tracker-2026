@@ -1893,6 +1893,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-minimal button{min-height:44px;background:#c92a12;color:#f2efe7;border:1px solid #c92a12;padding:0 14px;font-size:14px;cursor:pointer}
   .mv-minimal button:hover{background:#a8230e}
   .mv-minimal .mm-list{margin:6px 0 0;padding:8px 12px;background:#f2efe7;border:1px solid #d6d3d1;font-size:14px;color:#131210}
+
+  .mv-selfline{margin:4px 0 0;font-size:13px;color:#57534e}
 </style>
 
 
@@ -2019,6 +2021,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    <p id="mv-gap" class="mv-gap" aria-live="polite"></p>
    <p id="mv-focus-today" class="mv-focus-today"></p>
       <p id="mv-minimal" class="mv-minimal"></p>
+      <p id="mv-selfline" class="mv-selfline"></p>
    <p id="mv-yday" class="mv-yday"></p>
    <p id="mv-report" class="mv-report" aria-live="polite"></p>
   </div>
@@ -2350,7 +2353,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    ? ('🎓 初试已结束 ｜ 全程实做 <b>' + df.actual + '</b> 题次')  // W7c：考后不再报欠账
    : ('📐 距目标 <b>'+TOTAL_Q+'</b> 题次还差 <b>'+_left614+'</b> ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
    + (df.deficit > 0
-     ? '<span class="mv-bad">欠 '+df.deficit+'</span>（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）'
+     ? (cur.pass ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）'
      : '<span class="mv-good">不欠账 ✓</span>'));
 
   
@@ -2456,10 +2459,26 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   prefillWords();  // P1_20261115
   renderReportLine();  // V60: 报数接模型
   renderFocusToday();
-    renderMinimal();  // V84: 只看今天
+    renderMinimal(); renderSelfLine();  // V84: 只看今天
  }
 
  // V84: 「只看今天」开关（失败者减压迫）
+  // V98(B GAP1): 自报项独立进展层
+  function renderSelfLine(){
+    var el = $id('mv-selfline');
+    if(!el) return;
+    var o = loadOwn(); var T = studyDay();
+    var rec = (o.days && o.days[T]) || {};
+    var selfKeys = ['课','英','政'];
+    var done = 0, total = selfKeys.length;
+    for(var i=0;i<selfKeys.length;i++){
+      var k = selfKeys[i];
+      var tgt = (k==='课')?1:(k==='英')?2:8;
+      if(+(rec[k]||0) >= tgt) done++;
+    }
+    if(done === 0){ el.innerHTML = ''; return; }
+    el.innerHTML = '📋 自报已完成 <b>' + done + '/' + total + '</b> 项（不计入真实完成度，但你的努力记在这里）';
+  }
   function renderMinimal(){
     var el = $id('mv-minimal');
     if(!el) return;
