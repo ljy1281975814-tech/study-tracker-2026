@@ -1807,6 +1807,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-gate.self.ok{background:#f5f5f4!important;border-color:#a8a29e!important;color:#57534e!important}
   .mv-gate.self.ok .gi{opacity:.55}
   .mv-gate.self .mv-self{color:#78716c;background:#f5f5f4;border-color:#d6d3d1}
+  
+  .mv-report{margin:8px 0 0;font-size:13px;line-height:1.6;color:#374151}
   </style>
 
 
@@ -1932,6 +1934,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <p id="mv-extra" class="mv-extra"></p>
       <p id="mv-gap" class="mv-gap" aria-live="polite"></p>
       <p id="mv-yday" class="mv-yday"></p>
+      <p id="mv-report" class="mv-report" aria-live="polite"></p>
     </div>
   </div>
 
@@ -2327,6 +2330,25 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _sum = $id('mv-runway-summary');
     if(_sum){ _sum.textContent = '📅 38 格跑道 · ' + lit + ' 天有进展（点开看）'; }   // V16
     prefillWords();   // P1_20261115
+    renderReportLine();   // V60: 报数接模型
+  }
+
+  // V60: 今日报数接入 MOTIV（默写/做题%，不再孤立）
+  function renderReportLine(){
+    var el = $id('mv-report');
+    if(!el) return;
+    var d = new Date(Date.now() - 4*3600e3);
+    var day = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var store = {};
+    try{ store = JSON.parse(localStorage.getItem('dsh.347.report.v1')||'{}') || {}; }catch(e){ store = {}; }
+    var r = store[day];
+    if(!r || (r.mo==='' && r.do==='')){ el.innerHTML = '📝 <span style="color:#78716c">今日还没报数</span>（默写/做题% 在下方报数区填）'; return; }
+    var mo = parseInt(r.mo||'', 10), doP = parseInt(r.do||'', 10);
+    var parts = [];
+    if(!isNaN(mo)) parts.push((mo>=80?'✅':'⚠️')+' 默写 '+mo+'%'+(mo>=80?'':'（需≥80）'));
+    if(!isNaN(doP)) parts.push((doP>=60?'✅':'⚠️')+' 做题 '+doP+'%'+(doP>=60?'':'（需≥60）'));
+    var okCount = (mo>=80?1:0) + (doP>=60?1:0);
+    el.innerHTML = '📝 今日报数：' + parts.join(' · ') + (okCount===2 ? ' <b style="color:#059669">两项达标</b>' : '');
   }
 
   // 门点击（题门只读 → 跳 quiz）
