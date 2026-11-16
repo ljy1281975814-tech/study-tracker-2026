@@ -1833,7 +1833,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-gate.self.ok .gi{opacity:.55}
   .mv-gate.self .mv-self{color:#57534e;background:#f5f5f4;border-color:#d6d3d1}
   
-  .mv-report{margin:8px 0 0;font-size:13px;line-height:1.6;color:#374151}
+  .mv-report{margin:8px 0 0;font-size:13px;line-height:1.6;color:#374151}.mv-report a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
   
   /* V69: 低高度桌面（1366x768 等）压缩 hero，让环进首屏 */
   @media (max-height: 800px) and (min-width: 900px){
@@ -2287,6 +2287,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     else msg = ((cur.inkRowDone||0)>0 || (cur.quizRowDone||0)>0)
       ? '接下来：' + nx + '（墨墨 '+(cur.inkRowDone||0)+'/'+(cur.inkRowTgt||120)+' 还差 '+Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词'+ '；答题 '+(cur.quizRowDone||0)+'/'+(cur.quizRowTgt||8)+' 还差 '+Math.max(0,(cur.quizRowTgt||8)-(cur.quizRowDone||0))+' 题）'
       : '下一步：'+nx;   // V34: 兜底也量化
+    if(cur.pass && !cur.reportOK){ msg += '<br><b style="color:#b45309">⚠️ 但今日报数未达标</b>（需默≥80/做≥60），报数区补上才算完整。'; }
     if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
     // 超额（真实多做的量，单独显示，不进完成度）
