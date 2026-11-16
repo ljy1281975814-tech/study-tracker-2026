@@ -2101,7 +2101,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       var g = rq.list[i], v = +(rec[g.k] || 0);
       if(g.k === '题'){ v = QD[s] || 0; }
       var ok = v >= g.t;
-      if(ok) hit++; else if(!next) next = g;
+      if(ok) hit++;
+      else { var _gap = g.t - v; if(_gap > 0 && _gap < (next? (next._gap||Infinity) : Infinity)){ next = g; next._gap = _gap; } }   // V47: 最近可完成项
       if(v > g.t && s === studyDay()){
         // A3_20261115: 「背」的超额基准用 120（真实日量），不是 40（新词通关线）
         var _base = (g.k === '背') ? 120 : g.t;
@@ -2125,7 +2126,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var quizOK = quizAttend && qualityOK;
     // 墨墨「达标」= 真实填的数量 ≥ 目标（默认 120）
     var inkOK = !!(inkRow && inkRow.done >= inkRow.tgt);
-    var inkPartial = !!(inkRow && inkRow.tgt > 0 && inkRow.done >= Math.ceil(inkRow.tgt * 0.6));   // V27: 部分积分(>=60%)
+    var inkPartial = !!(inkRow && inkRow.tgt > 0 && inkRow.done >= Math.ceil(inkRow.tgt * 0.6));   // V27
+    var quizPartial = !!(quizRow && quizRow.tgt > 0 && quizRow.done > 0 && (quizRow.done / quizRow.tgt) * (acc||0) >= 0.6);   // V47: 答题部分分
     // 重新计算 hit（用新的达标定义）
     var hit2 = 0;
     for(var z2=0;z2<rows.length;z2++){
@@ -2145,7 +2147,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _ip = inkOK ? 1 : (inkRow && inkRow.tgt > 0 ? Math.min(1, inkRow.done / inkRow.tgt) : 0);
     var realPct = realTotal ? Math.round((_qp + _ip) / 2 * 100) : 0;
     return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
-             quizAttend:quizAttend, quizOK:quizOK, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
+             quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
              quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
              inkRowDone: inkRow ? inkRow.done : 0, inkRowTgt: inkRow ? inkRow.tgt : 0,   // V32: 供 coach 量化
              acc:acc, qualityOK:qualityOK,
@@ -2276,7 +2278,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       if(c2 > T) s3 = 'fut';
       else if(c2 === T) s3 = st2.pass ? 'pass' : ((st2.quizOK || st2.inkOK || st2.inkPartial) ? 'part' : 'now');   // V29: 今天也部分积分
       else if(st2.pass) s3 = (st2.realHit === 2) ? 'perfect' : 'pass';   // V27: 统一用 pass（去 hit/need 两套）
-      else if(st2.quizOK || st2.inkOK || st2.inkPartial) s3 = 'part';   // V27: 部分积分(inkPartial>=60%)，去 selfHit（与 chip 同源）
+      else if(st2.quizOK || st2.inkOK || st2.inkPartial || st2.quizPartial) s3 = 'part';   // V47: 部分分全链路
       else s3 = 'miss';
       var isMock = MOCK.indexOf(c2) >= 0;
       var lb = c2 === T ? '今' : String(pd(c2).getDate());
@@ -2290,7 +2292,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var bh = '';
     for(var p2=0;p2<RAMP.length;p2++){
       var rr = RAMP[p2], ln = 0, passed = 0, dd3;
-      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial) ln++; }   // V16: 有进展(pass||墨墨达标)也算，不只pass
+      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial || _d3.quizPartial) ln++; }   // V16: 有进展(pass||墨墨达标)也算，不只pass
       var started = (rr.from <= T);
       var on = started && ln >= 1;   // 有过达标记录即亮（不要求整期全过）
       bh += '<span class="'+(on?'on':'')+'">'+(on?'🎖 ':'○ ')+rr.step+' '+ln+'/'+passed+'</span>';
@@ -2303,7 +2305,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       total++;
       if(c3 <= T){
         var d3 = dayOf(o,QD,c3);
-        if(d3.pass || d3.inkOK || d3.quizOK || d3.inkPartial){ lit++; }   // V16: 有进展天数（pass 或墨墨达标）
+        if(d3.pass || d3.inkOK || d3.quizOK || d3.inkPartial || d3.quizPartial){ lit++; }   // V16: 有进展天数（pass 或墨墨达标）
       }
       c3 = sh(c3,1);
     }
@@ -2312,7 +2314,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var c4 = T;
     while(c4 >= START){
       var d4 = dayOf(o,QD,c4);
-      if(d4.pass || d4.inkOK || d4.quizOK || d4.inkPartial) streak++;   // V16: 墨墨-only 日也算连击（不再空账本）
+      if(d4.pass || d4.inkOK || d4.quizOK || d4.inkPartial || d4.quizPartial) streak++;   // V16: 墨墨-only 日也算连击（不再空账本）
       else if(c4 !== T) break;
       c4 = sh(c4,-1);
     }
