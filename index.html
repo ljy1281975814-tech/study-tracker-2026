@@ -2545,7 +2545,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var bh = '';
   for(var p2=0;p2<RAMP.length;p2++){
    var rr = RAMP[p2], ln = 0, passed = 0, dd3;
-   for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial || _d3.quizPartial || _d3.reportOK || _d3.reportPartial) ln++; }  // V16: 有进展(pass||墨墨达标)也算，不只pass
+   for(dd3=rr.from; dd3<=rr.to; dd3=sh(dd3,1)){ passed++;   /* V122(G13): 分母=阶段总天数，不随今天漂移 */ var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial || _d3.quizPartial || _d3.reportOK || _d3.reportPartial) ln++; }  // V16: 有进展(pass||墨墨达标)也算，不只pass
    var started = (rr.from <= T);
    var on = started && ln >= 1;  // 有过达标记录即亮（不要求整期全过）
    bh += '<span class="'+(on?'on':'')+'">'+(on?'🎖 ':'○ ')+rr.step+' '+(passed>0?(ln+'/'+passed):'未开启')+'</span>';
@@ -3434,7 +3434,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     <div class="weights-head">
      <div>
       <span class="label">真题画像</span>
-      <h3>章序权重</h3>
+      <h3>章序权重</h3><p style="margin:2px 0 0;font-size:12px;color:#57534e">（按优先级排序，非教材章号）</p>
      </div>
      <p><b>感觉最高，注意最低。</b> 真题无大题只认不默，不平均用力。</p>
     </div>
