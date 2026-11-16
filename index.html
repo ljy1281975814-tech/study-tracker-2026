@@ -1601,6 +1601,13 @@
 
   /* ---------- responsive ---------- */
   @media (max-width:1080px){
+     /* V66: 小桌面高度压缩 */
+     .count-num{font-size:clamp(88px,14vw,150px)!important}
+     .hero-main{padding-top:14px!important}
+     .hero-title{font-size:clamp(28px,3.4vw,42px)!important}
+     .hero-lead{margin-top:8px!important;font-size:16px!important}
+     .hero-facts{margin-top:10px!important}
+     .section{padding:12px 0!important}
     .hero-grid{grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr)}
     .hero-lead{max-width:100%}
     .pcard--7,.pcard--5{grid-column:span 6}
@@ -1647,7 +1654,7 @@
   }
   @media (max-width:720px){
      /* V65: 移动端 hero 压缩，让环进首屏 */
-     .hero-side{display:none!important}
+     .hero-side{padding:8px 12px!important;max-height:170px!important;overflow:hidden!important}
      .hero-main{padding-top:6px!important}
      .count-num{font-size:clamp(80px,22vw,120px)!important}
      .hero-title{font-size:clamp(24px,6vw,32px)!important;margin-top:2px!important}
@@ -2475,6 +2482,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   });
 
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) render(); });
+  document.addEventListener('347:report-saved', function(){ try{ render(); renderReportLine(); }catch(e){} });
   window.addEventListener('storage', function(e){ if(e.key === KEY || e.key === KEY_Q) render(); });
   // R7_20261115: 60s 只在「签名变化」时重绘，避免无变化也重建 38 格
   var _lastSig = '';
@@ -3278,7 +3286,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var store = {};
     try{ store = JSON.parse(localStorage.getItem(KEY_REPORT)||'{}') || {}; }catch(e){ store = {}; }
     store[reportDay()] = { mo: m, do: d, at: new Date().toISOString() };
-    try{ localStorage.setItem(KEY_REPORT, JSON.stringify(store)); return true; }catch(e){ return false; }
+    try{ localStorage.setItem(KEY_REPORT, JSON.stringify(store));
+      try{ document.dispatchEvent(new CustomEvent('347:report-saved')); }catch(e){}
+      return true; }catch(e){ return false; }
   }
   function reportIssues(m, d){
     var out = [];
