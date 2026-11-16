@@ -1802,7 +1802,12 @@
 
 body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .hero,.shell,footer{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
-</style>
+
+  /* V45: 自报门中性化（与真实门视觉分层） */
+  .mv-gate.self.ok{background:#f5f5f4!important;border-color:#a8a29e!important;color:#57534e!important}
+  .mv-gate.self.ok .gi{opacity:.55}
+  .mv-gate.self .mv-self{color:#78716c;background:#f5f5f4;border-color:#d6d3d1}
+  </style>
 
 
 <style id="mv-dup-fix2">/* DUP_FIX2_20261116: dup 里的重复今日基础包/底线块隐藏，保留执行线(carry/thesis/timeline) */#TASK-SHELL-dup{margin:0 !important;padding:0 !important;border:0 !important;background:transparent !important;border-radius:0 !important}#TASK-SHELL-dup > h3,#TASK-SHELL-dup > label,#TASK-SHELL-dup > p,#TASK-SHELL-dup > div:not([class]){display:none !important}</style>
@@ -2239,7 +2244,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         gh += '<button type="button" class="mv-gate off" disabled><span class="gi">'+g2.ico+'</span><span class="gn">'+g2.nm+'</span><span class="gx">不要求</span></button>';
         continue;
       }
-      var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':'');
+      var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':' self');
       var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
                        : (g2.nm + ' ' + row.done + '/' + row.tgt + '（自报）' + (row.ok ? '，点一下清空' : '，点一下填数量'));
       gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
