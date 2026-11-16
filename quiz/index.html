@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#f2efe7">
-<meta name="description" content="347 专业课（普心/社心）答题系统：只放已学章，答后即判，解析落到背诵手册考点卡号，错题进 3/7 天滚动。">
+<meta name="description" content="347 专业课（普心/社心）答题系统：只放已学章，答后即判，解析落到背诵手册考点卡号，错题进 1→3→7→14 天滚动（考前 2 天收口）。">
 <title>347 · 专业课答题 · 普心 / 社心</title>
 <style>
 :root{
@@ -3206,8 +3206,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         (i < 3 ? '<i class="roll-line"></i>' : '');
     }).join('');
     var tip = p.outcome === 'ok'
-      ? '答对一次进 3 天，再对进 7 → 15 → 30 天；标了「已掌握」的 30 天后抽查。'
-      : '答错回 1 天；不用自己记日期，到期它会自己回来。';
+      ? '答对按 1 → 3 → 7 → 14 天滚动（考前 2 天收口）；标了「已掌握」的 30 天后抽查。'
+      : '不记得/模糊今天再练；不用自己记日期，到期它会自己回来。';
     return '<div class="roll"><div class="roll-h">' + label + '</div>' +
       '<div class="roll-steps">' + steps + '</div>' +
       '<p class="roll-p">' + tip + '</p></div>';
