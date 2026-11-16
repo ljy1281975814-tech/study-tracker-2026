@@ -2176,6 +2176,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   function render(){
     if(!$id('MOTIV')) return;
     var T = studyDay();                       // ⭐ 每次重算（修 04:00 后错日）
+    var _isPastNow = (T >= EXAM);   // V62: 考后终态
     var o = loadOwn(), QD = quizDays();
     var cur = dayOf(o, QD, T), y = sh(T,-1), yst = dayOf(o, QD, y);
 
@@ -2184,7 +2185,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var pEl = $id('mv-pct'), ring = $id('mv-ring'), svg = $id('mv-ringsvg');
     var _dispPct = Math.round(pct);
     if(_dispPct >= 100 && !cur.pass) _dispPct = 99;   // V33: 绿100%仅当pass，防119/120假达标
-    if(pEl.textContent !== _dispPct+'%') pEl.textContent = _dispPct+'%';
+    var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
+    if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
     var col = cur.pass ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial) ? '#b45309' : '#b91c1c');   // V57: 环色也认 quizPartial
     pEl.style.color = col;
     var C = 2*Math.PI*44;
@@ -2257,6 +2259,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
             ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?(row.ro?'✅':'☑'):g2.ico)+'</span><span class="gn">'+g2.nm+
             '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">自报</i>')+'</span></button>';
     }
+    if(_isPastNow) gh = '';   // V62: 考后清空门
     $id('mv-gates').innerHTML = gh;
     // P1_20261115: 焦点保持（在下一帧恢复，避免被 60s 重绘打断）
     // W5_20261115: 只在「刚点过门」时恢复焦点，且输入框聚焦时绝不抢
