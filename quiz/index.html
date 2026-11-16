@@ -2341,8 +2341,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function KP(q) { return q.kp || q.id; }
 
   var KEY = 'dsh.347.quiz.v3', KEY_V2 = 'dsh.347.quiz.v2', KEY_V1 = 'dsh.347.quiz.v1';
-  var INTERVALS = [3, 7, 15, 30, 60, 90];
-  var STEP_LABEL = ['3 天复测', '7 天验证', '15 天巩固', '30 天结业'];
+  var INTERVALS = [1, 3, 7, 15, 30, 60, 90];   /* MEMORY_V2_20261116: 首次复习 1 天（艾宾浩斯 24h 临界点），不是 3 天 */
+  var STEP_LABEL = ['次日复测', '3 天验证', '7 天巩固', '15 天巩固', '30 天结业'];
   var MASTER_DAYS = 30;
   var MASTER_STREAK = 2;   /* MEMORY_LOGIC_20261116: 连续认识次数，达此值自动掌握 */
   var NEW_PER_DAY = 15, MAXQ = (function(){
@@ -2570,11 +2570,33 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var n = (r.ok || 0) + (r.bad || 0) + (r.fuzzy || 0);
     return n ? Math.round((r.ok || 0) / n * 100) : null;
   }
+  /* MEMORY_V2_20261116：间隔由「反馈三态」驱动
+     不记得 forgot → 1 天（次日）＋ 当天重练
+     模糊  fuzzy  → 2 天（短间隔，不做长期递增）
+     熟知  ok     → INTERVALS[streak]：1 → 3 → 7 → 15 → 30 → 60 → 90
+     依据：艾宾浩斯遗忘曲线首个复习点在 24h；SM-2 答错重置、答对递增；墨墨对生词次日复习 */
   function nextIntervalFor(q, outcome) {
     var r = rec(q) || {};
-    if (outcome === 'bad') return 1;
-    if (r.mastered) return outcome === 'fuzzy' ? 7 : MASTER_DAYS;
+    if (outcome === 'bad' || outcome === 'forgot') return 0;   /* 当天再现 */
+    if (outcome === 'fuzzy') return 0;                          /* 当天再练（不进阶） */
+    if (r.mastered) return MASTER_DAYS;
     return INTERVALS[Math.min(r.streak || 0, INTERVALS.length - 1)];
+  }
+
+  function dayLabel(n) { return n === 0 ? '今天再练' : n === 1 ? '明天' : n + ' 天后'; }
+
+  /* SCORE_GATE_20261116：评分与手动反馈联动——有缺漏即未达标，不允许「自己说答对了」 */
+  function scoreOf(q, p) {
+    if (isChoice(q)) {
+      var pick = (p.sel || []).slice().sort().join('');
+      var key = String(q.key || '').split('').sort().join('');
+      var okc = !!key && pick === key;
+      return { auto: true, pass: okc, hit: okc ? 1 : 0, total: 1 };
+    }
+    var ek = effKw(q);
+    var h = p.hits || kwHits(q, p.text || '');
+    if (!ek.length) return { auto: false, pass: null, hit: h.hit, total: 0 };
+    return { auto: true, pass: h.hit >= ek.length, hit: h.hit, total: ek.length };
   }
 
   /* ---------------- 可用章 / 队列 ---------------- */
@@ -2795,16 +2817,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       else if (outcome === 'bad') { r.bad++; r.wrong++; r.streak = 0; r.interval = 0; r.mastered = false; }
       else { r.fuzzy++; r.streak = 0; r.interval = 0; r.mastered = false; }
     } else if (outcome === 'ok') {
+      /* 熟知：按阶梯拉长 1 → 3 → 7 → 15 → 30 → 60 → 90；到 30 天视为掌握 */
       r.ok++; r.streak = (r.streak || 0) + 1;
-      if (r.streak >= MASTER_STREAK) {
-        r.mastered = true; r.masteredAt = TODAY; r.interval = INTERVALS[0];   // 连续2次认识→掌握，3天后复习
-      } else {
-        r.mastered = false; r.interval = 0;   // 当天再确认一次
-      }
+      r.interval = INTERVALS[Math.min(r.streak - 1, INTERVALS.length - 1)];
+      r.mastered = r.interval >= MASTER_DAYS;
+      if (r.mastered) r.masteredAt = TODAY;
     } else if (outcome === 'bad') {
-      r.bad++; r.wrong++; r.streak = 0; r.interval = 0; r.mastered = false;   // 忘→当天再现
+      /* 不记得：当天再现 + 次日；连续认识链清零 */
+      r.bad++; r.wrong++; r.streak = 0; r.interval = 0; r.mastered = false;
     } else {
-      r.fuzzy++; r.streak = 0; r.interval = 0; r.mastered = false;   // 模糊→当天再现
+      /* 模糊（蒙对）：当天再练一次、不进阶、不进错题本；已积累的阶梯保留 */
+      r.fuzzy++; r.streak = Math.max(0, r.streak || 0); r.interval = 0; r.mastered = false;
     }
     r.lastOutcome = outcome;
     r.lastId = q.id;
@@ -3185,14 +3208,24 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         (isChoice(q) && !p.sel.length ? ' disabled' : '') + '>' + label + '</button></div>';
     }
     if (!p.outcome) {
-      // 副标按「真实排期」算：当前 streak 决定这次「答对了」会排到几天后
+      var sc = scoreOf(q, p);
+      // ① 有缺漏 ⇒ 未达标：不给自评，只能当天再练到满分
+      if (sc.auto && !sc.pass) {
+        return '<div class="quiz-bar">' + prev +
+          '<button class="bar-primary bar-relearn" data-act="relearn">再练一次<span>命中 ' + sc.hit + '/' + sc.total +
+          ' · 当天练到满分才算过</span></button></div>';
+      }
+      // ② 达标（或该题无可判分关键词）⇒ 三态反馈，仅此时出现
       var okDays = nextIntervalFor(q, 'ok');
-      var badDays = nextIntervalFor(q, 'bad');
-      return '<div class="quiz-bar">' +
-        '<button class="bar-grade bar-grade--bad" data-act="grade" data-arg="bad">没答对<span>' +
-        (badDays === 1 ? '明天' : badDays + ' 天后') + '再来</span></button>' +
-        '<button class="bar-grade bar-grade--ok" data-act="grade" data-arg="ok" data-days="' + okDays + '">答对了<span>' +
-        (r_mastered(q) ? '抽查通过 · 30 天后' : okDays + ' 天后复习') + '</span></button></div>';
+      var fDays = nextIntervalFor(q, 'fuzzy');
+      var gDays = nextIntervalFor(q, 'forgot');
+      return '<div class="quiz-bar bar-grade3">' +
+        '<button class="bar-grade bar-grade--bad" data-act="grade" data-arg="forgot">不记得<span>' +
+        dayLabel(gDays) + '</span></button>' +
+        '<button class="bar-grade bar-grade--mid" data-act="grade" data-arg="fuzzy">模糊<span>' +
+        dayLabel(fDays) + '</span></button>' +
+        '<button class="bar-grade bar-grade--ok" data-act="grade" data-arg="ok" data-days="' + okDays + '">熟知<span>' +
+        (r_mastered(q) ? '抽查通过 · 30 天后' : dayLabel(okDays)) + '</span></button></div>';
     }
     if (p.restored) {
       return '<div class="quiz-bar">' + prev + '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
@@ -3581,6 +3614,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function grade(outcome) {
     var q = currentQ(), p = ensurePending();
     if (!q || !p || !p.revealed) return;
+    if (outcome === 'forgot') outcome = 'bad';   /* 三态「不记得」＝原有 bad 语义（次日+当天重练） */
     if (p.restored) { toast('这张卡今天已经判过了，不重复计分。'); return; }
     if (p.outcome) {
       // 已判定：只允许一次「蒙对的，没把握」改判，走 1 天（并回退上一次的计数与天数）
@@ -3608,6 +3642,24 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     p.graded = true;
     if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
     render(); afterGradeScroll();
+  }
+  /* RELEARN_20261116：未达标的题「当天再练一次」——重置本次作答并把该题重新排进今日队列 */
+  function relearnCurrent() {
+    var q = currentQ();
+    if (!q || !S.session) return;
+    var p = S.pend[q.id];
+    if (p) {
+      p.revealed = false; p.outcome = null; p.graded = false;
+      p.hits = null; p.text = ''; p.sel = []; p.restored = false;
+    }
+    if (S.pend[q.id]) {
+      var r = rec(q);
+      if (r && r.draft) { r.draft = ''; }
+    }
+    S.session.ids.push(q.id);          /* 队尾重排：当天循环，直到满分 */
+    S.session.relearn = (S.session.relearn || 0) + 1;
+    render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast('这一题当天再练一次：命中不足 <b>不算过</b>，练到满分再走。');
   }
   function nextQuestion() {
     if (!S.session) return;
@@ -3729,6 +3781,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         break;
       }
       case 'grade': grade(arg); break;
+      case 'relearn': relearnCurrent(); break;
       case 'next': nextQuestion(); break;
       case 'prev': prevQuestion(); break;
       case 'finish': finishSession(); break;
