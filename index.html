@@ -2168,7 +2168,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     // 墨墨「达标」= 真实填的数量 ≥ 目标（默认 120）
     var inkOK = !!(inkRow && inkRow.done >= inkRow.tgt);
     var inkPartial = !!(inkRow && inkRow.tgt > 0 && inkRow.done >= Math.ceil(inkRow.tgt * 0.6));   // V27
-    var quizPartial = !!(quizRow && quizRow.tgt > 0 && quizRow.done > 0 && (quizRow.done / quizRow.tgt) * (acc||0) >= 0.6);   // V47: 答题部分分
+    var quizPartial = !!(quizRow && quizRow.tgt > 0 && quizRow.done > 0 && (quizRow.done / quizRow.tgt) * (acc||0) >= 0.6);   // V47
+    var reportOK = false;   // V76: 报数两项达标（默>=80 且 做>=60）
+    try{
+      var _rs2 = JSON.parse(localStorage.getItem('dsh.347.report.v1')||'{}') || {};
+      var _r2 = _rs2[s];
+      if(_r2){ var _mo2 = parseInt(_r2.mo||'',10), _do2 = parseInt(_r2.do||'',10);
+        reportOK = (!isNaN(_mo2) && !isNaN(_do2) && _mo2 >= 80 && _do2 >= 60); }
+    }catch(e){}
     // 重新计算 hit（用新的达标定义）
     var hit2 = 0;
     for(var z2=0;z2<rows.length;z2++){
@@ -2199,7 +2206,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _num = _qp + _ip + (_mp >= 0 ? _mp : 0);
     var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;   // V67: 3项均值(含默写)
     return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
-             quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
+             quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK:reportOK, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
              quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
              inkRowDone: inkRow ? inkRow.done : 0, inkRowTgt: inkRow ? inkRow.tgt : 0,   // V32: 供 coach 量化
              acc:acc, qualityOK:qualityOK,
@@ -2239,7 +2246,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(_dispPct >= 100 && !cur.pass) _dispPct = 99;   // V33: 绿100%仅当pass，防119/120假达标
     var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
     if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
-    var col = cur.pass ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial) ? '#b45309' : '#b91c1c');   // V57: 环色也认 quizPartial
+    var col = cur.pass ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportOK) ? '#b45309' : '#b91c1c');   // V76: 报数达标也算琥珀
     pEl.style.color = col;
     var C = 2*Math.PI*44;
     ring.style.stroke = col;
@@ -2346,7 +2353,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       }
       // V3_20261115: 跑道以「答题达标」为主（真实），自报项只作辅助显示
       if(c2 > T) s3 = 'fut';
-      else if(c2 === T) s3 = st2.pass ? 'pass' : ((st2.quizOK || st2.inkOK || st2.inkPartial || st2.quizPartial) ? 'part' : 'now');   // V57: 今日也认 quizPartial
+      else if(c2 === T) s3 = st2.pass ? 'pass' : ((st2.quizOK || st2.inkOK || st2.inkPartial || st2.quizPartial || st2.reportOK) ? 'part' : 'now');   // V57: 今日也认 quizPartial
       else if(st2.pass) s3 = (st2.realHit === 2) ? 'perfect' : 'pass';   // V27: 统一用 pass（去 hit/need 两套）
       else if(st2.quizOK || st2.inkOK || st2.inkPartial || st2.quizPartial) s3 = 'part';   // V47: 部分分全链路
       else s3 = 'miss';
@@ -2362,7 +2369,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var bh = '';
     for(var p2=0;p2<RAMP.length;p2++){
       var rr = RAMP[p2], ln = 0, passed = 0, dd3;
-      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial || _d3.quizPartial) ln++; }   // V16: 有进展(pass||墨墨达标)也算，不只pass
+      for(dd3=rr.from; dd3<=rr.to && dd3<=T; dd3=sh(dd3,1)){ passed++; var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial || _d3.quizPartial || _d3.reportOK) ln++; }   // V16: 有进展(pass||墨墨达标)也算，不只pass
       var started = (rr.from <= T);
       var on = started && ln >= 1;   // 有过达标记录即亮（不要求整期全过）
       bh += '<span class="'+(on?'on':'')+'">'+(on?'🎖 ':'○ ')+rr.step+' '+ln+'/'+passed+'</span>';
@@ -2375,7 +2382,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       total++;
       if(c3 <= T){
         var d3 = dayOf(o,QD,c3);
-        if(d3.pass || d3.inkOK || d3.quizOK || d3.inkPartial || d3.quizPartial){ lit++; }   // V16: 有进展天数（pass 或墨墨达标）
+        if(d3.pass || d3.inkOK || d3.quizOK || d3.inkPartial || d3.quizPartial || d3.reportOK){ lit++; }   // V16: 有进展天数（pass 或墨墨达标）
       }
       c3 = sh(c3,1);
     }
@@ -2384,7 +2391,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var c4 = T;
     while(c4 >= START){
       var d4 = dayOf(o,QD,c4);
-      if(d4.pass || d4.inkOK || d4.quizOK || d4.inkPartial || d4.quizPartial) streak++;   // V16: 墨墨-only 日也算连击（不再空账本）
+      if(d4.pass || d4.inkOK || d4.quizOK || d4.inkPartial || d4.quizPartial || d4.reportOK) streak++;   // V16: 墨墨-only 日也算连击（不再空账本）
       else if(c4 !== T) break;
       c4 = sh(c4,-1);
     }
