@@ -1968,7 +1968,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   </details>
 
   <p class="mv-foot">
-    口径：达标 = 实际 ≥ 目标；完成度 = 达标项 ÷ 要求项（0–100%，不虚报）；超额单独显示；
+    口径：达标 = 实际 ≥ 目标；完成度 = (答题质量 + 墨墨) 两项完成率均值（自报不计；真实 2 项）；超额单独显示；
     答题题数只读做题系统（不可手点，防伪造）；学习日按 04:00 切（你 00:15 收工不算次日）。
   </p>
 </section>
@@ -2176,10 +2176,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     pEl.style.color = col;
     var C = 2*Math.PI*44;
     ring.style.stroke = col;
-    ring.style.strokeDashoffset = String(C - C*Math.min(pct,100)/100);
+    ring.style.strokeDashoffset = String(C - C*Math.min(_dispPct,100)/100);   // V34: 圆弧用显示值(防99%画满)
     if(svg){
-      svg.setAttribute('aria-valuenow', String(Math.round(Math.min(pct,100))));
-      svg.setAttribute('aria-valuetext', '今日完成度 ' + Math.round(pct) + '%（真实达标 ' + cur.realHit + '/2 项' + (cur.pass ? '，已过线' : '') + '）');   // V33
+      svg.setAttribute('aria-valuenow', String(_dispPct));
+      svg.setAttribute('aria-valuetext', '今日完成度 ' + _dispPct + '%（真实达标 ' + cur.realHit + '/2 项' + (cur.pass ? '，已过线' : '') + '）');   // V34
     }
 
     // 教练句：100% 必须 pass && hit===need（B 的处方）
@@ -2193,7 +2193,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（自报 '+cur.selfHit+' 项，不计入）';
     else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';
     else if(cur.hit > 0) msg = '真实达标 <b>'+cur.realHit+'/2</b>（答题+墨墨）｜ 自报 <b>'+cur.selfHit+'</b> 项（不计入完成度）'+((cur.inkRowDone||0) < (cur.inkRowTgt||120) && (cur.inkRowDone||0) > 0 ? '｜ 墨墨还差 <b>'+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+'</b> 词' : '')+((cur.quizRowDone||0) < (cur.quizRowTgt||8) ? '｜ 答题还差 <b>'+((cur.quizRowTgt||8)-(cur.quizRowDone||0))+'</b> 题' : '')+'. 下一步：'+nx;
-    else msg = '下一步：'+nx;
+    else msg = ((cur.inkRowDone||0)>0 || (cur.quizRowDone||0)>0)
+      ? '接下来：' + nx + '（墨墨 '+(cur.inkRowDone||0)+'/'+(cur.inkRowTgt||120)+'，答题 '+(cur.quizRowDone||0)+'/'+(cur.quizRowTgt||8)+'）'
+      : '下一步：'+nx;   // V34: 兜底也量化
     if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
     // 超额（真实多做的量，单独显示，不进完成度）
