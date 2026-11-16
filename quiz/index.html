@@ -2242,7 +2242,7 @@
   font-size:11px;
   line-height:1.65;
 }
-/* 5) 五级滚动 stepper（1 → 3 → 7 → 14 → 收口） */
+/* 5) 间隔条样式（现已不渲染，保留供重做） */
 .roll-steps{
   grid-template-columns:1fr 12px 1fr 12px 1fr 12px 1fr 12px 1fr;
   align-items:start;
@@ -2356,7 +2356,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
 
   var KEY = 'dsh.347.quiz.v3', KEY_V2 = 'dsh.347.quiz.v2', KEY_V1 = 'dsh.347.quiz.v1';
   /* EXAM_WINDOW_20261116：全部间隔压进 11-16～12-19 的 33 天窗口，不再出现 60/90 天（已考后）
-   阶梯：1 → 3 → 7 → 14 → 26 天（累计），第 6 档起按剩余天数封顶 */
+   阶梯：1/2/4/7/12/18 天，第 6 档起按剩余天数封顶 */
   var INTERVALS = [1, 2, 4, 7, 12, 18];
   var EXAM_KEY = '2026-12-19';   /* ⚠️ 与 347_计划数据.json 的 exam 字段同源，改日期必须两处一起改（H0323 第3项） */
   var EXAM_BUFFER = 2;           /* 考前 2 天收口：不再拉开新间隔 */
@@ -3494,7 +3494,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<span class="done-stamp">本次完成</span>' +
       '<div class="done-num">' + s.answered + '</div><span class="done-unit">题</span>' +
       '<h1>这一轮做完了</h1>' +
-      '<p>答对 ' + s.right + ' 题 · 正确率 ' + acc + '% · 用时 ' + mins + ' 分钟。答对按 1 → 3 → 7 → 14 天滚动（考前 2 天收口），答错当天重练进错题本。</p>' +
+      '<p>答对 ' + s.right + ' 题 · 正确率 ' + acc + '% · 用时 ' + mins + ' 分钟。答对按记忆间隔回队列，答错或没把握的题插回当天后续、隔 3 道再练，并进错题本。</p>' +
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, s.answered - s.right) + '</b><span>答错/没把握</span></div>' +
       '<div class="done-stat"><b>' + acc + '%</b><span>正确率</span></div></div>' +
@@ -3531,7 +3531,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       }
       var total = Object.keys(groups).reduce(function (a, k) { return a + groups[k].length; }, 0);
       var masterN = available().filter(function (q) { var r = rec(q); return r && r.mastered; }).length;
-      body = '<p class="sheet-lead">未来 7 天共 ' + total + ' 个考点到期；答对按 1 → 3 → 7 → 14 天推进；答错/不记得当天再练；考前 2 天起不再拉开间隔。</p>' +
+      body = '<p class="sheet-lead">未来 7 天共 ' + total + ' 个考点到期；答对按间隔回到队列；答错或不记得的题插回当天后续、隔 3 道再练；考前 2 天起不再拉开间隔。</p>' +
         Object.keys(groups).map(function (k) {
           if (!groups[k].length) return '';
           return '<div class="schedule-group"><div class="schedule-day"><b>' + (k === TODAY ? '今天' : mdLabel(k) + ' 周' + wdLabel(k)) +
