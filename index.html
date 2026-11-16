@@ -2235,7 +2235,18 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     ring.style.strokeDashoffset = String(C - C*Math.min(_dispPct,100)/100);   // V34: 圆弧用显示值(防99%画满)
     if(svg){
       svg.setAttribute('aria-valuenow', String(_dispPct));
-      svg.setAttribute('aria-valuetext', '今日完成度 ' + _dispPct + '%（真实达标 ' + cur.realHit + '/2 项' + (cur.pass ? '，已过线' : '') + '）');   // V34
+      var _vt = '今日完成度 ' + _dispPct + '%';
+    if(cur.pass){ _vt += '（已过线）'; }
+    else if(cur.quizPartial && !cur.quizOK){
+      var _need = Math.max(0, (cur.quizRowTgt||8) - (cur.quizRowDone||0));
+      _vt += '（答题还差 ' + _need + ' 题达标）';
+    } else if(cur.inkPartial && !cur.inkOK){
+      var _need2 = Math.max(0, (cur.inkRowTgt||120) - (cur.inkRowDone||0));
+      _vt += '（墨墨还差 ' + _need2 + ' 词达标）';
+    } else {
+      _vt += '（真实达标 ' + cur.realHit + '/2 项）';   // V71b: 修 _mp 未定义
+    }
+    svg.setAttribute('aria-valuetext', _vt);   // V71: 部分分给差额
     }
 
     // 教练句：100% 必须 pass && hit===need（B 的处方）
@@ -2250,7 +2261,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';
     else if(cur.hit > 0) msg = '真实达标 <b>'+cur.realHit+'/2</b>（答题+墨墨）｜ 自报 <b>'+cur.selfHit+'</b> 项（不计入完成度）'+((cur.inkRowDone||0) < (cur.inkRowTgt||120) && (cur.inkRowDone||0) > 0 ? '｜ 墨墨还差 <b>'+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+'</b> 词' : '')+((cur.quizRowDone||0) < (cur.quizRowTgt||8) ? '｜ 答题还差 <b>'+((cur.quizRowTgt||8)-(cur.quizRowDone||0))+'</b> 题' : '')+'. 下一步：'+nx;
     else msg = ((cur.inkRowDone||0)>0 || (cur.quizRowDone||0)>0)
-      ? '接下来：' + nx + '（墨墨 '+(cur.inkRowDone||0)+'/'+(cur.inkRowTgt||120)+'，答题 '+(cur.quizRowDone||0)+'/'+(cur.quizRowTgt||8)+'）'
+      ? '接下来：' + nx + '（墨墨 '+(cur.inkRowDone||0)+'/'+(cur.inkRowTgt||120)+' 还差 '+Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词'+ '；答题 '+(cur.quizRowDone||0)+'/'+(cur.quizRowTgt||8)+' 还差 '+Math.max(0,(cur.quizRowTgt||8)-(cur.quizRowDone||0))+' 题）'
       : '下一步：'+nx;   // V34: 兜底也量化
     if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
