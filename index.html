@@ -1860,6 +1860,13 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .check input[disabled] + .box{opacity:.3!important;background:#f5f5f4!important;border-style:dashed!important}
   .check{cursor:not-allowed!important}
   .t-item:has(.check input[disabled]){opacity:.75}
+
+  .mv-focus-today{margin:6px 0 0;font-size:12px}
+  .mv-focus-today button{background:none;border:1px solid #d6d3d1;padding:6px 10px;font-size:12px;cursor:pointer;color:#57534e}
+  .mv-focus-today button:hover{background:#f5f5f4}
+  .mv-focus-today button[aria-pressed="true"]{background:#131210;color:#f2efe7;border-color:#131210}
+  body.focus-today .mv-gap{display:none!important}
+  body.focus-today .mv-runway-wrap{display:none!important}
 </style>
 
 
@@ -1984,6 +1991,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <p id="mv-coach" class="mv-coach" aria-live="polite"></p>
       <p id="mv-extra" class="mv-extra"></p>
       <p id="mv-gap" class="mv-gap" aria-live="polite"></p>
+      <p id="mv-focus-today" class="mv-focus-today"></p>
       <p id="mv-yday" class="mv-yday"></p>
       <p id="mv-report" class="mv-report" aria-live="polite"></p>
     </div>
@@ -2417,9 +2425,29 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(_sum){ _sum.textContent = '📅 38 格跑道 · ' + lit + ' 天有进展（点开看）'; }   // V16
     prefillWords();   // P1_20261115
     renderReportLine();   // V60: 报数接模型
+    renderFocusToday();   // V84: 只看今天
+  }
+
+  // V84: 「只看今天」开关（失败者减压迫）
+  function renderFocusToday(){
+    var el = $id('mv-focus-today');
+    if(!el) return;
+    var on = document.body.classList.contains('focus-today');
+    el.innerHTML = '<button type="button" id="focusTodayBtn" aria-pressed="' + (on?'true':'false') + '">' +
+      (on ? '✓ 只看今天（已开）' : '🧘 只看今天（隐藏欠账/历史）') + '</button>';
+    var b = $id('focusTodayBtn');
+    if(b && !b._bound){
+      b._bound = true;
+      b.addEventListener('click', function(){
+        document.body.classList.toggle('focus-today');
+        try{ localStorage.setItem('dsh.347.focusToday', document.body.classList.contains('focus-today')?'1':'0'); }catch(e){}
+        renderFocusToday();
+      });
+    }
   }
 
   // V60: 今日报数接入 MOTIV（默写/做题%，不再孤立）
+  try{ if(localStorage.getItem('dsh.347.focusToday')==='1') document.body.classList.add('focus-today'); }catch(e){}
   function renderReportLine(){
     var el = $id('mv-report');
     if(!el) return;
