@@ -1854,7 +1854,13 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .report-history{margin-top:10px;font-size:12px;line-height:1.7;color:#57534e}
   .rh-item{display:inline-block;padding:1px 6px;margin:2px 0;border:1px solid #d6d3d1;background:#fbf8f0}
   .rh-ok{border-color:#059669;color:#065f46;background:#ecfdf5}
-  </style>
+  
+  /* V83: disabled 复选框禁用视觉（消除死 affordance） */
+  .check input[disabled]{opacity:.3!important;cursor:not-allowed!important}
+  .check input[disabled] + .box{opacity:.3!important;background:#f5f5f4!important;border-style:dashed!important}
+  .check{cursor:not-allowed!important}
+  .t-item:has(.check input[disabled]){opacity:.75}
+</style>
 
 
 <style id="mv-dup-fix2">/* DUP_FIX2_20261116: dup 里的重复今日基础包/底线块隐藏，保留执行线(carry/thesis/timeline) */#TASK-SHELL-dup{margin:0 !important;padding:0 !important;border:0 !important;background:transparent !important;border-radius:0 !important}#TASK-SHELL-dup > h3,#TASK-SHELL-dup > label,#TASK-SHELL-dup > p,#TASK-SHELL-dup > div:not([class]){display:none !important}</style>
