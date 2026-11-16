@@ -1658,7 +1658,7 @@
      #MOTIV .mv-top{gap:4px!important;margin:0!important}
      #MOTIV .mv-coach{font-size:13px!important;line-height:1.35!important;margin:2px 0!important}
      #MOTIV .mv-extra{font-size:11px!important;margin:0!important}
-     #MOTIV .mv-gap{font-size:11px!important;line-height:1.3!important;margin:2px 0!important;max-height:2.6em!important;overflow:hidden!important}
+     #MOTIV .mv-gap{font-size:11px!important;line-height:1.3!important;margin:2px 0!important}
      #MOTIV .mv-yday{display:none!important}
      #MOTIV .mv-report{font-size:12px!important;margin:2px 0!important}
      #MOTIV .mv-selfline{font-size:11px!important;margin:2px 0!important}
@@ -1910,6 +1910,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-minimal .mm-list{margin:6px 0 0;padding:8px 12px;background:#f2efe7;border:1px solid #d6d3d1;font-size:14px;color:#131210}
 
   .mv-selfline{margin:4px 0 0;font-size:13px;color:#57534e}
+
+  /* V104(G2): next+ro 组合态门标签可见 */
+  .mv-gate.next.ro{background:#a8200b!important;border-color:#a8200b!important;color:#f2efe7!important}
+  .mv-gate.next.ro .gn{color:#f2efe7!important}
+  .mv-gate.next.ro .gx{color:#f2efe7!important}
+  .mv-gate.next.ro .mv-self{color:#f2efe7!important;background:rgba(242,239,231,.18)!important;border-color:rgba(242,239,231,.45)!important}
 </style>
 
 
@@ -2810,10 +2816,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <p class="t-pass"><b>达标线</b> 默 ≥80%（≥16/20 卡）· <span class="nowrap">做 ≥60%</span></p>
       <p class="t-report">报数格式 <code>第4章：默 __% 做 __%</code></p>
      </div>
-     <label class="check">
-      <input type="checkbox" data-task-check="puxin" disabled aria-label="标记 普心第4章 完成">
-      <span class="box" aria-hidden="true"></span>
-     </label>
+     <span class="check-ro" aria-hidden="true">历史</span>
     </article>
 
     <article class="task" data-task="momo">
@@ -2826,10 +2829,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       </div>
       <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.02 快照），累计 809。</span></p>
      </div>
-     <label class="check">
-      <input type="checkbox" data-task-check="momo" disabled aria-label="标记 墨墨120词 完成">
-      <span class="box" aria-hidden="true"></span>
-     </label>
+     <span class="check-ro" aria-hidden="true">历史</span>
     </article>
 
     <article class="task" data-task="politics">
@@ -2842,10 +2842,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       </div>
       <p class="t-note">只看当讲，不展开成整套计划。</p>
      </div>
-     <label class="check">
-      <input type="checkbox" data-task-check="politics" disabled aria-label="标记 政治第3讲 完成">
-      <span class="box" aria-hidden="true"></span>
-     </label>
+     <span class="check-ro" aria-hidden="true">历史</span>
     </article>
 
     <article class="task" data-task="english">
@@ -2858,10 +2855,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       </div>
       <p class="t-note">阅读技巧第 1 讲，做完即收。</p>
      </div>
-     <label class="check">
-      <input type="checkbox" data-task-check="english" disabled aria-label="标记 英语阅读技巧第1讲 完成">
-      <span class="box" aria-hidden="true"></span>
-     </label>
+     <span class="check-ro" aria-hidden="true">历史</span>
     </article>
 
     <article class="task" data-task="social">
@@ -2874,10 +2868,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       </div>
       <p class="t-note">把第 2 章讲到的内容收口，不带账过夜。</p>
      </div>
-     <label class="check">
-      <input type="checkbox" data-task-check="social" disabled aria-label="标记 社心强化第1讲 完成">
-      <span class="box" aria-hidden="true"></span>
-     </label>
+     <span class="check-ro" aria-hidden="true">历史</span>
     </article>
 
     <article class="task" data-task="answer">
@@ -2890,10 +2881,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       </div>
       <p class="t-note">第 2 期必须动笔。答完再谈质量。</p>
      </div>
-     <label class="check">
-      <input type="checkbox" data-task-check="answer" disabled aria-label="标记 答题营第2期 完成">
-      <span class="box" aria-hidden="true"></span>
-     </label>
+     <span class="check-ro" aria-hidden="true">历史</span>
     </article>
    </div>
 
