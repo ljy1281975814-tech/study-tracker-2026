@@ -2341,8 +2341,18 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function KP(q) { return q.kp || q.id; }
 
   var KEY = 'dsh.347.quiz.v3', KEY_V2 = 'dsh.347.quiz.v2', KEY_V1 = 'dsh.347.quiz.v1';
-  var INTERVALS = [1, 3, 7, 15, 30, 60, 90];   /* MEMORY_V2_20261116: 首次复习 1 天（艾宾浩斯 24h 临界点），不是 3 天 */
-  var STEP_LABEL = ['次日复测', '3 天验证', '7 天巩固', '15 天巩固', '30 天结业'];
+  /* EXAM_WINDOW_20261116：全部间隔压进 11-16～12-19 的 33 天窗口，不再出现 60/90 天（已考后）
+   阶梯：1 → 3 → 7 → 14 → 26 天（累计），第 6 档起由考前收口接管 */
+  var INTERVALS = [1, 2, 4, 7, 12, 18];
+  var EXAM_KEY = '2026-12-19';   /* 与 347_计划数据.json 的 exam 字段一致 */
+  var EXAM_BUFFER = 2;           /* 考前 2 天收口：不再拉开新间隔 */
+  function examLeft() { return diffDays(TODAY, EXAM_KEY); }
+  function capInterval(d) {
+    var left = examLeft();
+    if (left <= 0 || left <= EXAM_BUFFER) return 0;
+    return Math.min(d, left - EXAM_BUFFER);
+  }
+  var STEP_LABEL = ['次日复测', '3 天验证', '7 天巩固', '14 天巩固', '考前收口'];
   var MASTER_DAYS = 30;
   var MASTER_STREAK = 2;   /* MEMORY_LOGIC_20261116: 连续认识次数，达此值自动掌握 */
   var NEW_PER_DAY = 15, MAXQ = (function(){
@@ -2579,8 +2589,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var r = rec(q) || {};
     if (outcome === 'bad' || outcome === 'forgot') return 0;   /* 当天再现 */
     if (outcome === 'fuzzy') return 0;                          /* 当天再练（不进阶） */
-    if (r.mastered) return MASTER_DAYS;
-    return INTERVALS[Math.min(r.streak || 0, INTERVALS.length - 1)];
+    if (r.mastered) return capInterval(INTERVALS[INTERVALS.length - 1]);
+    return capInterval(INTERVALS[Math.min(r.streak || 0, INTERVALS.length - 1)]);
   }
 
   function dayLabel(n) { return n === 0 ? '今天再练' : n === 1 ? '明天' : n + ' 天后'; }
@@ -2819,8 +2829,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     } else if (outcome === 'ok') {
       /* 熟知：按阶梯拉长 1 → 3 → 7 → 15 → 30 → 60 → 90；到 30 天视为掌握 */
       r.ok++; r.streak = (r.streak || 0) + 1;
-      r.interval = INTERVALS[Math.min(r.streak - 1, INTERVALS.length - 1)];
-      r.mastered = r.interval >= MASTER_DAYS;
+      r.interval = capInterval(INTERVALS[Math.min(r.streak - 1, INTERVALS.length - 1)]);
+      r.mastered = (r.streak >= INTERVALS.length);
       if (r.mastered) r.masteredAt = TODAY;
     } else if (outcome === 'bad') {
       /* 不记得：当天再现 + 次日；连续认识链清零 */
