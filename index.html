@@ -1871,7 +1871,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .check input[disabled]{opacity:.3!important;cursor:not-allowed!important}
   .check input[disabled] + .box{opacity:.3!important;background:#f5f5f4!important;border-style:dashed!important}
   .check{cursor:not-allowed!important}
-  .t-item:has(.check input[disabled]){opacity:.75}
+  .task:has(.check input[disabled]), .t-item:has(.check input[disabled]){opacity:.75}
 
   .mv-focus-today{margin:6px 0 0;font-size:12px}
   .mv-focus-today button{background:none;border:1px solid #d6d3d1;padding:6px 10px;font-size:12px;cursor:pointer;color:#57534e}
@@ -2870,10 +2870,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 <div style="display:none"><span id="PO-EPCT"></span></div>
 <div style="height:12px;background:#f3f4f6;border-radius:6px;overflow:hidden"><div id="PO-EBAR" style="height:100%;width:0;background:#8a8578;transition:width .3s"></div></div>
 
-<div id="PO-TODAY" style="display:none"><!-- PO_MERGE_20261115: 今日打勾已由 🔥 末路灯带(MOTIV)接管，隐藏避免双口径 -->
-  <div style="font-size:14px;font-weight:600;margin-bottom:10px"><span id="PO-STEP"></span></div>
-  <div id="PO-ROWS" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px"></div>
-</div>
+
 
 <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:10px">
   <span>今日完成度 <b id="PO-DPCT">→ 见 🔥 末路灯带</b></span>
