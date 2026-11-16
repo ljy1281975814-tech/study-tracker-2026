@@ -2260,7 +2260,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(svg){
       svg.setAttribute('aria-valuenow', String(_dispPct));
       var _vt = '今日完成度 ' + _dispPct + '%';
-    if(cur.pass){ _vt += '（已过线）'; }
+    if(cur.pass){ _vt += cur.reportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
     else if(cur.quizPartial && !cur.quizOK){
       var _need = Math.max(0, (cur.quizRowTgt||8) - (cur.quizRowDone||0));
       _vt += '（答题还差 ' + _need + ' 题达标）';
