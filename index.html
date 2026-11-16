@@ -3342,6 +3342,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     el.addEventListener("blur", function(){
       if(el.value !== ""){ el.value = clampPct(el.value); }
       paintReport();
+      try{ if(memo && doPct){ var _m3 = clampPct(memo.value.trim()), _d3 = clampPct(doPct.value.trim());
+        if(_m3 !== '' || _d3 !== '') saveReport(_m3, _d3); } }catch(e){}   // V77: blur 自动保存
     });
   });
   paintReport();
@@ -3373,6 +3375,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(_today){
       if(memo && _today.mo !== undefined && memo.value === "") memo.value = _today.mo;
       if(doPct && _today.do !== undefined && doPct.value === "") doPct.value = _today.do;
+      try{ paintReport(); }catch(e){}   // V77: 回填后同步预览
     }
   }catch(e){}
   try{ renderReportHistory(); }catch(e){}
@@ -3397,8 +3400,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(copyBtn){
     copyBtn.addEventListener("click", function(){
       var text = reportText();
-      if(!memo || !doPct || memo.value === "" || doPct.value === ""){
-        showStatus("先填两个百分比，再复制。格式：" + text);
+      if(!memo && !doPct){
+        showStatus("先填至少一个百分比。格式：" + text);
+        return;
+      }
+      if((!memo || memo.value === "") && (!doPct || doPct.value === "")){
+        showStatus("先填至少一个百分比。格式：" + text);
         return;
       }
       var _m = clampPct(memo.value.trim()), _d = clampPct(doPct.value.trim());
