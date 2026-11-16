@@ -2673,7 +2673,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         <div>
           <p class="report-kicker" id="report-title">输出报数 / 唯一有效凭证</p>
           <p class="report-format" id="reportPreview">第4章：默 __% 做 __%</p>
-          <p class="report-note">默写正确率 ≥80%（≥16/20 卡）· 做题正确率 ≥70%。</p>
+          <p class="report-note">默写正确率 ≥80%（≥16/20 卡）· 做题正确率 ≥60%。</p>
         </div>
         <form class="report-form" id="reportForm">
           <label class="report-field" for="memoPct">默
@@ -2804,7 +2804,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var totalDays = PM.total_days;
     var _sd = new Date(Date.now() - 4*3600e3); _sd.setHours(0,0,0,0);
     var dleft = Math.max(0, Math.round((new Date(2026,11,19) - _sd)/864e5));   // V28: 学习日日历日差，与 MOTIV 同源
-    var tPct = Math.min(100, (totalDays - dleft)/totalDays*100);
+    var _st = new Date(2026,10,11); _st.setHours(0,0,0,0);
+    var _passedDays = Math.max(0, Math.round((_sd - _st)/864e5)) + 1;
+    var tPct = Math.min(100, _passedDays/totalDays*100);
     document.getElementById('PO-DAYS').textContent = '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
     document.getElementById('PO-TPCT').textContent = tPct.toFixed(1)+'%';
     document.getElementById('PO-TBAR').style.width = tPct+'%';
