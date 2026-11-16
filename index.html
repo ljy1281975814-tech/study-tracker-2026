@@ -1896,7 +1896,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
           </div>
           <h3 class="focus-title">普心 04 <span>感觉</span></h3>
           <p class="focus-desc">看框架卡 11 张 15′ → 默 L1 20 张 35′ → 做题 42 张 50′ → 错题回填 10′</p>
-          <p class="focus-pass"><b>达标线</b> 默 ≥80%（≥16/20 卡）· <span class="nowrap">做 ≥70%</span></p>
+          <p class="focus-pass"><b>达标线</b> 默 ≥80%（≥16/20 卡）· <span class="nowrap">做 ≥60%</span></p>
           <div class="focus-actions">
             <span class="timer" id="timerDisplay" aria-live="off">35:00</span>
             <button class="btn-primary" id="focusStart" type="button" aria-pressed="false">开始 35′ 默写</button>
@@ -2222,7 +2222,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
     // 昨日：有数据才报，没数据说"未记录"（不抹成 0）
     var yHas = yst.rows.some(function(r){ return r.done > 0; });
-    var yTxt = '📅 昨天 '+y+' ' + (yHas ? '<b>'+Math.round(yst.pct)+'%</b>（真实 '+yst.realHit+'/2）' : '<span class="mv-dim">未记录</span>');
+    var _yP = Math.round(yst.pct); if(_yP >= 100 && !yst.pass) _yP = 99;
+    var yTxt = '📅 昨天 '+y+' ' + (yHas ? '<b>'+_yP+'%</b>（真实 '+yst.realHit+'/2）' : '<span class="mv-dim">未记录</span>');
     if($id('mv-yday').innerHTML !== yTxt) $id('mv-yday').innerHTML = yTxt;
 
     // 门（题只读；其它可点；保持焦点）
@@ -2335,7 +2336,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var cur = +(rec[k] || 0);
     if(cur >= tgt){ rec[k] = 0; saveOwn(o); render(); return; }   // 已达标 → 清空
     var unit = (k === '背') ? '个词' : (k === '课' ? '节' : (k === '英' ? '篇' : '题'));
-    var ans = window.prompt(g.nm + '：今天实际完成多少' + unit + '？（目标 ' + tgt + '）', String(tgt));
+    var ans = window.prompt(g.nm + '：今天实际完成多少' + unit + '？（目标 ' + tgt + '）', '');
     if(ans === null) return;
     // X8_20261115: 上限按项收紧，防 999 荒谬
     var _cap = (k === '背') ? 500 : (k === '课' ? 5 : (k === '英' ? 10 : 50));
@@ -2573,7 +2574,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
               <span class="step-arrow" aria-hidden="true">→</span>
               <span><i>做题</i><b>30′</b></span>
             </div>
-            <p class="t-pass"><b>达标线</b> 默 ≥80%（≥16/20 卡）· <span class="nowrap">做 ≥70%</span></p>
+            <p class="t-pass"><b>达标线</b> 默 ≥80%（≥16/20 卡）· <span class="nowrap">做 ≥60%</span></p>
             <p class="t-report">报数格式 <code>第4章：默 __% 做 __%</code></p>
           </div>
           <label class="check">
