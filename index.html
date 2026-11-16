@@ -3469,7 +3469,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     与答题页 dsh.347.quiz.v3 的 days[日].sec 合并展示，同一模块同一口径。 */
  var FLOG = "map347.focus.v1";
  var flogDay = (function(){
-  var d = new Date();
+  /* STUDY_DAY_SYNC_20261117：与答题页 TODAY 同源，学习日 04:00 切天 */
+  var d = new Date(Date.now() - 4 * 3600e3);
   return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
  })();
  var flogMod = (function(){
@@ -3526,6 +3527,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  }
  var runAccMs = 0, runTickAt = 0;
  function flushFocus(){
+  if(running && runTickAt){ runAccMs += (Date.now() - runTickAt); runTickAt = Date.now(); }
   if(runAccMs >= 1000){
    var sec = Math.round(runAccMs / 1000);
    flogAdd(sec); runAccMs = 0; paintFocusLog();
@@ -3539,15 +3541,17 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  var _stopOrig = stopTick;
  stopTick = function(){ flushFocus(); runTickAt = 0; _stopOrig(); };
  /* 只在 tick 里累计：running 为真则每秒记账，转假立即冲账，避免重复计 */
- var _tickOrig = tick;
+ var _tickOrig = tick, _wasRunning = false;
  tick = function(){
   if(running){
+   if(!_wasRunning){ runTickAt = Date.now() - 250; }   /* 起跑补首个 tick 的 250ms 窗口 */
    if(!runTickAt){ runTickAt = Date.now(); }
    var now2 = Date.now();
    if(now2 - runTickAt >= 200){ runAccMs += (now2 - runTickAt); runTickAt = now2; }
   }
   _tickOrig();
   if(!running){ flushFocus(); runTickAt = 0; }
+  _wasRunning = running;
  };
  paintFocusLog();
 
