@@ -2659,7 +2659,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  });
 
  document.addEventListener('visibilitychange', function(){ if(!document.hidden) render(); });
- document.addEventListener('347:report-saved', function(){ try{ render(); renderReportLine(); }catch(e){} });
+ document.addEventListener('347:report-saved', function(){ try{ render(); renderReportLine();
+  var _ce = $id('mv-coach');
+  if(_ce){ _ce.innerHTML = (_ce.innerHTML||'') + '<br><b style="color:#059669">✓ 报数已记入今日记录</b>'; }
+}catch(e){} });
  window.addEventListener('storage', function(e){ if(e.key === KEY || e.key === KEY_Q) render(); });
  // R7_20261115: 60s 只在「签名变化」时重绘，避免无变化也重建 38 格
  var _lastSig = '';
