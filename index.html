@@ -2221,6 +2221,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(!$id('MOTIV')) return;
     var T = studyDay();                       // ⭐ 每次重算（修 04:00 后错日）
     var _isPastNow = (T >= EXAM);   // V62: 考后终态
+    if(_isPastNow){   // V74: 考后隐藏 CTA/报数
+      try{ var _fs=$id('focusStart'); if(_fs) _fs.style.display='none';
+        var _rf=$id('reportForm'); if(_rf) _rf.style.display='none'; }catch(e){}
+    }
     var o = loadOwn(), QD = quizDays();
     var cur = dayOf(o, QD, T), y = sh(T,-1), yst = dayOf(o, QD, y);
 
@@ -3111,7 +3115,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
             <span class="wch">04</span>
             <div class="wname">
               <h4>感觉</h4>
-              <em>今天 · 最高优先级</em>
+              <em>章序 · 最高优先级</em>
             </div>
             <span class="wlv">最高</span>
             <span class="wbar" role="img" aria-label="感觉：最高优先级"><i style="--w:100%"></i></span>
