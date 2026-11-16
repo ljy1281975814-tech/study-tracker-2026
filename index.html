@@ -2252,7 +2252,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    var _rd = new Date(Date.now() - 4*3600e3);
    var _rday = _rd.getFullYear()+'-'+String(_rd.getMonth()+1).padStart(2,'0')+'-'+String(_rd.getDate()).padStart(2,'0');
    var _rr = _rs[_rday];
-   if(_rr && _rr.mo !== '' && _rr.mo !== undefined){ _mp = Math.max(0, Math.min(1, (parseInt(_rr.mo,10)||0)/100)); }
+   if(_rr){ var _mo=(_rr.mo!==''&&_rr.mo!==undefined)?(parseInt(_rr.mo,10)||0)/100:null; var _do2=(_rr.do!==''&&_rr.do!==undefined)?(parseInt(_rr.do,10)||0)/100:null; if(_mo!==null&&_do2!==null){_mp=Math.max(0,Math.min(1,(_mo+_do2)/2));} else if(_mo!==null){_mp=Math.max(0,Math.min(1,_mo));} else if(_do2!==null){_mp=Math.max(0,Math.min(1,_do2));} }
   }catch(e){}
   var _denom = (_mp >= 0) ? 3 : 2;
   var _num = _qp + _ip + (_mp >= 0 ? _mp : 0);
