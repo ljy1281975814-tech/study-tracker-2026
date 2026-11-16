@@ -2102,7 +2102,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       if(g.k === '题'){ v = QD[s] || 0; }
       var ok = v >= g.t;
       if(ok) hit++;
-      else { var _gap = g.t - v; if(_gap > 0 && _gap < (next? (next._gap||Infinity) : Infinity)){ next = g; next._gap = _gap; } }   // V47: 最近可完成项
+      else { var _gap = g.t - v; var _isReal = (g.k === '题' || g.k === '背'); var _score = _gap - (_isReal ? 1000 : 0);   // V57: 真实门优先(减1000让其排前)
+        if(_score < (next ? (next._score||Infinity) : Infinity)){ next = g; next._score = _score; next._gap = _gap; } }
       if(v > g.t && s === studyDay()){
         // A3_20261115: 「背」的超额基准用 120（真实日量），不是 40（新词通关线）
         var _base = (g.k === '背') ? 120 : g.t;
@@ -2181,7 +2182,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _dispPct = Math.round(pct);
     if(_dispPct >= 100 && !cur.pass) _dispPct = 99;   // V33: 绿100%仅当pass，防119/120假达标
     if(pEl.textContent !== _dispPct+'%') pEl.textContent = _dispPct+'%';
-    var col = cur.pass ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK) ? '#b45309' : '#b91c1c');   // V40: 环颜色=有进展判据(与chip一致,修71vs72断层)
+    var col = cur.pass ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial) ? '#b45309' : '#b91c1c');   // V57: 环色也认 quizPartial
     pEl.style.color = col;
     var C = 2*Math.PI*44;
     ring.style.stroke = col;
@@ -2276,7 +2277,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       }
       // V3_20261115: 跑道以「答题达标」为主（真实），自报项只作辅助显示
       if(c2 > T) s3 = 'fut';
-      else if(c2 === T) s3 = st2.pass ? 'pass' : ((st2.quizOK || st2.inkOK || st2.inkPartial) ? 'part' : 'now');   // V29: 今天也部分积分
+      else if(c2 === T) s3 = st2.pass ? 'pass' : ((st2.quizOK || st2.inkOK || st2.inkPartial || st2.quizPartial) ? 'part' : 'now');   // V57: 今日也认 quizPartial
       else if(st2.pass) s3 = (st2.realHit === 2) ? 'perfect' : 'pass';   // V27: 统一用 pass（去 hit/need 两套）
       else if(st2.quizOK || st2.inkOK || st2.inkPartial || st2.quizPartial) s3 = 'part';   // V47: 部分分全链路
       else s3 = 'miss';
