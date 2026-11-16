@@ -2118,6 +2118,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var quizOK = quizAttend && qualityOK;
     // 墨墨「达标」= 真实填的数量 ≥ 目标（默认 120）
     var inkOK = !!(inkRow && inkRow.done >= inkRow.tgt);
+    var inkPartial = !!(inkRow && inkRow.tgt > 0 && inkRow.done >= Math.ceil(inkRow.tgt * 0.6));   // V27: 部分积分(>=60%)
     // 重新计算 hit（用新的达标定义）
     var hit2 = 0;
     for(var z2=0;z2<rows.length;z2++){
@@ -2134,7 +2135,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     for(var z3=0;z3<rows.length;z3++){ var k3 = rows[z3].k; if(k3 === '题' || k3 === '背') realTotal++; }
     var realPct = realTotal ? Math.round(realHit / realTotal * 100) : 0;
     return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
-             quizAttend:quizAttend, quizOK:quizOK, inkOK:inkOK, selfHit:selfHit, realHit:realHit,
+             quizAttend:quizAttend, quizOK:quizOK, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
              quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
              acc:acc, qualityOK:qualityOK,
              // X3: pass = 真实部分全达标（答题质量 + 墨墨）
@@ -2258,8 +2259,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       // V3_20261115: 跑道以「答题达标」为主（真实），自报项只作辅助显示
       if(c2 > T) s3 = 'fut';
       else if(c2 === T) s3 = st2.pass ? 'pass' : 'now';   // V11_20261116: 用 pass(答题质量+墨墨)判今日格，消除自报变绿/真实反而不绿的矛盾
-      else if(st2.quizOK && st2.hit >= st2.need) s3 = (st2.hit === st2.rq.list.length) ? 'perfect' : 'pass';
-      else if(st2.quizOK || st2.selfHit > 0 || st2.inkOK) s3 = 'part';   // V14_20261116: inkOK(墨墨达标)也算「有进展」，墨墨-only日不判红 miss
+      else if(st2.pass) s3 = (st2.realHit === 2) ? 'perfect' : 'pass';   // V27: 统一用 pass（去 hit/need 两套）
+      else if(st2.quizOK || st2.inkOK || st2.inkPartial) s3 = 'part';   // V27: 部分积分(inkPartial>=60%)，去 selfHit（与 chip 同源）
       else s3 = 'miss';
       var isMock = MOCK.indexOf(c2) >= 0;
       var lb = c2 === T ? '今' : String(pd(c2).getDate());
@@ -2724,7 +2725,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(!D[T]) D[T] = {};
   // 阶段判定
   function stageOf(t){ var ts = (t instanceof Date) ? t.getTime() : new Date(t).getTime(); for(var i=0;i<PM.ramp.length;i++){ var r=PM.ramp[i]; var a = parseMD(r.from).getTime(); var b = parseMD(r.to).getTime() + 86400000 - 1; if(ts>=a && ts<=b) return r; } return PM.ramp[PM.ramp.length-1]; }   // V25: 末日按 23:59:59.999，修末日全天误判冲刺
-  var ST = stageOf(new Date());
+  var ST = stageOf(new Date(Date.now() - 4*3600e3));   // V28: 04:00 学习日，与 MOTIV 同源
   var TARGET_Q = 0; for(var i=0;i<PM.ramp.length;i++) TARGET_Q += PM.ramp[i].days * PM.ramp[i].题;
   // 渲染今日配额行
   var q = PM.quota;
@@ -2791,7 +2792,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var ePct = TARGET_Q>0 ? Math.min(100, doneQ/TARGET_Q*100) : 0;
     // 时间进度
     var totalDays = PM.total_days;
-    var dleft = Math.max(0, Math.ceil((new Date(2026,11,19) - new Date())/86400000));
+    var _sd = new Date(Date.now() - 4*3600e3); _sd.setHours(0,0,0,0);
+    var dleft = Math.max(0, Math.round((new Date(2026,11,19) - _sd)/864e5));   // V28: 学习日日历日差，与 MOTIV 同源
     var tPct = Math.min(100, (totalDays - dleft)/totalDays*100);
     document.getElementById('PO-DAYS').textContent = '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
     document.getElementById('PO-TPCT').textContent = tPct.toFixed(1)+'%';
