@@ -2055,6 +2055,17 @@
   text-wrap:pretty;
 }
 .jx-p b{color:var(--ink);font-weight:700}
+/* 得分点 */
+.pts{margin-top:10px;border-top:1px dashed var(--line-soft);padding-top:8px}
+.pts-h{font-size:12px;color:var(--muted);margin-bottom:6px}
+.pt{display:grid;grid-template-columns:18px 1fr auto;gap:6px;align-items:baseline;padding:5px 0;border-bottom:1px dotted #e2dccd;font-size:14px;line-height:1.5}
+.pt:last-child{border-bottom:0}
+.pt-i{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.pt-t{overflow-wrap:anywhere}
+.pt-k{font-size:11px;color:var(--muted);white-space:nowrap;max-width:42%;overflow:hidden;text-overflow:ellipsis}
+.pt.is-on .pt-i{color:var(--ok-deep);font-weight:700}
+.pt.is-on .pt-k{color:var(--ok-deep)}
+.roll--quiet{border-color:var(--line-soft)}
 /* 关键词命中 */
 .hits{
   display:flex;
@@ -2544,6 +2555,50 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     });
     return out;
   }
+  /* POINTS_20261117：得分点＝按答案语义分句拆，不再只按关键词表的条数
+     规则：先按 ；。！ 切句；单句 >42 字再按逗号切；关键词归位到所在句；
+     句中无关键词时取该句 3–8 字片段作检查词，保证每点都有可判内容 */
+  function pointsOf(q) {
+    if (q._pts) return q._pts;
+    var ans = String(q.ans || '').replace(/\s+/g, ' ').trim();
+    if (!ans) { q._pts = []; return q._pts; }
+    var segs = ans.split(/[；;。！!]/).map(function (x) { return x.trim(); }).filter(function (x) { return x.length >= 4; });
+    var out = [];
+    segs.forEach(function (sg) {
+      /* 长句先按冒号分层（列举型答案常见），仍过长再按逗号切 */
+      if (sg.length > 30 && /[：:]/.test(sg)) {
+        sg.split(/[：:]/).forEach(function (x) { x = x.trim(); if (x.length >= 6) out.push(x); });
+        return;
+      }
+      if (sg.length > 42) {
+        sg.split(/[，,]/).forEach(function (x) { x = x.trim(); if (x.length >= 6) out.push(x); });
+      } else out.push(sg);
+    });
+    if (!out.length) out = [ans];
+    var pts = out.map(function (t) { return { t: t, kw: [] }; });
+    (q.kw || []).forEach(function (k) {
+      var nk = normTxt(k), idx = -1;
+      for (var i = 0; i < pts.length; i++) { if (normTxt(pts[i].t).indexOf(nk) >= 0) { idx = i; break; } }
+      if (idx < 0) idx = 0;
+      pts[idx].kw.push(k);
+    });
+    pts.forEach(function (pt) {
+      if (pt.kw.length) return;
+      var cands = pt.t.replace(/[，,、：:（）()「」“”"'']/g, ' ').split(/\s+/).filter(function (x) { return x.length >= 3 && x.length <= 8; });
+      pt.kw = cands.slice(0, 1);
+      pt.derived = true;
+    });
+    q._pts = pts; return pts;
+  }
+  function pointHits(q, txt) {
+    var pts = pointsOf(q), t = normTxt(txt), hit = 0;
+    pts.forEach(function (pt) {
+      var on = pt.kw.some(function (k) { var nk = normTxt(k); return nk && t.indexOf(nk) >= 0; });
+      pt._hit = !!(t && on);
+      if (pt._hit) hit++;
+    });
+    return { hit: hit, total: pts.length, pts: pts };
+  }
   function kwHits(q, txt) {
     var t = normTxt(txt), kw = effKw(q), hit = 0;
     if (!t) return { hit: 0, total: kw.length };
@@ -2639,7 +2694,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return capInterval(INTERVALS[Math.min(r.streak || 0, INTERVALS.length - 1)]);
   }
 
-  function dayLabel(n) { return n === 0 ? '今天再练' : n === 1 ? '明天' : n + ' 天后'; }
+  function dayLabel(n) { return n === 0 ? '排回今天' : n === 1 ? '明天' : n + ' 天后'; }
 
   /* SCORE_GATE_20261116：评分与手动反馈联动——有缺漏即未达标，不允许「自己说答对了」 */
   function scoreOf(q, p) {
@@ -3164,7 +3219,10 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     } else {
       var h = p.hits || kwHits(q, p.text);
       sub = (p.text ? '你写了 ' + p.text.length + ' 字' : '未写') + ' · ' +
-        (h.total ? ('关键词命中 ' + h.hit + '/' + h.total) : '无可判分关键词（与题干重合，按原文自评）');
+        (function () {
+          var ph = pointHits(q, p.text);
+          return ph.total ? ('得分点命中 ' + ph.hit + '/' + ph.total) : '无可判分得分点（按原文自评）';
+        })();
     }
     var score = '';
     if (p.outcome) {
@@ -3175,12 +3233,16 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var hitsHTML = '';
     var _ek = effKw(q);
     if (!isChoice(q) && _ek.length) {
-      var hh = p.hits || kwHits(q, p.text);
-      hitsHTML = '<div class="hits">' + _ek.slice(0, 8).map(function (k, i) {
-        var nk = normTxt(k), t = normTxt(p.text);
-        var on = t && (t.indexOf(nk) >= 0 || (t.length >= 3 && nk.indexOf(t) >= 0));
-        return '<span class="hit' + (on ? ' is-on' : '') + '">' + esc(clamp(k, 16)) + '</span>';
-      }).join('') + '</div>';
+      var ph = pointHits(q, p.text);
+      hitsHTML = '<div class="pts"><div class="pts-h">得分点 ' + ph.total + ' 个 · 命中 ' + ph.hit +
+        '（按答案分句拆分，逐点算分）</div>' +
+        ph.pts.map(function (pt, i) {
+          return '<div class="pt' + (pt._hit ? ' is-on' : '') + '">' +
+            '<span class="pt-i">' + (i + 1) + '</span>' +
+            '<span class="pt-t">' + esc(clamp(pt.t, 46)) + '</span>' +
+            '<span class="pt-k">' + (pt.kw.length ? pt.kw.map(function (k) { return esc(clamp(k, 12)); }).join(' / ') : '原文点') + '</span>' +
+            '</div>';
+        }).join('') + '</div>';
     }
     var ansBlock;
     if (isChoice(q)) {
@@ -3197,12 +3259,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       layer('破题思路', q.jx.po) + layer('正确项 / 踩分点', _kxOk(q)) + layer('易错与陷阱', q.jx.bad) +
       '</div>' : '';
     function _kxOk(q) {
-      var ek = effKw(q), raw = (q.kw || []);
+      var raw = (q.kw || []), pts = pointsOf(q);
       if (!q.jx) return '';
-      if (ek.length === raw.length) return q.jx.ok;
-      if (!ek.length) return '本题关键词全部与题干重合（如「' + (raw[0] || '') + '」），不能作为踩分点；请对照下方原文自评是否写下定义主干。';
-      return '有效踩分术语 ' + ek.length + ' 个（已剔除与题干重合的 ' + (raw.length - ek.length) + ' 个）：' +
-        ek.slice(0, 6).map(function (k) { return '「' + k + '」'; }).join('、') + '。';
+      var head = '本题按答案分句拆成 ' + pts.length + ' 个得分点' +
+        (pts.length > raw.length ? '（关键词表只有 ' + raw.length + ' 个，已按内容补足）' : '') + '：';
+      return head + pts.map(function (pt, i) {
+        return '第' + (i + 1) + '点「' + clamp(pt.t, 18) + '」' + (pt.kw.length ? '关键词 ' + pt.kw.join('/') : '');
+      }).join('；') + '。';
     }
     var ch = CH[q.s + q.c] || {};
     var book = '<div class="locate"><span class="locate-mark"></span><div class="locate-body">' +
@@ -3235,7 +3298,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return '<div class="jx-layer"><div class="jx-k">' + k + '</div><p class="jx-p">' + esc(v) + '</p></div>';
   }
   function rollHTML(r, p) {
+    /* ROLL_HIDE_20261117：滚动阶段条不再展示——排期只落在机制里，界面上不出现阶梯 */
     if (!p.outcome) return '';
+    if (!p.practice) {
+      return '<div class="roll roll--quiet"><div class="roll-h">已排进复习：' +
+        relDue((r && r.due) || addDays(TODAY, 1)) + '</div>' +
+        '<p class="roll-p">不用记日期，到期它会自己回到队列。</p></div>';
+    }
     if (p.practice) {
       return '<div class="roll"><div class="roll-h">重做 · 不计分</div>' +
         '<p class="roll-p">这题本次不改排期；' + (r && r.due ? '当前排期 ' + mdLabel(r.due) + '（' + relDue(r.due) + '）。' : '它还没进滚动。') + '</p></div>';
@@ -3273,8 +3342,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       // ① 有缺漏 ⇒ 未达标：不给自评，只能当天再练到满分
       if (sc.auto && !sc.pass) {
         return '<div class="quiz-bar">' + prev +
-          '<button class="bar-primary bar-relearn" data-act="relearn">再练一次<span>命中 ' + sc.hit + '/' + sc.total +
-          ' · 当天练到满分才算过</span></button></div>';
+          '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
+          (last ? '完成本次' : '下一题') + '<span>命中不足已排回今天第 ' + (p.reinsTo || 0) +
+          ' 题 · 隔 3 道再练</span></button></div>';
       }
       // ② 达标（或该题无可判分关键词）⇒ 三态反馈，仅此时出现
       var okDays = nextIntervalFor(q, 'ok');
@@ -3703,25 +3773,35 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     p.outcome = outcome;
     p.graded = true;
     if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
+    if (S.session && !p.practice && outcome !== 'ok') {
+      var at = queueReinsert(q);
+      toast(at ? ('已排回今天第 <b>' + at + '</b> 题（隔 3 道再练）。') : '今天这题已排满 3 次，明天按排期回来。');
+      nextQuestion();                       /* 模糊/不记得：判完直接进下一题 */
+      return;
+    }
     render(); afterGradeScroll();
   }
-  /* RELEARN_20261116：未达标的题「当天再练一次」——重置本次作答并把该题重新排进今日队列 */
+  /* REINSERT_20261117：当天未达标/模糊的题不再原处重复，而是按记忆机制插回当天后续题序
+     - 间隔：跳过 3 道题后插入（短时记忆消退，避免即时提取造成的「假掌握」）
+     - 上限：同一题当天最多插回 3 次
+     - 返回插入位置（1 基题序），供提示文案用 */
+  function queueReinsert(q) {
+    if (!q || !S.session) return 0;
+    S.session.reins = S.session.reins || {};
+    var n = (S.session.reins[q.id] || 0);
+    if (n >= 3) return 0;
+    S.session.reins[q.id] = n + 1;
+    var ids = S.session.ids, cur = S.session.idx;
+    var at = Math.min(ids.length, cur + 4);
+    ids.splice(at, 0, q.id);
+    return at + 1;
+  }
   function relearnCurrent() {
     var q = currentQ();
     if (!q || !S.session) return;
-    var p = S.pend[q.id];
-    if (p) {
-      p.revealed = false; p.outcome = null; p.graded = false;
-      p.hits = null; p.text = ''; p.sel = []; p.restored = false;
-    }
-    if (S.pend[q.id]) {
-      var r = rec(q);
-      if (r && r.draft) { r.draft = ''; }
-    }
-    S.session.ids.push(q.id);          /* 队尾重排：当天循环，直到满分 */
-    S.session.relearn = (S.session.relearn || 0) + 1;
-    render(); window.scrollTo({ top: 0, behavior: 'smooth' });
-    toast('这一题当天再练一次：命中不足 <b>不算过</b>，练到满分再走。');
+    var at = queueReinsert(q);
+    toast(at ? ('已排回今天第 <b>' + at + '</b> 题：隔 3 道再做，不用连着重来。') : '今天这题已经排满 3 次，明天按排期回来。');
+    nextQuestion();
   }
   function nextQuestion() {
     if (!S.session) return;
@@ -3839,8 +3919,20 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       case 'reveal': {
         var pp = ensurePending(); if (!pp) break;
         if (pp.restored) { toast('这张卡今天已经判过了。'); break; }
-        pp.revealed = true; pp.hits = kwHits(currentQ(), pp.text);
-        recordTiming(currentQ(), timerSec()); timerPause();
+        var _q = currentQ();
+        pp.revealed = true; pp.hits = kwHits(_q, pp.text);
+        recordTiming(_q, timerSec()); timerPause();
+        var _sc = scoreOf(_q, pp);
+        if (_sc.auto && !_sc.pass && !pp.restored) {
+          /* 命中不足即未达标：直接按「不记得」记账并排回当天后续，不再逼人原地重写 */
+          var _g = applyGrade(_q, 'bad', { text: pp.text, sel: pp.sel });
+          if (_g && !_g.locked) {
+            pp.outcome = 'bad'; pp.graded = true;
+            if (S.session) S.session.answered++;
+            var _at = queueReinsert(_q);
+            pp.reinsTo = _at;
+          }
+        }
         render();
         afterGradeScroll();
         break;

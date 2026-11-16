@@ -2206,9 +2206,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  var GATES = [
   { k:'背',  nm:'墨墨词数', t:120, ico:'🔤', ro:false },
   { k:'题',  nm:'答题',   t:0, ico:'✍️', ro:true },
-  { k:'课',  nm:'课',    t:1, ico:'🎬', ro:false },
+  { k:'课',  nm:'课',    t:380, ico:'🎬', ro:false },   /* COURSE_20261117：按今日课表应听分钟计 */
   { k:'英',  nm:'阅读',   t:2, ico:'📖', ro:false },
-  { k:'政',  nm:'政治',   t:8, ico:'🏛️', ro:false },
+  { k:'政',  nm:'政治',   t:14, ico:'🏛️', ro:false },  /* POLITY_20261117：按救命课讲次/专题计 */
   { k:'模考', nm:'模考',   t:0, ico:'🧪', ro:false }
  ];
  var MOCK = ['2026-11-24','2026-12-01'];
@@ -2498,7 +2498,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    }
    var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':' self');
    var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
-            : (g2.nm + ' ' + row.done + '/' + row.tgt + (g2.k==='背' ? '（手动填）' : '（手动填）') + (row.ok ? '，点一下清空' : '，点一下填数量'));
+            : (g2.k === '课' ? ('课 已听 ' + row.done + '/' + row.tgt + ' 分钟' + (row.ok ? '，已达标' : '，点一下填分钟'))
+              : g2.k === '政' ? ('政治 讲到第 ' + row.done + '/' + row.tgt + ' 讲' + (row.ok ? '，已达标' : '，点一下填讲次'))
+              : (g2.nm + ' ' + row.done + '/' + row.tgt + '（手动填）' + (row.ok ? '，点一下清空' : '，点一下填数量')));
    gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
       ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?(row.ro?'✅':'☑'):g2.ico)+'</span><span class="gn">'+g2.nm+
       '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">手动填</i>')+'</span></button>';
@@ -2653,6 +2655,104 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   el.innerHTML = '📝 今日报数：' + parts.join(' · ') + (okCount===2 ? ' <b style="color:#059669">两项达标</b>' : '');
  }
 
+ /* COURSE_20261117：今日课表（源＝计划数据 rest 的课程条目）与政治讲次表
+    课程按「已听分钟 / 计划分钟」算，不再按「完成几节」；政治按专题讲次算 */
+ var COURSE_PLAN = [
+  { nm:'政治 第3讲 + 配套题', min:65, tk:'政' },
+  { nm:'社心 强化第1讲收口',  min:85, tk:'' },
+  { nm:'英语 27阅读课·阅读理论课', min:70, tk:'' },
+  { nm:'答题营 第2期（回放）', min:40, tk:'' },
+  { nm:'研方法速成营 第5期收尾+第6期', min:60, tk:'' },
+  { nm:'保命班 统计专题 2节', min:60, tk:'' }
+ ];
+ var COURSE_TOTAL = COURSE_PLAN.reduce(function(a,c){ return a + c.min; }, 0);
+ var POLITY = [
+  { nm:'专题一 唯物论', from:1, to:2 },
+  { nm:'专题二 唯物辩证法', from:3, to:5 },
+  { nm:'专题三 认识论', from:6, to:7 },
+  { nm:'专题四 唯物史观', from:8, to:9 },
+  { nm:'专题五 马原政治经济学', from:10, to:13 },
+  { nm:'专题六 垄断与科社', from:14, to:14 }
+ ];
+ var KP_C = 'dsh.347.course.v1';
+ function loadCourse(){
+  try{ return JSON.parse(localStorage.getItem(KP_C) || '{}') || {}; }catch(e){ return {}; }
+ }
+ function saveCourse(x){ try{ localStorage.setItem(KP_C, JSON.stringify(x)); }catch(e){} }
+ function polityOf(lec){
+  for(var i=0;i<POLITY.length;i++){ if(lec >= POLITY[i].from && lec <= POLITY[i].to) return POLITY[i]; }
+  return POLITY[0];
+ }
+ function sheetOpen(build){
+  var old = document.getElementById('course-sheet'); if(old) old.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'course-sheet';
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(20,19,16,.55);display:flex;align-items:flex-end';
+  wrap.innerHTML = '<div style="width:100%;max-height:86dvh;overflow:auto;background:#fbf8f0;border-top:2px solid #131210;padding:16px 16px calc(18px + env(safe-area-inset-bottom))">' +
+    '<div id="cs-body"></div>' +
+    '<div style="display:flex;gap:10px;margin-top:14px">' +
+    '<button type="button" id="cs-ok" style="flex:1;min-height:48px;background:#131210;color:#f2efe7;border:1px solid #131210;font-size:16px">确定</button>' +
+    '<button type="button" id="cs-cancel" style="flex:1;min-height:48px;background:transparent;color:#131210;border:1px solid #131210;font-size:16px">取消</button></div></div>';
+  document.body.appendChild(wrap);
+  var body = wrap.querySelector('#cs-body');
+  build(body, function(){ wrap.remove(); });
+  wrap.querySelector('#cs-cancel').onclick = function(){ wrap.remove(); };
+  return { wrap: wrap, body: body, close: function(){ wrap.remove(); } };
+ }
+ function openCourseSheet(){
+  var T = studyDay(), o = loadOwn(), rec = o.days[T] = o.days[T] || {};
+  var cdata = loadCourse(), day = cdata[T] = cdata[T] || {};
+  var s = sheetOpen(function(body, close){
+   body.innerHTML = '<h3 style="margin:0 0 4px;font-size:18px">课：今天听到哪了</h3>' +
+    '<p style="margin:0 0 12px;font-size:13px;color:#57534e">按今日课表逐门填「已听分钟」，比例自动算；不再数「完成几节」。</p>' +
+    COURSE_PLAN.map(function(c, i){
+     var v = +(day[i] || 0);
+     return '<label style="display:block;margin:10px 0">' +
+       '<span style="display:block;font-size:15px;margin-bottom:4px">' + c.nm + ' <b style="color:#57534e;font-weight:400">计划 ' + c.min + '′</b></span>' +
+       '<input data-i="' + i + '" type="number" inputmode="numeric" min="0" max="' + c.min + '" value="' + v + '" ' +
+       'style="width:100%;box-sizing:border-box;padding:10px;font-size:17px;border:1px solid #131210;background:#fff">' +
+       '</label>';
+    }).join('') +
+    '<p id="cs-sum" style="margin:8px 0 0;font-size:13px;color:#57534e"></p>';
+   var sumEl = body.querySelector('#cs-sum');
+   function recalc(){
+    var tot = 0;
+    body.querySelectorAll('input[data-i]').forEach(function(inp){ tot += Math.max(0, Math.min(+inp.max, +inp.value || 0)); });
+    sumEl.textContent = '合计已听 ' + tot + ' / ' + COURSE_TOTAL + ' 分钟（' + Math.round(tot / COURSE_TOTAL * 100) + '%）';
+   }
+   body.addEventListener('input', recalc); recalc();
+   body.__collect = function(){
+    var tot = 0;
+    body.querySelectorAll('input[data-i]').forEach(function(inp){
+     var i = +inp.getAttribute('data-i');
+     var v = Math.max(0, Math.min(COURSE_PLAN[i].min, Math.round(+inp.value || 0)));
+     day[i] = v; tot += v;
+    });
+    cdata[T] = day; saveCourse(cdata);
+    rec['课'] = tot; saveOwn(o); render();
+   };
+  });
+  s.wrap.querySelector('#cs-ok').onclick = function(){ s.body.__collect(); s.close(); };
+ }
+ function openPolitySheet(){
+  var T = studyDay(), o = loadOwn(), rec = o.days[T] = o.days[T] || {};
+  var cur = +(rec['政'] || 0);
+  var s = sheetOpen(function(body, close){
+   body.innerHTML = '<h3 style="margin:0 0 4px;font-size:18px">政治：听到第几讲</h3>' +
+    '<p style="margin:0 0 10px;font-size:13px;color:#57534e">按救命课讲次推进，专题自动归位（当前共 14 讲）。</p>' +
+    '<input id="cs-lec" type="range" min="0" max="14" step="1" value="' + cur + '" style="width:100%;min-height:44px">' +
+    '<p id="cs-pt" style="margin:6px 0 0;font-size:15px"></p>';
+   var lec = body.querySelector('#cs-lec'), pt = body.querySelector('#cs-pt');
+   function paint(){
+    var v = +lec.value, p = polityOf(v);
+    pt.innerHTML = v === 0 ? '还没开始（0 讲）' : ('讲到 <b>第 ' + v + ' 讲</b> · ' + p.nm + '（本专题第 ' + (v - p.from + 1) + '/' + (p.to - p.from + 1) + ' 讲）');
+   }
+   lec.addEventListener('input', paint); paint();
+   body.__collect = function(){ rec['政'] = +lec.value; saveOwn(o); render(); };
+  });
+  s.wrap.querySelector('#cs-ok').onclick = function(){ s.body.__collect(); s.close(); };
+ }
+
  // 门点击（题门只读 → 跳 quiz）
  var _lastGate = null;  // P0_20261115: 记住刚点的门，用于重绘后恢复焦点
  $id('mv-gates') && $id('mv-gates').addEventListener('click', function(ev){
@@ -2661,6 +2761,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var k = b.getAttribute('data-gate');
   _lastGate = k;
   if(b.getAttribute('data-ro') === '1'){ location.href = 'quiz/'; return; }
+  if(k === '课'){ openCourseSheet(); return; }
+  if(k === '政'){ openPolitySheet(); return; }
   // R2_20261115: 改成**记录真实数量**（不再「点一下=记满」，避免可伪造）
   var o = loadOwn(), T = studyDay();
   var rq = reqOf(T), tgt = 0, g = null;
