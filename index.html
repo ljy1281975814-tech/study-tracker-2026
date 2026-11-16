@@ -1682,10 +1682,10 @@
      #MOTIV .mv-h{font-size:13px!important;margin:0!important;line-height:1.05!important}
      #MOTIV .mv-top{gap:3px!important;margin:0!important}
      #MOTIV .mv-coach{font-size:11px!important;line-height:1.25!important;margin:0!important;max-height:2.4em!important;overflow:hidden!important}
-     #MOTIV .mv-gap{font-size:10px!important;line-height:1.2!important;margin:0!important;max-height:2.2em!important;overflow:hidden!important}
-     #MOTIV .mv-report{display:none!important}
-     #MOTIV .mv-focus-today{display:none!important}
-     #MOTIV .mv-minimal{display:none!important}
+     #MOTIV .mv-gap{font-size:11px!important;line-height:1.3!important;margin:2px 0!important}
+     #MOTIV .mv-report{display:block!important;font-size:10px!important;margin:1px 0!important}
+     #MOTIV .mv-focus-today{display:block!important;margin:2px 0 0!important}
+     #MOTIV .mv-minimal{display:block!important;margin:2px 0 0!important}
      #MOTIV .mv-gates{gap:2px!important;margin-top:1px!important}
      #MOTIV .mv-gate{min-height:40px!important}
      #MOTIV .mv-ringbox{width:72px!important;height:72px!important}
@@ -2462,7 +2462,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    }
    var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':' self');
    var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
-            : (g2.nm + ' ' + row.done + '/' + row.tgt + (g2.k==='背' ? '（手动填）' : '（自报）') + (row.ok ? '，点一下清空' : '，点一下填数量'));
+            : (g2.nm + ' ' + row.done + '/' + row.tgt + (g2.k==='背' ? '（手动填）' : '（手动填）') + (row.ok ? '，点一下清空' : '，点一下填数量'));
    gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
       ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?(row.ro?'✅':'☑'):g2.ico)+'</span><span class="gn">'+g2.nm+
       '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">自报</i>')+'</span></button>';
