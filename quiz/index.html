@@ -418,7 +418,7 @@
     align-items:baseline;
     justify-content:space-between;
     gap:10px;
-    color:var(--red);
+    color:#a8200b;
     font-size:12px;
     line-height:1.4;
     font-weight:700;
@@ -2991,7 +2991,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
 
   /* ---------------- 视图：首页 ---------------- */
-  function homeHTML() {
+  function homeHTML() { document.body.classList.remove('in-session');
     var q = todayQueue();
     var due = dueItems();
     var nc = nextChapter();
@@ -3287,7 +3287,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         '其实没把握 → 改按 1 天再排</button>';
     }
     return '<section class="result' + cls + '" id="resultCard">' +
-      '<div class="result-top"><span class="result-mark">' + mark + '</span>' +
+      '<div class="result-top" role="status" aria-live="polite"><span class="result-mark">' + mark + '</span>' +
       '<div class="result-title"><b>' + title + '</b><span>' + sub + '</span></div>' +
       '<div class="result-score">' + score + '</div></div>' +
       '<div class="result-body">' + rollHTML(r, p) + lockNote + ansBlock + nogood + jx + book + '</div></section>';
@@ -3782,7 +3782,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     toast(at ? ('已排回今天第 ' + at + ' 题：隔 3 道再做，不用连着重来。') : '今天这题已经排满 3 次，明天按排期回来。');
     nextQuestion();
   }
-  function nextQuestion() {
+  function nextQuestion() { document.body.classList.add('in-session');
     if (!S.session) return;
     if (S.session.idx < S.session.ids.length - 1) {
       S.session.idx++; markRevisit(); render();
