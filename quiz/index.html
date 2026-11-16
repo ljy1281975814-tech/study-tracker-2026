@@ -2369,6 +2369,45 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   return (t < new Date(2026,10,11)) ? 8 : 34;
 })();
+  /* TIMER_20261117：作答计时埋点 + 由真实用时反推每日可做量
+     口径：只计可见时间（切后台暂停）、每题净用时、按科目+章归集 */
+  var Q_TIMER = { id: null, start: 0, acc: 0, running: false };
+  function _now() { return Date.now(); }
+  function timerReset(id) { Q_TIMER = { id: id, start: _now(), acc: 0, running: !document.hidden }; }
+  function timerPause() { if (Q_TIMER.running) { Q_TIMER.acc += _now() - Q_TIMER.start; Q_TIMER.running = false; } }
+  function timerResume() { if (!Q_TIMER.running) { Q_TIMER.start = _now(); Q_TIMER.running = true; } }
+  function timerSec() { return Math.max(0, Math.round((Q_TIMER.acc + (Q_TIMER.running ? _now() - Q_TIMER.start : 0)) / 1000)); }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) timerPause(); else timerResume(); });
+  function recordTiming(q, sec) {
+    if (!q || !sec || sec < 1) return;
+    var k = KP(q), r = progress.q[k] || {};
+    r.tsec = (r.tsec || 0) + sec; r.tn = (r.tn || 0) + 1;
+    r.tavg = Math.round(r.tsec / r.tn);
+    progress.q[k] = r;
+    var d = progress.days[TODAY] || {};
+    d.sec = (d.sec || 0) + sec;
+    d.mod = d.mod || {};
+    var mk = (q.s || '') + q.c;
+    d.mod[mk] = (d.mod[mk] || 0) + sec;
+    progress.days[TODAY] = d;
+    saveProgress();
+  }
+  function timedAvgSec() {
+    var tot = 0, n = 0;
+    Object.keys(progress.q || {}).forEach(function (k) {
+      var r = progress.q[k]; if (r && r.tsec && r.tn) { tot += r.tsec; n += r.tn; }
+    });
+    return n >= 5 ? tot / n : 0;
+  }
+  function quotaInfo() {
+    var base = MAXQ, avg = timedAvgSec();
+    if (!avg) return { q: base, avg: 0, src: 'ramp' };
+    var budget = 40 * 60;                    /* 与计划 rest 的「答题」预算同量级 */
+    var est = Math.floor(budget / avg);
+    var lo = Math.max(4, base - 4), hi = Math.min(24, base + 4);
+    return { q: Math.max(lo, Math.min(hi, est || base)), avg: Math.round(avg), src: 'measured' };
+  }
+
   /* REVIEW_SPLIT_20261116: 复习与新题分离配额——复习题(错题滚动)上限 MAX_REVIEW，不占新题 MAXQ 爬坡额度 */
   var MAX_REVIEW = 15;
   /* MOCK_FREEZE_20261116（H0323 第2项）：模考日复习配额归 0，只保留错题本 */
@@ -2745,7 +2784,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var fresh = chapterItems(nc.l.s, nc.l.c).filter(function (q) {
         return !q.se && !isSeen(q) && !answeredToday(q) && !seen[KP(q)];
       });
-      for (var j = 0; j < fresh.length && newCnt < MAXQ; j++) {
+      var _mq = quotaInfo().q;
+      for (var j = 0; j < fresh.length && newCnt < _mq; j++) {
         seen[KP(fresh[j])] = 1;
         picked.push(fresh[j]);
         newCnt++;
@@ -2913,7 +2953,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
          「…新题 8 题。0 题。只放已学…」的错句。改为队列内分解，保证 待复习 + 新题 === q.length（D0046 断言1）。 */
       var _qNewN = newItemsIn(q).length, _qDueN = q.length - _qNewN;
       lead = '今日队列 <b>' + q.length + ' 题</b>：待复习 <b>' + _qDueN + '</b> 题 + 新题 <b>' + _qNewN + '</b> 题。只放已学 ' + BANK.learned.length + ' 章（' + total +
-        ' 个考点），未学章锁定。';
+        ' 个考点），未学章锁定。' +
+        (function () { var _qi = quotaInfo(); return _qi.src === 'measured' ? '按你实测每题 ' + _qi.avg + ' 秒、每日 40 分钟，今日可做上限 <b>' + _qi.q + '</b> 题。' : ''; })();
       cta = '开始今日答题'; ctaArg = 'daily';
     } else {
       title = '今天，已清空';
@@ -2932,6 +2973,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="hero-fact"><span>已学章</span><b>' + BANK.learned.length + ' 章</b></div>' +
       '<div class="hero-fact"><span>待复习</span><b>' + realDueItems().length + ' 题</b></div>' + '<div class="hero-fact"><span>新题</span><b>' + newItemsIn(q).length + ' 题</b></div>' +
       '<div class="hero-fact"><span>错题</span><b>' + ws.rolling.length + ' 道</b></div>' +
+      (function () { var _a = timedAvgSec(); return _a ? '<div class="hero-fact"><span>实测每题</span><b>' + Math.round(_a) + ' 秒</b></div>' : ''; })() +
       '</div></section>' +
       '<section class="shell">' +
       adviceHTML(nc, due.length) +
@@ -3607,6 +3649,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (p.restored) { toast('这张卡今天已经判过了，明天按排期回来。'); return; }
     if (p.revealed) return;
     if (isChoice(q) && !p.sel.length) { toast('先选一个选项。'); return; }
+    recordTiming(q, timerSec()); timerPause();
     p.revealed = true;
     if (isChoice(q)) {
       // 选择题当场判：正确/错误立即落库，仍可改判「蒙对的」
@@ -3712,6 +3755,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     else if (S.view === 'wrong') html = wrongHTML();
     else if (S.view === 'progress') html = progressHTML();
     else if (S.view === 'done') html = doneHTML();
+    if (S.view === 'quiz') { var _cq = currentQ(); if (_cq && Q_TIMER.id !== _cq.id) timerReset(_cq.id); }
     app.innerHTML = html;
     // 底部栏
     Array.prototype.slice.call(document.querySelectorAll('.quiz-bar')).forEach(function (el) { el.parentNode.removeChild(el); });
@@ -3795,7 +3839,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       case 'reveal': {
         var pp = ensurePending(); if (!pp) break;
         if (pp.restored) { toast('这张卡今天已经判过了。'); break; }
-        pp.revealed = true; pp.hits = kwHits(currentQ(), pp.text); render();
+        pp.revealed = true; pp.hits = kwHits(currentQ(), pp.text);
+        recordTiming(currentQ(), timerSec()); timerPause();
+        render();
         afterGradeScroll();
         break;
       }

@@ -537,6 +537,13 @@
   color:var(--paper);
  }
  .btn-primary[aria-pressed="true"]::after{content:"Ⅱ";font-size:15px}
+ .focus-log{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--dark-muted);
+  font-variant-numeric:tabular-nums;
+ }
  .focus-foot{
   margin-top:10px;
   color:var(--muted);
@@ -1638,7 +1645,14 @@
   .hero-side .focus-card{order:4;margin-top:14px;padding:18px 18px 16px}
   .focus-actions{flex-wrap:nowrap}
   .timer{flex:0 0 104px}
-  .focus-foot{display:none}
+  .focus-log{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--dark-muted);
+  font-variant-numeric:tabular-nums;
+ }
+ .focus-foot{display:none}
   .count-num{font-size:clamp(154px,27vw,230px)}
   .hero-title{max-width:11em}
   .progress-grid{gap:14px}
@@ -1728,7 +1742,14 @@
    .brand-mark{min-width:44px!important;min-height:44px!important}
    /* V65: 移动端 hero 压缩，让环进首屏 */
    .hero-side{padding:6px 12px!important}
-   .focus-desc, .focus-pass, .focus-foot, .focus-top{display:none!important}
+   .focus-desc, .focus-pass, .focus-log{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--dark-muted);
+  font-variant-numeric:tabular-nums;
+ }
+ .focus-foot, .focus-top{display:none!important}
    .focus-title{font-size:16px!important;margin:2px 0 4px!important}
    .focus-actions{margin-top:2px!important}
    .hero-main{padding-top:6px!important}
@@ -1783,7 +1804,14 @@
   .timer{flex:0 0 86px;min-width:0;min-height:46px;padding:8px 6px;font-size:19px}
   .btn-primary{flex:1 1 auto;min-width:0;min-height:46px;font-size:16px;padding:8px 6px;gap:5px}
   .btn-primary::after{font-size:16px}
-  .focus-foot{display:none}
+  .focus-log{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--dark-muted);
+  font-variant-numeric:tabular-nums;
+ }
+ .focus-foot{display:none}
   .section{padding:38px 0}
   .section-head{grid-template-columns:38px minmax(0,1fr);gap:10px 12px;padding-top:12px}
   .sec-index{grid-column:1;grid-row:1;padding-top:4px}
@@ -1912,7 +1940,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .hero-lead{display:none!important}
   .hero-facts{display:none!important}
   .hero-side{padding:8px 14px!important}
-  .focus-desc, .focus-pass, .focus-foot, .focus-top{display:none!important}
+  .focus-desc, .focus-pass, .focus-log{
+  margin-top:6px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--dark-muted);
+  font-variant-numeric:tabular-nums;
+ }
+ .focus-foot, .focus-top{display:none!important}
   .focus-title{font-size:17px!important;margin:2px 0 4px!important}
   .focus-actions{margin-top:2px!important}
   .section{padding:8px 0!important}
@@ -2080,6 +2115,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <button class="btn-primary" id="focusStart" type="button" aria-pressed="false">开始 35′ 默写</button>
      </div>
      <p class="focus-foot" id="timerNote">只做这一件。做完再决定下一件。</p>
+     <p class="focus-log" id="focusLog" aria-live="polite"></p>
     </div>
    </aside>
   </div>
@@ -3427,6 +3463,93 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   });
  }
  paintTimer();
+
+ /* TIMER_LOG_20261117：把倒计时变成可统计的真实专注时长
+    口径：只累计运行区间（暂停/切后台不计），按日 + 按模块归集；
+    与答题页 dsh.347.quiz.v3 的 days[日].sec 合并展示，同一模块同一口径。 */
+ var FLOG = "map347.focus.v1";
+ var flogDay = (function(){
+  var d = new Date();
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+ })();
+ var flogMod = (function(){
+  var t = document.querySelector(".focus-title");
+  var txt = t ? t.textContent.replace(/\s+/g, " ").trim() : "";
+  var m = txt.match(/([一-龥]{2})\s*0*(\d+)/);
+  return m ? (m[1] + parseInt(m[2], 10)) : (txt || "未标注");
+ })();
+ var flogPhase = (function(){
+  var t = document.querySelector(".phase-title b");
+  return t ? t.textContent.trim() : "";
+ })();
+ function flogLoad(){
+  try{ return JSON.parse(localStorage.getItem(FLOG) || "{}") || {}; }catch(e){ return {}; }
+ }
+ function flogSave(o){ try{ localStorage.setItem(FLOG, JSON.stringify(o)); }catch(e){} }
+ function flogAdd(sec){
+  if(!sec || sec < 1){ return; }
+  var o = flogLoad();
+  var days = o.days || {};
+  var d = days[flogDay] || { sec: 0, mod: {}, phase: flogPhase };
+  d.sec = (d.sec || 0) + sec;
+  d.mod = d.mod || {};
+  d.mod[flogMod] = (d.mod[flogMod] || 0) + sec;
+  d.phase = d.phase || flogPhase;
+  days[flogDay] = d;
+  o.days = days;
+  flogSave(o);
+ }
+ function quizTodaySec(){
+  try{
+   var j = JSON.parse(localStorage.getItem("dsh.347.quiz.v3") || "{}") || {};
+   var d = (j.days || {})[flogDay];
+   return d && d.sec ? d.sec : 0;
+  }catch(e){ return 0; }
+ }
+ function paintFocusLog(){
+  var el = $("focusLog");
+  if(!el){ return; }
+  var o = flogLoad();
+  var d = (o.days || {})[flogDay] || { sec: 0, mod: {} };
+  var qsec = quizTodaySec();
+  var mine = d.sec || 0;
+  var parts = [];
+  parts.push("今日专注 " + (mine < 60 ? mine + "″" : Math.round(mine / 60) + "′"));
+  var mods = Object.keys(d.mod || {});
+  if(mods.length){
+   var top = mods.sort(function(a, b){ return d.mod[b] - d.mod[a]; })[0];
+   var _mv = d.mod[top] || 0;
+   parts.push(flogMod + " " + (_mv < 60 ? _mv + "″" : Math.round(_mv / 60) + "′"));
+  }
+  if(qsec){ parts.push("答题实测 " + (qsec < 60 ? qsec + "″" : Math.round(qsec / 60 * 10) / 10 + "′")); }
+  el.textContent = parts.join(" · ");
+ }
+ var runAccMs = 0, runTickAt = 0;
+ function flushFocus(){
+  if(runAccMs >= 1000){
+   var sec = Math.round(runAccMs / 1000);
+   flogAdd(sec); runAccMs = 0; paintFocusLog();
+  }
+ }
+ function markRun(){ runTickAt = Date.now(); }
+ document.addEventListener("visibilitychange", function(){
+  if(document.hidden && running){ flushFocus(); running = false; stopTick(); paintTimer(); }
+ });
+ /* 暂停/到点都要立刻冲账：stopTick 是唯一收敛点 */
+ var _stopOrig = stopTick;
+ stopTick = function(){ flushFocus(); runTickAt = 0; _stopOrig(); };
+ /* 只在 tick 里累计：running 为真则每秒记账，转假立即冲账，避免重复计 */
+ var _tickOrig = tick;
+ tick = function(){
+  if(running){
+   if(!runTickAt){ runTickAt = Date.now(); }
+   var now2 = Date.now();
+   if(now2 - runTickAt >= 200){ runAccMs += (now2 - runTickAt); runTickAt = now2; }
+  }
+  _tickOrig();
+  if(!running){ flushFocus(); runTickAt = 0; }
+ };
+ paintFocusLog();
 
  /* Checklist: local only, no source data mutation. */
  var STORE = "map347.w1a.checks.20261102.v1";
