@@ -1667,6 +1667,10 @@
   .weight-table .wrow--top{padding-left:14px;padding-right:12px}
  }
  @media (max-width:720px){
+     /* V124: 390 门再压4px */
+     .focus-actions{margin-top:4px!important;gap:5px!important}
+     .btn-primary{min-height:40px!important;font-size:14px!important}
+     .timer{min-height:40px!important}
      /* V109: 320 再压24px */
      .masthead-in{min-height:52px!important}
      .hero-main{padding-top:2px!important;padding-bottom:2px!important}
@@ -1742,13 +1746,8 @@
    .brand-mark{min-width:44px!important;min-height:44px!important}
    /* V65: 移动端 hero 压缩，让环进首屏 */
    .hero-side{padding:6px 12px!important}
-   .focus-desc, .focus-pass, .focus-log{
-  margin-top:6px;
-  font-size:13px;
-  line-height:1.5;
-  color:var(--dark-muted);
-  font-variant-numeric:tabular-nums;
- }
+   .focus-desc, .focus-pass{display:none!important}
+   .focus-log{margin-top:6px;font-size:13px;line-height:1.5;color:var(--dark-muted);font-variant-numeric:tabular-nums}
  .focus-foot, .focus-top{display:none!important}
    .focus-title{font-size:16px!important;margin:2px 0 4px!important}
    .focus-actions{margin-top:2px!important}
@@ -1933,6 +1932,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  
  /* V69: 低高度桌面（1366x768 等）压缩 hero，让环进首屏 */
  @media (max-height: 920px) and (min-width: 900px){
+     /* V124: 1366 门再压10px */
+     .hero-main{padding-top:8px!important;padding-bottom:8px!important}
+     .focus-actions{margin-top:6px!important}
   .count-num{font-size:clamp(68px,9vw,112px)!important}
   .hero-main{padding-top:6px!important;padding-bottom:6px!important}
   .hero-top{padding-bottom:4px!important}
@@ -1940,13 +1942,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .hero-lead{display:none!important}
   .hero-facts{display:none!important}
   .hero-side{padding:8px 14px!important}
-  .focus-desc, .focus-pass, .focus-log{
-  margin-top:6px;
-  font-size:13px;
-  line-height:1.5;
-  color:var(--dark-muted);
-  font-variant-numeric:tabular-nums;
- }
+  .focus-desc, .focus-pass{display:none!important}
+  .focus-log{margin-top:6px;font-size:13px;line-height:1.5;color:var(--dark-muted);font-variant-numeric:tabular-nums}
  .focus-foot, .focus-top{display:none!important}
   .focus-title{font-size:17px!important;margin:2px 0 4px!important}
   .focus-actions{margin-top:2px!important}
@@ -2376,7 +2373,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   }catch(e){}
   var _hasReal = (quizRow && quizRow.done > 0) || (inkRow && inkRow.done > 0); var _mpEff = (_mp >= 0 && _hasReal) ? (((_rr && parseInt(_rr.mo,10)>=80 && parseInt(_rr.do,10)>=60)) ? 1 : _mp) : -1;   /* V116(G14): 报数达标即满贡献 */   /* V116(G14): 报数达标即满贡献 */ var _denom = (_mpEff >= 0) ? 3 : 2;
   var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
-  var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;  // V67: 3项均值(含默写)
+  var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;
+    if(_mp < 0 && realPct > 66) realPct = 66;   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK:reportOK, reportPartial:reportPartial, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
