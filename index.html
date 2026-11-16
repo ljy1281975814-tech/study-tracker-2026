@@ -3225,6 +3225,34 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   });
   paintReport();
 
+  // V49: 报数落库 + 校验（"唯一有效凭证"不再只是装饰）
+  var KEY_REPORT = 'dsh.347.report.v1';
+  function reportDay(){
+    var x = new Date(Date.now() - 4*3600e3);
+    return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  }
+  function saveReport(m, d){
+    var store = {};
+    try{ store = JSON.parse(localStorage.getItem(KEY_REPORT)||'{}') || {}; }catch(e){ store = {}; }
+    store[reportDay()] = { mo: m, do: d, at: new Date().toISOString() };
+    try{ localStorage.setItem(KEY_REPORT, JSON.stringify(store)); return true; }catch(e){ return false; }
+  }
+  function reportIssues(m, d){
+    var out = [];
+    if(m !== "" && +m < 80) out.push('默写 ' + m + '% 未达标（需 ≥80%）');
+    if(d !== "" && +d < 60) out.push('做题 ' + d + '% 未达标（需 ≥60%）');
+    return out;
+  }
+  // 回填今天已有的报数
+  try{
+    var _rs = JSON.parse(localStorage.getItem(KEY_REPORT)||'{}') || {};
+    var _today = _rs[reportDay()];
+    if(_today){
+      if(memo && _today.mo !== undefined && memo.value === "") memo.value = _today.mo;
+      if(doPct && _today.do !== undefined && doPct.value === "") doPct.value = _today.do;
+    }
+  }catch(e){}
+
   function showStatus(msg){
     if(status){ status.textContent = msg; }
   }
@@ -3249,14 +3277,18 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         showStatus("先填两个百分比，再复制。格式：" + text);
         return;
       }
+      var _m = clampPct(memo.value.trim()), _d = clampPct(doPct.value.trim());
+      var _saved = saveReport(_m, _d);
+      var _iss = reportIssues(_m, _d);
+      if(!_saved){ showStatus("⚠️ 保存失败（浏览器空间满/隐私模式），本次报数未存上"); }
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(text).then(function(){
-          showStatus("已复制：" + text);
+          showStatus((_iss.length ? "⚠️ " + _iss.join("；") + "。" : "") + "已保存并复制：" + text);
         }).catch(function(){
-          showStatus(fallbackCopy(text) ? ("已复制：" + text) : ("复制失败，请手动选择：" + text));
+          showStatus((_iss.length ? "⚠️ " + _iss.join("；") + "。" : "") + (fallbackCopy(text) ? ("已保存并复制：" + text) : ("复制失败，请手动选择：" + text)));
         });
       }else{
-        showStatus(fallbackCopy(text) ? ("已复制：" + text) : ("复制失败，请手动选择：" + text));
+        showStatus((_iss.length ? "⚠️ " + _iss.join("；") + "。" : "") + (fallbackCopy(text) ? ("已保存并复制：" + text) : ("复制失败，请手动选择：" + text)));
       }
     });
   }
