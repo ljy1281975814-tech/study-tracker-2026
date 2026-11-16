@@ -1884,6 +1884,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  #today .sec-title h2{font-size:clamp(24px,2.6vw,34px)!important}
  
  .mv-extra{color:#92400e!important}
+
+  .mv-minimal{margin:6px 0 0;font-size:13px}
+  .mv-minimal button{min-height:44px;background:#c92a12;color:#f2efe7;border:1px solid #c92a12;padding:0 14px;font-size:14px;cursor:pointer}
+  .mv-minimal button:hover{background:#a8230e}
+  .mv-minimal .mm-list{margin:6px 0 0;padding:8px 12px;background:#f2efe7;border:1px solid #d6d3d1;font-size:14px;color:#131210}
 </style>
 
 
@@ -2009,6 +2014,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    <p id="mv-extra" class="mv-extra"></p>
    <p id="mv-gap" class="mv-gap" aria-live="polite"></p>
    <p id="mv-focus-today" class="mv-focus-today"></p>
+      <p id="mv-minimal" class="mv-minimal"></p>
    <p id="mv-yday" class="mv-yday"></p>
    <p id="mv-report" class="mv-report" aria-live="polite"></p>
   </div>
@@ -2445,11 +2451,30 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(_sum){ _sum.textContent = '📅 38 格跑道 · ' + lit + ' 天有进展（点开看）'; }  // V16
   prefillWords();  // P1_20261115
   renderReportLine();  // V60: 报数接模型
-  renderFocusToday();  // V84: 只看今天
+  renderFocusToday();
+    renderMinimal();  // V84: 只看今天
  }
 
  // V84: 「只看今天」开关（失败者减压迫）
- function renderFocusToday(){
+  function renderMinimal(){
+    var el = $id('mv-minimal');
+    if(!el) return;
+    if(!document.body.classList.contains('minimal-mode')){
+      el.innerHTML = '<button type="button" id="minimalBtn">🔄 今日只做两件（重启）</button>';
+    } else {
+      el.innerHTML = '<div class="mm-list">今天只做两件：<b>墨墨 120 词</b> + <b>答题 8 题</b> —— 做完就算赢，欠账不追。</div>'
+        + '<button type="button" id="minimalBtn">✓ 已开（点此关闭）</button>';
+    }
+    var b = $id('minimalBtn');
+    if(b && !b._bound){
+      b._bound = true;
+      b.addEventListener('click', function(){
+        document.body.classList.toggle('minimal-mode');
+        renderMinimal();
+      });
+    }
+  }
+   function renderFocusToday(){
   var el = $id('mv-focus-today');
   if(!el) return;
   var on = document.body.classList.contains('focus-today');
