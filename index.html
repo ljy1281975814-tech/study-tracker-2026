@@ -2632,7 +2632,13 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(!g) return;
   var rec = o.days[T] = o.days[T] || {};
   var cur = +(rec[k] || 0);
-  if(cur >= tgt){ rec[k] = 0; saveOwn(o); render(); return; }  // 已达标 → 清空
+  if(cur >= tgt){
+      // V110(G10): 清零加确认（防误触）
+      if(window.confirm('清空 ' + g.nm + ' 的 ' + cur + '/' + tgt + ' 记录？')){
+        rec[k] = 0; saveOwn(o); render();
+      }
+      return;
+    }
   var unit = (k === '背') ? '个词' : (k === '课' ? '节' : (k === '英' ? '篇' : '题'));
     window.__showInput(g.nm, unit, tgt, (k === '背') ? 500 : (k === '课' ? 5 : (k === '英' ? 10 : 50)), function(ans){
       if(ans === null || ans === '') return;
@@ -3473,7 +3479,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  function reportText(){
   var m = clampPct(memo ? memo.value.trim() : "");
   var d = clampPct(doPct ? doPct.value.trim() : "");
-  return "第4章：默 " + (m || "__") + "% 做 " + (d || "__") + "%";
+  var _day = reportDay();
+  var _short = (_day.replace(/-/g, '').slice(4) + (m || '') + (d || '')).slice(0, 6).toUpperCase();
+  return _day + "：默 " + (m || "__") + "% 做 " + (d || "__") + "% · 凭证" + _short;
  }
  function renderReportHistory(){
   var el = document.getElementById('reportHistory');
