@@ -2088,7 +2088,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  <section class="section" id="today" aria-labelledby="today-title">
   <div class="shell">
    <section id="MOTIV" class="mv-wrap" aria-label="今日完成度">
- <h2 id="mv-h2" class="mv-h">🔥 末路灯带 <span id="mv-sub" class="mv-sub"></span><span id="mv-chip" class="mv-chip"></span></h2>
+ <h2 id="mv-h2" class="mv-h">🔥 末路灯带 <span id="mv-sub" class="mv-sub" aria-hidden="true"></span><span id="mv-chip" class="mv-chip" aria-hidden="true"></span></h2>
 
  <div class="mv-top">
   <div class="mv-ringbox">
@@ -3685,9 +3685,11 @@ window.__showInput = function(title, unit, tgt, cap, cb){
   var f = document.getElementById('mv-input-field');
   f.value = '';
   layer.style.display = 'flex';
+  try{ document.body.style.overflow = 'hidden'; }catch(e){}
   setTimeout(function(){ try{ f.focus(); }catch(e){} }, 50);
   function close(v){
     layer.style.display = 'none';
+    try{ document.body.style.overflow = ''; }catch(e){}
     try{ document.removeEventListener('keydown', _trap, true); }catch(e){}
     try{ layer.removeEventListener('click', _onLayerClick); }catch(e){}
     try{ if(_prevFocus && _prevFocus.focus) _prevFocus.focus(); }catch(e){}
