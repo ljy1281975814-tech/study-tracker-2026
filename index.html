@@ -1653,6 +1653,10 @@
   .weight-table .wrow--top{padding-left:14px;padding-right:12px}
  }
  @media (max-width:720px){
+     /* V97(A G6): 移动端 5 门 3+2 布局，避免孤行 */
+     #MOTIV .mv-gates{grid-template-columns:repeat(6,1fr)!important}
+     #MOTIV .mv-gate{grid-column:span 2!important}
+     #MOTIV .mv-gate:nth-child(n+4){grid-column:span 3!important}
    /* V88(B GAP5): 移动端 MOTIV 压缩，让 5 门进首屏 */
    #MOTIV .mv-top{gap:6px!important}
    #MOTIV .mv-coach{font-size:14px!important;line-height:1.45!important;margin:4px 0!important}
@@ -1845,7 +1849,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  .mv-gate.self.ok .gi{opacity:.55}
  .mv-gate.self .mv-self{color:#57534e;background:#f5f5f4;border-color:#d6d3d1}
  
- .mv-report{margin:8px 0 0;font-size:13px;line-height:1.6;color:#374151}.mv-report a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
+ .mv-report{margin:8px 0 0;font-size:15px;line-height:1.6;color:#374151}.mv-report a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
  
  /* V69: 低高度桌面（1366x768 等）压缩 hero，让环进首屏 */
  @media (max-height: 800px) and (min-width: 900px){
@@ -1874,7 +1878,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  .task:has(.check input[disabled]), .t-item:has(.check input[disabled]){opacity:.75}
 
  .mv-focus-today{margin:6px 0 0;font-size:12px}
- .mv-focus-today button{background:none;border:1px solid #d6d3d1;padding:6px 10px;font-size:12px;cursor:pointer;color:#57534e}
+ .mv-focus-today button{background:none;border:1px solid #d6d3d1;padding:6px 10px;min-height:44px;font-size:13px;cursor:pointer;color:#57534e}
  .mv-focus-today button:hover{background:#f5f5f4}
  .mv-focus-today button[aria-pressed="true"]{background:#131210;color:#f2efe7;border-color:#131210}
  body.focus-today .mv-gap{display:none!important}
@@ -1997,12 +2001,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
  <section class="section" id="today" aria-labelledby="today-title">
   <div class="shell">
-   <section id="MOTIV" class="mv-wrap" aria-labelledby="mv-h2">
+   <section id="MOTIV" class="mv-wrap" aria-label="今日完成度">
  <h2 id="mv-h2" class="mv-h">🔥 末路灯带 <span id="mv-sub" class="mv-sub"></span><span id="mv-chip" class="mv-chip"></span></h2>
 
  <div class="mv-top">
   <div class="mv-ringbox">
-   <svg viewBox="0 0 104 104" class="mv-ring" role="progressbar" aria-labelledby="mv-h2"
+   <svg viewBox="0 0 104 104" class="mv-ring" role="progressbar" aria-label="今日完成度（真实项）"
       aria-valuemin="0" aria-valuemax="100" id="mv-ringsvg" aria-valuenow="0">
     <circle cx="52" cy="52" r="44" class="mv-ring-bg"></circle>
     <circle id="mv-ring" cx="52" cy="52" r="44" class="mv-ring-fg"></circle>
