@@ -1826,7 +1826,20 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-gate.self .mv-self{color:#57534e;background:#f5f5f4;border-color:#d6d3d1}
   
   .mv-report{margin:8px 0 0;font-size:13px;line-height:1.6;color:#374151}
-  </style>
+  
+  /* V69: 低高度桌面（1366x768 等）压缩 hero，让环进首屏 */
+  @media (max-height: 800px) and (min-width: 900px){
+    .count-num{font-size:clamp(68px,9vw,112px)!important}
+    .hero-main{padding-top:6px!important;padding-bottom:6px!important}
+    .hero-top{padding-bottom:4px!important}
+    .hero-title{font-size:clamp(22px,2.5vw,32px)!important;margin-top:2px!important}
+    .hero-lead{display:none!important}
+    .hero-facts{display:none!important}
+    .hero-side{padding:10px 14px!important;max-height:200px!important;overflow:hidden!important}
+    .section{padding:8px 0!important}
+    .section-head{padding-top:4px!important}
+  }
+</style>
 
 
 <style id="mv-dup-fix2">/* DUP_FIX2_20261116: dup 里的重复今日基础包/底线块隐藏，保留执行线(carry/thesis/timeline) */#TASK-SHELL-dup{margin:0 !important;padding:0 !important;border:0 !important;background:transparent !important;border-radius:0 !important}#TASK-SHELL-dup > h3,#TASK-SHELL-dup > label,#TASK-SHELL-dup > p,#TASK-SHELL-dup > div:not([class]){display:none !important}</style>
