@@ -2688,9 +2688,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    '.mv-bad{color:#b91c1c;font-weight:700}',
    '.mv-gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px;margin-top:14px}',
    '.mv-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:60px;border:1px solid var(--ink,#131210);border-radius:0;background:transparent;color:var(--ink,#131210);font-size:13px;line-height:1.25;cursor:pointer;padding:6px 4px;font-family:inherit}',  // V20_P01
-   '.mv-gate .gi{font-size:15px}.mv-gate .gn{font-weight:700}.mv-gate .gx{font-size:13px;font-weight:700;color:#4b5563}',
+   '.mv-gate .gi{font-size:15px}.mv-gate .gn{font-weight:700}.mv-gate .gx{font-size:13px;font-weight:700;color:#131210}',
    '.mv-gate.ok{background:#f2efe7;border-color:#131210;color:#131210}.mv-gate.ok .gx{color:#131210}',
-   '.mv-gate.next{background:#c92a12;border-color:#c92a12;color:#f2efe7;box-shadow:0 0 0 3px rgba(201,42,18,.18)}',
+   '.mv-gate.next{background:#c92a12;border-color:#c92a12;color:#f2efe7;box-shadow:0 0 0 3px rgba(201,42,18,.18)}.mv-gate.next .gx{color:#f2efe7}.mv-gate.next .gn{color:#f2efe7}.mv-gate.next .mv-self{color:#f2efe7;background:rgba(242,239,231,.18);border-color:rgba(242,239,231,.45)}',
    '.mv-gate.ro{background:#fbf8f0;border-color:#8a8578;color:#131210}.mv-gate.ro .gx{color:#131210}',
    '.mv-gate.off{opacity:.6;cursor:default;color:#78716c;border-color:#d6d3d1;background:#f5f5f4}',
    '.mv-gate:hover{border-color:#57534e}',
@@ -3569,11 +3569,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  else upd();
 })();
 </script>
-<div id="mv-input-layer" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(19,18,16,.55);align-items:center;justify-content:center">
+<div id="mv-input-layer" role="dialog" aria-modal="true" aria-labelledby="mv-input-title" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(19,18,16,.55);align-items:center;justify-content:center">
   <div style="background:#fbf8f0;border:2px solid #131210;max-width:360px;width:calc(100% - 40px);padding:20px">
     <p id="mv-input-title" style="margin:0 0 6px;font-size:16px;font-weight:700;color:#131210"></p>
     <p id="mv-input-hint" style="margin:0 0 12px;font-size:13px;color:#57534e"></p>
-    <input id="mv-input-field" type="number" inputmode="numeric" min="0"
+    <input id="mv-input-field" type="number" inputmode="numeric" min="0" aria-label="实际完成数量"
            style="width:100%;box-sizing:border-box;padding:12px;font-size:20px;border:1px solid #131210;background:#fff;color:#131210">
     <div style="display:flex;gap:10px;margin-top:14px">
       <button type="button" id="mv-input-ok" style="flex:1;min-height:44px;background:#131210;color:#f2efe7;border:1px solid #131210;font-size:15px;cursor:pointer">确定</button>
@@ -3584,6 +3584,23 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 <script>
 /* V95(G4): 内联输入弹层（替代 window.prompt） */
 window.__showInput = function(title, unit, tgt, cap, cb){
+  var _prevFocus = document.activeElement;
+  function _trap(e){
+    if(e.key === 'Tab'){
+      var f = document.getElementById('mv-input-field');
+      var ok = document.getElementById('mv-input-ok');
+      var cancel = document.getElementById('mv-input-cancel');
+      var nodes = [f, ok, cancel];
+      var idx = nodes.indexOf(document.activeElement);
+      if(e.shiftKey){ e.preventDefault(); nodes[(idx - 1 + nodes.length) % nodes.length].focus(); }
+      else { e.preventDefault(); nodes[(idx + 1) % nodes.length].focus(); }
+    }
+    if(e.key === 'Escape'){ e.preventDefault(); close(null); }
+  }
+  function _onLayerClick(e){ if(e.target && e.target.id === 'mv-input-layer'){ close(null); } }
+  document.addEventListener('keydown', _trap, true);
+  var _layer = document.getElementById('mv-input-layer');
+  if(_layer) _layer.addEventListener('click', _onLayerClick);
   var layer = document.getElementById('mv-input-layer');
   if(!layer){ cb(window.prompt(title + '：今天实际完成多少' + unit + '？（目标 ' + tgt + '）', '')); return; }
   document.getElementById('mv-input-title').textContent = title + '：今天实际完成多少' + unit + '？';
@@ -3594,6 +3611,9 @@ window.__showInput = function(title, unit, tgt, cap, cb){
   setTimeout(function(){ try{ f.focus(); }catch(e){} }, 50);
   function close(v){
     layer.style.display = 'none';
+    try{ document.removeEventListener('keydown', _trap, true); }catch(e){}
+    try{ layer.removeEventListener('click', _onLayerClick); }catch(e){}
+    try{ if(_prevFocus && _prevFocus.focus) _prevFocus.focus(); }catch(e){}
     try{ cb(v); }catch(e){}
   }
   document.getElementById('mv-input-ok').onclick = function(){ close(f.value); };
