@@ -3313,7 +3313,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   function load(){ try { return JSON.parse(localStorage.getItem(KEY_DAILY)||'{}') } catch(e){ return {} } }
   function save(o){ try { localStorage.setItem(KEY_DAILY, JSON.stringify(o)) } catch(e){} }
   var D = load();
-  var T = today();
+  /* V297 P3-DUAL-TODAY: 与 MOTIV 同口径（学习日 = now-4h），修 00:00-04:00 两套「今天」 */
+  var T = (function () {
+    try { if (typeof studyDay === "function") return studyDay(); } catch(e){}
+    var _d = new Date(); _d.setHours(_d.getHours() - 4);
+    return _d.getFullYear() + '-' + ('0'+(_d.getMonth()+1)).slice(-2) + '-' + ('0'+_d.getDate()).slice(-2);
+  })();
   if(!D[T]) D[T] = {};
   // 阶段判定
   function stageOf(t){ if (t instanceof Date) { t = new Date(t.getFullYear(), t.getMonth(), t.getDate()); } for(var i=0;i<PM.ramp.length;i++){ var r=PM.ramp[i]; if(t>=parseMD(r.from)&&t<=parseMD(r.to)) return r; } return PM.ramp[PM.ramp.length-1]; }   /* V137: 日期归零防时分秒落空回退冲刺 */

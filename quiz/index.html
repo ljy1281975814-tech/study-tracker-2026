@@ -3628,7 +3628,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (p.skipGrade || p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分））</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分）</span></button></div>';
       }
       var label = isChoice(q) ? '提交答案' : '显示参考答案';
       return '<div class="quiz-bar">' + prev + '<button class="bar-primary" data-act="' + (isChoice(q) ? 'submit' : 'reveal') + '"' +
@@ -3646,13 +3646,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（今天可重练（本遍不记分））</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（今天可重练（本遍不记分）</span></button></div>';
       }
       if (p.skipGrade && !p._revealedBefore) {
         /* V226 C: skipGrade 卡（首触 learn / 已判过）—— 直接给前进按钮，不再死路 */
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分））</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分）</span></button></div>';
       }
       if (p.skipGrade || (!isChoice(q) && !normTxt(p.text || ''))) {
         return '<div class="quiz-bar">' + prev +
@@ -3846,7 +3846,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<h1>这一轮做完了</h1>' +
       (_learnedN > 0 && _gradedN === 0
         ? '<p>本次<b>学习 ' + _learnedN + '</b> 题（首遍学习不计正确率、不进错题本）· 用时 ' + mins + ' 分钟。'
-        : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分）做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、今天可重练，并进错题本。</p>') +
+        : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分），明天做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、今天可重练，并进错题本。</p>') +
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0)) + '</b><span>答错/没把握</span></div>' +
       ((s.selfJudged||0) > 0 ? '<div class="done-stat"><b>' + (s.selfJudged||0) + '</b><span>自评（不计正确率）</span></div>' : '') +
@@ -4105,8 +4105,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         p.graded = true;
         if (S.session) { S.session.answered++; if (p.outcome === 'ok') S.session.right++; }
       } else {
-        try { if (S.session && (p.outcome === 'fuzzy' || p.outcome === 'bad' || p.outcome === 'forgot')) S.session.selfJudged = (S.session.selfJudged || 0) + 1; } catch(e){}   /* V293 X8b: 用户自评模糊/不记得也计入，完成页不再判 0% */
-        var g = applyGrade(q, p.outcome, { text: '', sel: p.sel });
+        var g = applyGrade(q, p.outcome, { text: '', sel: p.sel });   /* V296: 删除 V293 的 selfJudged++（那是机器判分，不是自评；单选答错不得被美化成自评） */
         if (g && g.locked) {
           p.restored = true; p.outcome = (rec(q) || {}).lastOutcome || 'ok';
         } else if (g && g.learnt) {
@@ -4125,6 +4124,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     afterGradeScroll();
   }
   function grade(outcome) {
+    /* V296 P2②: 三态是**用户自评**（不记得/模糊/熟知）——这里计 selfJudged，完成页正确率分母排除；
+       机器判分（选择/自动部分命中/空答）不计 */
+    try {
+      var _qAG = currentQ();
+      var _pAG = _qAG ? ensurePending() : null;
+      if (_pAG && !_pAG.practice && (_pAG.text || _pAG.sel)) {
+        if (outcome === 'fuzzy' || outcome === 'bad' || outcome === 'forgot') {
+          if (S.session) S.session.selfJudged = (S.session.selfJudged || 0) + 1;
+        }
+      }
+    } catch(e){}
     /* V191 P0-1: 任何入口进入 grade 前若还没快照，立即冻结当前判分（含 Ctrl+Enter 路径） */
     try {
       var _qG = currentQ();
@@ -4536,7 +4546,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               } catch(e){}
             }
           } catch(e){}
-          try{ toast('本次只看答案：不记对错、不计正确率（今天可重练（本遍不记分））'); }catch(e){}
+          try{ toast('本次只看答案：不记对错、不计正确率（今天可重练（本遍不记分）'); }catch(e){}
           pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
           pp.skipGrade = true;
           /* V286 X3: 练习模式**完全零写库**（days.a/la + last + 会话计数全包） */
@@ -4591,7 +4601,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             pp.outcome = 'learn'; pp.graded = true; pp.skipGrade = true;
             try { if (S.session) { S.session.answered++; S.session.learned = (+S.session.learned || 0) + 1; } } catch(e){}   /* V243 2: 主路径 learn 也计会话（完成页不再 0 题） */
             saveProgress();
-            try{ toast('首遍看过答案：今天可重练（本遍不记分）（不计分、不进错题本）'); }catch(e){}
+            try{ toast('首遍看过答案，本遍不记分（不计分、不进错题本）'); }catch(e){}
           } catch(e){}
         }
         /* V246 1: 同义改写兜底 —— 内容 2-gram 覆盖高（>=0.72）但分句未全中时，**不自动判模糊**，给三态让用户自己确认（修 54.3% 误杀） */
@@ -5027,7 +5037,7 @@ case 'rate': {
         }
       }catch(e){}
       if (box) box.innerHTML = (_grLast && _grLast.learnt)
-        ? '<b>📖 首遍学习过（不计分、不进错题本）</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天可重练（本遍不记分）做首次回忆。自评题不计入「真实答题」的正确率。</div>'
+        ? '<b>📖 首遍学习过（不计分、不进错题本）</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天可重练（本遍不记分），明天做首次回忆。自评题不计入「真实答题」的正确率。</div>'
         : ('<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，今天可重练') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>');
       /* V262: 不再合成点击 reveal（会走 submitAnswer 空答分支 -> session 双记）；直接标已揭示 */
       try {
