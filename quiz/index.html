@@ -3325,7 +3325,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="advice-title">' + nc.l.s + ' · 第' + nc.l.c + '章 ' + esc(nc.l.name) + '</div>' +
       '<p>新题 <b>' + n + ' 道</b> · 本章已答 <b>' + seenIn + '/' + kps.length + '</b> 考点（' +
       chapterItems(nc.l.s, nc.l.c).length + ' 题）· 手册卡 ' + nc.l.a + '–' + nc.l.b + '</p>' +
-      '<p class="advice-order">先清到期 ' + dueN + ' 题（全库口径；今日队列仅 ' + MAXQ + '）' + '，再进本章；答对按间隔回队列（次日起 1/3/7/14/26 天），不记得或模糊的题按排期今天可重练。</p></div>';
+      '<p class="advice-order">先清到期 ' + realDueItems().length + ' 题（与首页同源；今日队列仅 ' + MAXQ + '）' + '，再进本章；答对按间隔回队列（次日起 1/3/7/14/26 天），不记得或模糊的题按排期今天可重练。</p></div>';
   }
   function entriesHTML(due, ws, last) {
     var _rd = realDueItems().length; var sched = _rd ? '今天有 ' + _rd + ' 道待复习题' : '今天待复习 0 道';
@@ -3628,7 +3628,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (p.skipGrade || p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（明天按排期再来）</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分））</span></button></div>';
       }
       var label = isChoice(q) ? '提交答案' : '显示参考答案';
       return '<div class="quiz-bar">' + prev + '<button class="bar-primary" data-act="' + (isChoice(q) ? 'submit' : 'reveal') + '"' +
@@ -3646,13 +3646,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（明天按排期再来）</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（今天可重练（本遍不记分））</span></button></div>';
       }
       if (p.skipGrade && !p._revealedBefore) {
         /* V226 C: skipGrade 卡（首触 learn / 已判过）—— 直接给前进按钮，不再死路 */
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（明天按排期再来）</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分））</span></button></div>';
       }
       if (p.skipGrade || (!isChoice(q) && !normTxt(p.text || ''))) {
         return '<div class="quiz-bar">' + prev +
@@ -4111,7 +4111,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           p.restored = true; p.outcome = (rec(q) || {}).lastOutcome || 'ok';
         } else if (g && g.learnt) {
           p.outcome = 'learn'; p.graded = true; p.skipGrade = true;
-          try { toast('首遍学习过（不计分、不进错题本）：明天按排期再来。'); } catch(e){}
+          try { toast('首遍学习过（不计分、不进错题本）：今天可重练（本遍不记分）。'); } catch(e){}
         } else {
           p.graded = true;
           if (S.session) { S.session.answered++; if (p.outcome === 'ok') S.session.right++; }
@@ -4193,7 +4193,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (g && g.learnt) {
       p.outcome = 'learn'; p.graded = true; p.skipGrade = true;
       render(); afterGradeScroll();
-      try{ toast('首遍学习过（不计分、不进错题本）：明天按排期再来。'); }catch(e){}
+      try{ toast('首遍学习过（不计分、不进错题本）：今天可重练（本遍不记分）。'); }catch(e){}
       return;
     }
     if (g && g.locked) {
@@ -4536,7 +4536,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               } catch(e){}
             }
           } catch(e){}
-          try{ toast('本次只看答案：不记对错、不计正确率（明天按排期再来）'); }catch(e){}
+          try{ toast('本次只看答案：不记对错、不计正确率（今天可重练（本遍不记分））'); }catch(e){}
           pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
           pp.skipGrade = true;
           /* V286 X3: 练习模式**完全零写库**（days.a/la + last + 会话计数全包） */
@@ -4591,7 +4591,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             pp.outcome = 'learn'; pp.graded = true; pp.skipGrade = true;
             try { if (S.session) { S.session.answered++; S.session.learned = (+S.session.learned || 0) + 1; } } catch(e){}   /* V243 2: 主路径 learn 也计会话（完成页不再 0 题） */
             saveProgress();
-            try{ toast('首遍看过答案：明天按排期再来（不计分、不进错题本）'); }catch(e){}
+            try{ toast('首遍看过答案：今天可重练（本遍不记分）（不计分、不进错题本）'); }catch(e){}
           } catch(e){}
         }
         /* V246 1: 同义改写兜底 —— 内容 2-gram 覆盖高（>=0.72）但分句未全中时，**不自动判模糊**，给三态让用户自己确认（修 54.3% 误杀） */
@@ -5012,6 +5012,12 @@ case 'rate': {
               } catch(e){}
             }
             _pJ.selfEvalDone = true; _pJ.selfEvalOk = !!ok;
+            /* V294: 写入 record 供跨重载/跨页防重复（v292 只写 pending -> rec.selfEvalDone 永远 undefined） */
+            try {
+              var _rkSE = KP(_qJ);
+              var _rSE = progress.q[_rkSE] || (progress.q[_rkSE] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null });
+              _rSE.selfEvalDone = TODAY; _rSE.selfEvalOk = !!ok;
+            } catch(e){}
             /* V238: 首触 learn 时 UI 也按 learn（此前赋值被这里覆盖 = 假修复） */
             _pJ.outcome = (_gr && _gr.learnt) ? 'learn' : (ok ? 'fuzzy' : 'bad');
             _pJ.graded = true; _pJ.revealed = true;

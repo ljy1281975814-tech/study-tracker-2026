@@ -3381,7 +3381,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
         var _pq = JSON.parse(_rawQ);
         var _pdays = (_pq && _pq.days) || {};
         for (var _dkC in _pdays) {
-          if (String(_dkC) <= String(T)) _cumQ += (+((_pdays[_dkC] || {}).a) || 0);
+          /* V294: 加 START 过滤（修 pre-START 数据把累计虚高到 39.1%） */
+          if (String(_dkC) <= String(T) && String(_dkC) >= String(START)) _cumQ += (+((_pdays[_dkC] || {}).a) || 0);
         }
       }
     } catch(e) { if (typeof console !== 'undefined') console.error('[V286 PO] days 读取失败', e); }
