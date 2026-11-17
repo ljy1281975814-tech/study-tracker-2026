@@ -2561,7 +2561,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
               : (g2.nm + ' ' + row.done + '/' + row.tgt + '（手动填）' + (row.ok ? '，点一下清空' : '，点一下填数量')));
    gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
       ' aria-label="'+lbl+'"><span class="gi">'+(row.ok?(row.ro?'✅':'☑'):g2.ico)+'</span><span class="gn">'+g2.nm+
-      '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">手动填</i>')+'</span></button>';
+      '</span><span class="gx">'+row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">'+(row.legacy?'旧口径':'勾节')+'</i>')+'</span></button>';
   }
   if(_isPastNow) gh = '';  // V62: 考后清空门
   $id('mv-gates').innerHTML = gh;
@@ -3255,17 +3255,17 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var rows = [
     ['背', '墨墨 '+q['背'].target===undefined?'':('120 词'), ST.题? '' : ''],
     ['题', '答题 ' + ST.题 + ' 题', ''],
-    ['课', '强化课 1 节', ''],
+    ['课', '今日课表 6 节', ''],
     ['英语', '阅读 1 篇', ''],
-    ['政治', '政治 8 题', ''],
+    ['政治', '救命课 14 讲', ''],
     ['模拟考', '—(11/24、12/1)', '']
   ];
   var ROWS = [
     ['背', 120, '词'],
     ['题', ST.题, '题'],
-    ['课', 1, '节'],
+    ['课', 6, '节'],
     ['英语', 1, '篇'],
-    ['政治', 8, '题'],
+    ['政治', 14, '讲'],
     ['模拟考', (T==='2026-11-24'||T==='2026-12-01')?1:0, '次']
   ];
   var html = '';
