@@ -2047,6 +2047,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   /* V149: minimal 隐藏页脚统计/计划参考标题，加答题入口 */
   body.minimal-mode .foot{ display:none!important; }
   body.minimal-mode .sec-title{ display:none!important; }
+
+  /* V152: minimal 移动端隐藏红链；答题入口由 renderMinimal 生成 */
+  @media (max-width: 720px){
+    body.minimal-mode #MOTIV .mv-report{ display:none!important; }
+  }
 </style>
 
 
@@ -2652,7 +2657,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       el.innerHTML = '<button type="button" id="minimalBtn">🔄 今日只做两件（重启）</button>';
     } else {
       el.innerHTML = '<div class="mm-list">今天只做两件：<b>墨墨 120 词</b> + <b>答题 8 题</b> —— 做完就算赢，欠账不追。</div>'
-        + '<button type="button" id="minimalBtn">✓ 已开（点此关闭）</button>';
+        + '<a href="quiz/index.html" id="minimalQuizBtn" style="display:inline-block;min-height:44px;line-height:44px;padding:0 16px;background:#131210;color:#f2efe7;text-decoration:none;font-size:15px;margin-right:8px">▶ 开始答题 8 题</a>'
+        + '<button type="button" id="minimalBtn" style="min-height:44px;background:transparent;border:1px solid #131210;padding:0 14px;font-size:14px;cursor:pointer">✓ 已开（点此关闭）</button>';
     }
     var b = $id('minimalBtn');
     if(b && !b._bound){
