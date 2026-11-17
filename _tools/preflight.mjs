@@ -6,6 +6,9 @@
  *       三态不穿透 / SE 不双记 / 练习零写库 / PO 累计 / 门不裁剪」这些硬约束
  *       固化成可复跑的断言，避免「改 A 坏 B」和「声称修但没生效」。
  *
+ * 注意：本工具当前只覆盖「基础可用 + 空答不记账 + PO 累计 + 门不裁剪 + 0 JS」；
+ *       三态穿透 / SE 双记 / 练习零写库 / 照抄批量 仍未覆盖（见 README「已知未覆盖」）。
+ *
  * 用法：
  *   node tools/preflight.mjs [--url http://127.0.0.1:18080] [--edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
  *
@@ -123,8 +126,8 @@ async function main() {
         'buttons=' + await evalJs('document.querySelectorAll("button").length'));
 
   // A1 判分函数存在且可从 window 读取（不强求暴露，用 DOM 侧等价断言）
-  const hasStorage = await evalJs('!!localStorage.getItem("dsh.347.quiz.v3") || typeof localStorage !== "undefined"');
-  check('localStorage 可写', hasStorage, 'dsh.347.quiz.v3');
+  const hasStorage = await evalJs(`(() => { try { localStorage.setItem('__pf_probe','1'); const v = localStorage.getItem('__pf_probe'); localStorage.removeItem('__pf_probe'); return v === '1'; } catch(e) { return false; } })()`);
+  check('localStorage 可读写', hasStorage === true, 'probe=' + hasStorage);
 
   // A2 首页 CTA 可点（进入会话）
   const startBtn = await evalJs(`(() => {
@@ -171,12 +174,6 @@ async function main() {
   check('空答揭晓不记 bad/wrong', recAfter.bad === 0 && recAfter.wrong === 0,
         'bad=' + recAfter.bad + ' wrong=' + recAfter.wrong);
 
-  // C. 三态不穿透：case 'grade' 有 break（模糊只推一题）
-  const gradeSnippet = await evalJs(`(() => {
-    const html = document.documentElement.outerHTML;
-    return -1;
-  })()`);
-
   // D. index 页面：门/环/PO 存在且 PO 累计不恒 0
   await navigate(INDEX);
   const idxOk = await evalJs(`!!document.getElementById('MOTIV') || !!document.querySelector('.mv-gates, #mv-gates')`);
@@ -215,11 +212,8 @@ async function main() {
   await send('Emulation.clearDeviceMetricsOverride');
 
   // F. 练习零写库（结构断言：练习路径不产生 days.a）
-  const practiceGuard = await evalJs(`(() => {
-    const raw = localStorage.getItem('dsh.347.quiz.v3');
-    return raw !== null;
-  })()`);
-  check('store 键存在且可解析', practiceGuard, 'dsh.347.quiz.v3');
+  const parseOk = await evalJs(`(() => { const raw = localStorage.getItem('dsh.347.quiz.v3'); if (!raw) return 'no-key'; try { const p = JSON.parse(raw); return (p && typeof p === 'object' && p.q !== undefined) ? 'ok' : 'bad-shape'; } catch(e) { return 'bad-json'; } })()`);
+  check('store JSON 可解析且结构正确', parseOk === 'ok', parseOk);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');

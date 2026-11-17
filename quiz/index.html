@@ -3226,6 +3226,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         d.a = (+d.a || 0) + 1;
         /* V274 1: 自评「熟知」不计 days.c（自评不算机器判对，正确率不虚高），但计 days.a（题次）*/
         if (outcome === 'ok' && !(detail && detail.selfJudged)) { d.c = (+d.c || 0) + 1; r._okCountedToday = true; }
+        /* V298 P2: 自动判 partial/fuzzy（非用户自评、非练习）单独计 partial，完成页不判 0% */
+        if (outcome === 'fuzzy' && !(detail && (detail.selfJudged || detail.regrade)) && !(detail && detail.selfEval)) {
+          try { if (S.session) S.session.partial = (S.session.partial || 0) + 1; } catch(e){}
+        }
+        if (outcome === 'bad' && !(detail && (detail.selfJudged || detail.regrade)) && !(detail && detail.selfEval)) {
+          try { if (S.session) S.session.machineBad = (S.session.machineBad || 0) + 1; } catch(e){}
+        }
         if (outcome === 'bad') d.w = (+d.w || 0) + 1;
         progress.days[TODAY] = d;
         r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
@@ -3628,7 +3635,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (p.skipGrade || p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分）</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练，本遍不记分）</span></button></div>';
       }
       var label = isChoice(q) ? '提交答案' : '显示参考答案';
       return '<div class="quiz-bar">' + prev + '<button class="bar-primary" data-act="' + (isChoice(q) ? 'submit' : 'reveal') + '"' +
@@ -3646,13 +3653,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（今天可重练（本遍不记分）</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（今天可重练，本遍不记分）</span></button></div>';
       }
       if (p.skipGrade && !p._revealedBefore) {
         /* V226 C: skipGrade 卡（首触 learn / 已判过）—— 直接给前进按钮，不再死路 */
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练（本遍不记分）</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（今天可重练，本遍不记分）</span></button></div>';
       }
       if (p.skipGrade || (!isChoice(q) && !normTxt(p.text || ''))) {
         return '<div class="quiz-bar">' + prev +
@@ -3838,7 +3845,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var s = S.session || { answered: 0, right: 0, start: Date.now() };
     var mins = Math.max(1, Math.round((Date.now() - s.start) / 60000));
     var _learnedN = s.learned || 0;
-    var _gradedN = Math.max(0, (s.answered || 0) - _learnedN - (s.selfJudged || 0));   /* V281 F6: 正式判分题次（排除学习 + 自评）*/
+    var _gradedN = Math.max(0, (s.answered || 0) - _learnedN - (s.selfJudged || 0) - (s.partial || 0));   /* V298: 正式判分题次（排除学习 + 自评 + 部分命中）*/
+    var _partN = s.partial || 0;
     var acc = _gradedN ? Math.round(s.right / _gradedN * 100) : 0;
     return masthead() + '<section class="done shell">' +
       '<span class="done-stamp">本次完成</span>' +
@@ -3850,6 +3858,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0)) + '</b><span>答错/没把握</span></div>' +
       ((s.selfJudged||0) > 0 ? '<div class="done-stat"><b>' + (s.selfJudged||0) + '</b><span>自评（不计正确率）</span></div>' : '') +
+      (_partN > 0 ? '<div class="done-stat"><b>' + _partN + '</b><span>部分命中（不计正确率）</span></div>' : '') +
       '<div class="done-stat"><b>' + (_gradedN > 0 ? acc + '%' : '—') + '</b><span>正确率</span></div></div>' +
       '<div class="done-actions"><button class="hero-cta" data-act="go" data-arg="home">回首页</button>' +
       '<button class="done-ghost" data-act="go" data-arg="wrong">看错题本</button>' +
@@ -4546,7 +4555,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               } catch(e){}
             }
           } catch(e){}
-          try{ toast('本次只看答案：不记对错、不计正确率（今天可重练（本遍不记分）'); }catch(e){}
+          try{ toast('本次只看答案：不记对错、不计正确率（今天可重练，本遍不记分）'); }catch(e){}
           pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
           pp.skipGrade = true;
           /* V286 X3: 练习模式**完全零写库**（days.a/la + last + 会话计数全包） */
@@ -5027,6 +5036,7 @@ case 'rate': {
               var _rkSE = KP(_qJ);
               var _rSE = progress.q[_rkSE] || (progress.q[_rkSE] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null });
               _rSE.selfEvalDone = TODAY; _rSE.selfEvalOk = !!ok;
+              try { saveProgress(); } catch(e){}   /* V298 ADV1: 必须落盘，否则跨重载防重复无效 */
             } catch(e){}
             /* V238: 首触 learn 时 UI 也按 learn（此前赋值被这里覆盖 = 假修复） */
             _pJ.outcome = (_gr && _gr.learnt) ? 'learn' : (ok ? 'fuzzy' : 'bad');
