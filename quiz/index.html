@@ -2846,8 +2846,35 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return n;
   }
   function saveProgress() {
-    /* V211: 撤掉 V207 的记录级 merge —— 它每次把磁盘旧记录回灌内存，导致「清空进度/取消掌握/覆盖导入」全部失效。
-       跨标签一致性改由下方 storage 事件**重载**承担（每个标签内存始终新鲜，不会用陈旧内存覆盖别人）。 */
+    /* V246 2: 写前先重读磁盘做记录级合并 —— 降低双标签并发整包覆盖的概率（X3 6/6 丢） */
+    try {
+      var _rawW = localStorage.getItem(KEY);
+      if (_rawW) {
+        var _diskW = JSON.parse(_rawW);
+        if (_diskW && _diskW.q && progress && progress.q) {
+          var _ws = ''; try { _ws = (JSON.stringify(progress) || ''); } catch(e){}
+          for (var _kw in _diskW.q) {
+            var _dw = _diskW.q[_kw], _mw = progress.q[_kw];
+            if (!_dw) continue;
+            if (!_mw) { progress.q[_kw] = _dw; continue; }
+            ['ok','bad','fuzzy','wrong','seen'].forEach(function (f) { var a = +(_mw[f]||0), b = +(_dw[f]||0); if (b > a) _mw[f] = b; });
+            if (_dw.last && (!_mw.last || String(_dw.last) > String(_mw.last))) {
+              _mw.last = _dw.last; _mw.lastOutcome = _dw.lastOutcome; _mw.lastId = _dw.lastId;
+              if (_dw.due) _mw.due = _dw.due;
+            }
+            if (typeof _dw.streak === 'number' && _dw.streak > (_mw.streak || 0)) _mw.streak = _dw.streak;
+            if (typeof _dw.interval === 'number' && _dw.interval > (_mw.interval || 0)) _mw.interval = _dw.interval;
+            if (_dw.mastered && !_mw.mastered) _mw.mastered = true;
+          }
+          if (_diskW.days && progress.days) {
+            for (var _dkw in _diskW.days) {
+              var _ddw = _diskW.days[_dkw] || {}, _mdw = progress.days[_dkw] || (progress.days[_dkw] = {});
+              ['a','c','w','la','sec'].forEach(function (f) { var a = +(_mdw[f]||0), b = +(_ddw[f]||0); if (b > a) _mdw[f] = b; });
+            }
+          }
+        }
+      }
+    } catch (e) {}
     try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch (e) {}
   }
   function rec(q) { return progress.q[KP(q)] || null; }
@@ -4505,7 +4532,18 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             try{ toast('首遍看过答案：明天按排期再来（不计分、不进错题本）'); }catch(e){}
           } catch(e){}
         }
-        if (_sc.auto && !_sc.pass && !pp.restored && !pp.practice && !_firstTouch && !pp.skipGrade && !pp._revealedBefore) {   /* V216 N6: skipGrade 卡不得自动记 fuzzy/bad */   /* V191 P0-4: 练习模式不写库 */
+        /* V246 1: 同义改写兜底 —— 内容 2-gram 覆盖高（>=0.72）但分句未全中时，**不自动判模糊**，给三态让用户自己确认（修 54.3% 误杀） */
+        var _covHi2 = 0;
+        try {
+          var _na2 = normTxt(_q && _q.ans || ''), _nt2 = normTxt(pp.text || '');
+          if (_na2.length >= 2 && _nt2.length >= 2) {
+            var _s2 = {}, _h2 = 0, _t2 = 0;
+            for (var _g2 = 0; _g2 + 1 < _na2.length; _g2++) { _s2[_na2.substr(_g2, 2)] = 1; }
+            for (var _k2b in _s2) { _t2++; if (_nt2.indexOf(_k2b) >= 0) _h2++; }
+            _covHi2 = _t2 ? (_h2 / _t2) : 0;
+          }
+        } catch(e){ _covHi2 = 0; }
+        if (_sc.auto && !_sc.pass && !pp.restored && !pp.practice && !_firstTouch && !pp.skipGrade && !pp._revealedBefore && _covHi2 < 0.72) {   /* V216 N6 + V246 1 */   /* V191 P0-4: 练习模式不写库 */
           /* V169: 三档 —— 部分命中(30%~55%)记「模糊」不惩罚；<30% 才记「不记得」
              且不再排回（排回的是锁定卡，只会白增步数，属假承诺） */
           var _outc = _sc.partial ? 'fuzzy' : 'bad';
