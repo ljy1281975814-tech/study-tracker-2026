@@ -2540,6 +2540,21 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   }
   return { planned:planned, actual:actual, deficit: Math.max(0, planned - actual) };
  }
+  /* V332 D: 只读状态快照，供自动化校验 */
+  try {
+    window.__DSH_STATE = function () {
+      var out = { ok: true };
+      try {
+        var _raw = localStorage.getItem(KEY_QUIZ) || '{}';
+        var _p = JSON.parse(_raw);
+        out.days = _p.days || {};
+        out.q = _p.q || {};
+      } catch(e) { out.days = {}; out.q = {}; }
+      try { out.today = (typeof T !== 'undefined') ? T : null; } catch(e) { out.today = null; }
+      return out;
+    };
+  } catch(e) {}
+
 
  function render(){  try{ if(localStorage.getItem('dsh.347.minimal')==='1'){ document.body.classList.add('minimal-mode'); } }catch(e){}
 

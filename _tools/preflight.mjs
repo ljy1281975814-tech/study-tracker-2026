@@ -269,6 +269,50 @@ async function main() {
         pctJ2 !== '' && pctJ2 !== _pctJ1,
         'sj=5 pct="' + _pctJ1 + '" sj=0 pct="' + pctJ2 + '"');
 
+  // M1. 【不变量·状态级】违规 days（c > a-la-sj）-> 页面不得渲染 >100%，且 __DSH_STATE 可读
+  await navigate(QUIZ);
+  const invM1 = await evalJs(`(() => {
+    if (typeof window.__DSH_STATE !== 'function') return { why: 'no-state-api' };
+    const st = window.__DSH_STATE();
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    // 违反不变量：a=8, la=0, sj=5 -> cap=3，但 c=9
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:{}, days: { [T]: { a:8, c:9, w:0, la:0, sj:5 } } }));
+    return { T: T, hasState: true, availCount: st.availCount, repCount: st.repCount, realKps: st.realKps };
+  })()`);
+  await navigate(QUIZ);
+  const invM1b = await evalJs(`(() => {
+    const t = document.body.innerText || '';
+    const over = (t.match(/(\d{1,3})\s*%/g) || []).map(x => parseInt(x,10)).filter(n => n > 100);
+    return { over: over, overCount: over.length };
+  })()`);
+  check('M1 违规 days 不渲染 >100%（状态级）',
+        invM1.hasState === true && invM1b.overCount === 0,
+        'stateApi=' + invM1.hasState + ' avail=' + invM1.availCount + ' over=' + invM1b.overCount);
+
+  // M2. 【真实 kp 种子】用 __DSH_STATE().realKps 的**真键**种记录 + days -> 进度页 acc===100%
+  const realKps = (invM1 && invM1.realKps) || [];
+  const seedM2 = await evalJs(`(() => {
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    const kps = ${JSON.stringify(realKps)};
+    const q = {};
+    // a=8,c=3,sj=5 + 8 条真 kp 记录 ok=1 -> 旧混口径 = 8/3 = 267%，新口径 = 3/3 = 100%
+    for (let i = 0; i < Math.min(8, kps.length); i++) q[kps[i]] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:q, days: { [T]: { a:8, c:3, w:0, la:0, sj:5 } } }));
+    return { T: T, seeded: Object.keys(q).length };
+  })()`);
+  await navigate(QUIZ);
+  await evalJs(`(() => { try { const c=[...document.querySelectorAll('[data-act="go"]')].filter(b=>/progress/i.test(b.getAttribute('data-arg')||'')); if(c.length){c[0].click();return 1;} } catch(e){} return 0; })()`);
+  await sleep(1200);
+  const m2txt = await evalJs(`document.body.innerText || ''`);
+  const m2accEl = await evalJs(`(() => { const e = document.querySelector('.acc-num'); return e ? (e.textContent || '').replace(/[^0-9]/g, '') : null; })()`);
+  const m2acc = m2accEl;
+  const m2over = ((m2txt.match(/(\d{1,3})\s*%/g) || []).map(x => parseInt(x,10)).filter(n => n > 100)).length;
+  check('M2 真实 kp 种子下进度页正确率 ===100% 且无 >100%（钉死 267%）',
+        seedM2.seeded >= 8 && parseInt(m2acc, 10) === 100 && m2over === 0,
+        'seeded=' + seedM2.seeded + ' acc=' + m2acc + ' over=' + m2over);
+
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
 

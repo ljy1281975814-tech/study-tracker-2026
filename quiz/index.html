@@ -2844,6 +2844,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     n.mastered = !!(a.mastered || b.mastered);
     return n;
   }
+  /* V332 D: 只读状态快照，供自动化校验（不进 UI、不改业务） */
+  try {
+    window.__DSH_STATE = function () {
+      var out = { ok: true };
+      try { out.today = TODAY; } catch(e) { out.today = null; }
+      try { out.days = JSON.parse(JSON.stringify(progress.days || {})); } catch(e) { out.days = {}; }
+      try { out.q = JSON.parse(JSON.stringify(progress.q || {})); } catch(e) { out.q = {}; }
+      try { out.availCount = available().length; } catch(e) { out.availCount = -1; }
+      try { out.repCount = reps(available()).length; } catch(e) { out.repCount = -1; }
+      try { out.realKps = reps(available()).map(function (x) { return KP(x); }).slice(0, 20); } catch(e) { out.realKps = []; }
+      return out;
+    };
+  } catch(e) {}
   function saveProgress() {
     /* V248: 回滚 V246 的「写前重读合并」——它把刚清空/取消掌握/覆盖导入的数据灌回来（3 个 P0）。
        跨标签一致性保留在 storage 事件重载 + 记录级合并（只对别的标签页写入生效）。 */
