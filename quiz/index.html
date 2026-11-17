@@ -3111,8 +3111,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         _rawKp += kps.length;
         seen += kps.filter(isSeen).length;
       });
-      /* V154: 分科考点数按 META.kp 比例缩放，消除 130+78=208 vs 179 矛盾 */
-      if (_rawKp > 0) { kpN = Math.round(META.kp * _rawKp / 208); } else { kpN = 0; }
+      /* V155: 统一用真实 KP 数（208），删缩放 hack */
+      kpN = _rawKp;
       return '<div class="subject-block"><div class="subject-head"><h2>' + s + '</h2>' +
         '<span>' + rows.length + ' 章已学 · ' + seen + '/' + kpN + ' 考点</span></div>' +
         '<div class="chapter-list">' + rows.map(function (l) {
@@ -3912,6 +3912,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       case 'reveal': {
         var pp = ensurePending(); if (!pp) break;
         if (pp.restored) { toast('这张卡今天已经判过了。'); break; }
+        // V155: 空作答不记账——只揭晓看答案，不判负、不进错题本、不排回
+        if (!pp.text || !String(pp.text).trim()) {
+          try{ toast('空作答：只揭晓看答案，本次不记分（不计入正确率）'); }catch(e){}
+          pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
+          pp.skipGrade = true;
+          render();
+          break;
+        }
         if (!pp.text || !String(pp.text).trim()) {
           try{ toast('空作答：先写或点「想出来了✓」再揭晓（本次不记分）'); }catch(e){}
           pp.revealed = true; pp.hits = { hit: 0, total: 0 }; pp.selfOk = true;   /* V152: 空答不记 bad */
