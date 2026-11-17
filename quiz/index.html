@@ -2825,11 +2825,44 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return n;
   }
   function saveProgress() {
+    /* V207 F3: 保存前先与磁盘最新快照做**记录级 merge**，防双标签旧内存整包覆盖对方记录 */
     try {
-      progress.updated = new Date().toISOString();
-      localStorage.setItem(KEY, JSON.stringify(progress));
-      return true;
-    } catch (e) { return false; }
+      if (typeof localStorage !== 'undefined') {
+        var _raw = localStorage.getItem(KEY);
+        if (_raw) {
+          var _disk = JSON.parse(_raw);
+          if (_disk && _disk.q && progress && progress.q) {
+            for (var _k in _disk.q) {
+              var _d = _disk.q[_k], _m = progress.q[_k];
+              if (!_d) continue;
+              if (!_m) { progress.q[_k] = _d; continue; }
+              /* 计数类取较大值（只增不减），时间/状态取较晚的 */
+              ['ok','bad','fuzzy','wrong','seen'].forEach(function (f) {
+                var a = +(_m[f] || 0), b = +(_d[f] || 0);
+                if (b > a) _m[f] = b;
+              });
+              if (_d.last && (!_m.last || String(_d.last) > String(_m.last))) {
+                _m.last = _d.last; _m.lastOutcome = _d.lastOutcome; _m.lastId = _d.lastId;
+                if (_d.due) _m.due = _d.due;
+              }
+              if (_d.revealedToday && !_m.revealedToday) _m.revealedToday = _d.revealedToday;
+              if (_d.mastered && !_m.mastered) { _m.mastered = _d.mastered; _m.interval = _d.interval; _m.due = _d.due; }
+            }
+          }
+          /* days 取每项较大值 */
+          if (_disk && _disk.days && progress && progress.days) {
+            for (var _dk in _disk.days) {
+              var _dd = _disk.days[_dk] || {}, _md = progress.days[_dk] || (progress.days[_dk] = {});
+              ['a','c','w'].forEach(function (f) {
+                var a = +(_md[f] || 0), b = +(_dd[f] || 0);
+                if (b > a) _md[f] = b;
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {}
+    try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch (e) {}
   }
   function rec(q) { return progress.q[KP(q)] || null; }
   function isSeen(q) { var r = rec(q); return !!(r && (r.seen || r.ok || r.bad || r.fuzzy || r.wrong)); }   /* V201 P1-3: 首接触 learn 也算见过 */
@@ -3151,7 +3184,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       r.bad++; r.wrong++; r.streak = 0; r.interval = 0; r.mastered = false;
     } else {
       /* 模糊（蒙对）：当天再练一次、不进阶、不进错题本；已积累的阶梯保留 */
-      r.fuzzy++; r.streak = Math.max(0, r.streak || 0); r.interval = 0; r.mastered = false;
+      if (!(detail && detail.regrade)) r.fuzzy++;   /* V207 F1: 改判不自增 */
     }
     r.lastOutcome = outcome;
     r.lastId = q.id;
@@ -3451,7 +3484,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               : bad ? '答错了'
               : fuzzy ? (p.selfEvalDone ? '算你对（自评「想出来了」）' : '部分命中，按模糊记')
               : (_tOut === 'learn') ? '首遍学习过（不计分）'
-              : (p._revealedBefore || (r && r.revealedToday === TODAY)) ? '今天已看过答案（本遍不记分）'
+              : p._revealedBefore ? '今天已看过答案（本遍不记分）'   /* V207 F5: 不读本帧刚写的 revealedToday，避免首揭示就误报 */
               : '待判分';
     var sub = '';
     if (p.restored && r && r.lastId && r.lastId !== q.id) {
@@ -3980,6 +4013,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (!q || !p) return;
     if (p.restored) { toast('这张卡今天已经判过了，明天按排期回来。'); return; }
     if (p.revealed) return;
+    /* V207 F2: 今天已看过答案 / 首接触 learn 的卡，选择题也不许再判（此前只拦非选择题） */
+    if (p.skipGrade || p._revealedBefore) {
+      toast('今天已看过这道题的答案 —— 本遍只练习不记分。');
+      return;
+    }
     if (isChoice(q) && !p.sel.length) { toast('先选一个选项。'); return; }
     recordTiming(q, timerSec()); timerPause();
     p.revealed = true;
@@ -4163,7 +4201,31 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
   } catch(e){}
 
+  /* V207 F10: META 运行时校准 —— 旧 META 是 2026-11-03 快照（learned 250/total 776/alt 71/stems 189），
+     实际题库是 208/859/0/208。启动时覆盖，保证「唯一权威口径」自洽。 */
+  function calibrateMeta() {
+    try {
+      var av = available();
+      var mc = av.filter(function (x) { return isChoice(x); });
+      var seenStem = {}, stems = 0, altN = 0;
+      av.forEach(function (x) {
+        var s = normTxt(x.stem || x.q || '');
+        if (s && !seenStem[s]) { seenStem[s] = 1; stems++; }
+        if (x.alt || x.altOf) altN++;
+      });
+      META.total = Object.keys(BY).length || META.total;
+      META.learned = reps(av).length || av.length;
+      META.learnedMc = mc.length;
+      META.learnedKpChoices = mc.length;
+      META.kp = META.learned;
+      META.learnedStems = stems;
+      META.alt = altN;
+      META._calibrated = 'V207';
+    } catch (e) {}
+  }
+
   function render() {
+    try { if (typeof calibrateMeta === 'function' && !META._calibrated) calibrateMeta(); } catch(e){}
     /* V196 P0-3: 只要某题处于「已揭示且不是恢复态」——无论走按钮/键盘/空答哪条路——都记 revealedToday，
        这样「看过答案的题当天只练习不记分」对所有路径生效 */
     try {
