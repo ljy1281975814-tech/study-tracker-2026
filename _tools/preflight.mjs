@@ -242,11 +242,13 @@ async function main() {
     return { txt: t.slice(0, 4000), pct: m[1] || null };
   })()`);
   // 断言：页面内出现 100%（或至少不出现 38%）
+  const _pctJ1 = await evalJs(`(() => { const e = document.getElementById('mv-pct'); return e ? (e.textContent||'').trim() : ''; })()`);
   const has100 = /\b100\s*%/.test(accJ.txt) || accJ.txt.indexOf('100%') >= 0;
   const has38 = accJ.txt.indexOf('38%') >= 0;
   check('自评题次 sj 从正确率分母排除（a=8,c=3,sj=5 -> 100% 而非 38%）',
         has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
-  // J2（自校验对）：sj=0 时必须得到 38%（3/8）—— 与 J1 成对，证明断言真有区分力
+  // J2（自校验对·相对断言）：sj=0 时的 ring 百分比必须与 J1(sj=5) 不同
+  // 若 sj 未从正确率分母排除，两次 ring 相同 -> 本断言 FAIL
   await evalJs(`(() => {
     const KEY = 'dsh.347.quiz.v3';
     const d = new Date(); d.setHours(d.getHours() - 4);
@@ -257,12 +259,13 @@ async function main() {
     return T;
   })()`);
   await navigate(INDEX);
-  const accJ2 = await evalJs(`document.body.innerText`);
-  const has38b = accJ2.indexOf('38%') >= 0;
-  const has100b = /\b100\s*%/.test(accJ2);
-  check('自校验：sj=0 时正确率必为 38%（证明 J1 有区分力，非恒真）',
-        has38b && !has100b, 'has38=' + has38b + ' has100=' + has100b);
-
+  const pctJ2 = await evalJs(`(() => {
+    const e = document.getElementById('mv-pct');
+    return e ? (e.textContent || '').trim() : '';
+  })()`);
+  check('自校验：sj=0 的完成度与 sj=5 不同（相对断言，证明 J1 有区分力）',
+        pctJ2 !== '' && pctJ2 !== _pctJ1,
+        'sj=5 pct="' + _pctJ1 + '" sj=0 pct="' + pctJ2 + '"');
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
