@@ -2612,6 +2612,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         var nb = normTxt(out[b2]);
         if (!nb) continue;
         if (na.length < nb.length && nb.indexOf(na) >= 0) { skip = true; break; }
+        if (a > b2 && na.length === nb.length && na === nb) { skip = true; break; }   /* V242 5: 等长完全重复也去重（修 sx-3-17 两个「环境」） */
       }
       if (!skip) _dd.push(out[a]);
     }
@@ -3524,7 +3525,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       sub = (p.text ? '你写了 ' + normTxt(p.text).length + ' 字' : '未写');
       try {
         if (p.selfEvalDone) {
-          sub += ' · 自评：' + (p.selfEvalOk ? '记「模糊」（想出来了）' : '记「不记得」') + ' · 不计入正确率';
+          sub += (r && r.last === TODAY && r.lastOutcome === 'learn') ? ' · 首遍学习（不计分）' : (' · 自评：' + (p.selfEvalOk ? '记「模糊」（想出来了）' : '记「不记得」'));
+
+          sub += ' · 不计入正确率';   /* V244 4: 首触 learn 时副标题不写「自评记模糊」 */
         } else if (!isChoice(q)) {
           var _ccSub = clauseCover(q, p.text || '');
           if (_ccSub.total > 0) sub += ' · 答案分句命中 ' + _ccSub.hit + '/' + _ccSub.total;
@@ -4497,6 +4500,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               if (_rFT._countedToday !== true) { _d7.a = (+_d7.a || 0) + 1; _d7.la = (+_d7.la || 0) + 1; _rFT._countedToday = true; _rFT._countedDay = TODAY; }
             } catch(e){}
             pp.outcome = 'learn'; pp.graded = true; pp.skipGrade = true;
+            try { if (S.session) { S.session.answered++; S.session.learned = (+S.session.learned || 0) + 1; } } catch(e){}   /* V243 2: 主路径 learn 也计会话（完成页不再 0 题） */
             saveProgress();
             try{ toast('首遍看过答案：明天按排期再来（不计分、不进错题本）'); }catch(e){}
           } catch(e){}
@@ -4806,7 +4810,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             _pJ.graded = true; _pJ.revealed = true;
             if (_gr && _gr.learnt) { _pJ.skipGrade = true; }
           }
-          try{ if (S.session) S.session.answered++; }catch(e){}
+          /* V242: 删掉 SE 的 session.answered++（applyGrade 已计，V240 A1 造成双记） */
         }
       }catch(e){}
       if (box) box.innerHTML = (_grLast && _grLast.learnt)

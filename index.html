@@ -2588,7 +2588,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     continue;
    }
    var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':' self');
-   var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
+   var lbl = row.ro ? ('答题 '+Math.min(row.done,row.tgt)+'/'+row.tgt+'（真实，自动从做题系统读）' + ((cur && cur._learnN > 0) ? ('；另学习 '+cur._learnN+' 题') : ''))
             : (g2.k === '课' ? ('课 完成 ' + row.done + '/' + row.tgt + ' 节' + (row.ok ? '，已达标' : (row.legacy ? '，旧口径 ' + row.legacy + ' 分钟需按节重勾' : '，点一下勾节数')))
               : g2.k === '政' ? ('政治 讲到第 ' + row.done + '/' + row.tgt + ' 讲' + (row.ok ? '，已达标' : '，点一下填讲次'))
               : (g2.nm + ' ' + row.done + '/' + row.tgt + '（手动填）' + (row.ok ? '，点一下清空' : '，点一下填数量')));
