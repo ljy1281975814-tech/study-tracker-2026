@@ -2011,6 +2011,17 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     #MOTIV .mv-coach{font-size:12px!important}
     #MOTIV .mv-gap{font-size:10px!important}
   }
+
+  /* V129(G27): minimal-mode 真隐藏负面信号 + 显示两件清单 */
+  body.minimal-mode .mv-extra,
+  body.minimal-mode .mv-gap,
+  body.minimal-mode .mv-badges,
+  body.minimal-mode .mv-runway-wrap,
+  body.minimal-mode .mv-yday,
+  body.minimal-mode .mv-report { display:none!important; }
+  body.minimal-mode #mv-gates{ display:none!important; }
+  body.minimal-mode .mv-top{ display:none!important; }
+  body.minimal-mode .mv-minimal{ display:block!important; }
 </style>
 
 
@@ -2402,7 +2413,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   return { planned:planned, actual:actual, deficit: Math.max(0, planned - actual) };
  }
 
- function render(){
+ function render(){  try{ if(localStorage.getItem('dsh.347.minimal')==='1'){ document.body.classList.add('minimal-mode'); } }catch(e){}
+
   if(!$id('MOTIV')) return;
   var T = studyDay();            // ⭐ 每次重算（修 04:00 后错日）
   var _isPastNow = (T >= EXAM);  // V62: 考后终态
@@ -2616,7 +2628,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     if(b && !b._bound){
       b._bound = true;
       b.addEventListener('click', function(){
-        document.body.classList.toggle('minimal-mode');
+        var on = !document.body.classList.contains('minimal-mode');
+        document.body.classList.toggle('minimal-mode', on);
+        try{ localStorage.setItem('dsh.347.minimal', on ? '1' : '0'); }catch(e){}
         renderMinimal();
       });
     }
