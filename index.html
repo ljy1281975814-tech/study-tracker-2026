@@ -2410,6 +2410,12 @@ function _ensureRecovery(s){
       r = null;
     }
     if (r && r.day === s) return r;
+    /* V376: **昨日恢复日已完成** -> 今天走渐进档（6 题/60 词），不再重新触发 recovery */
+    if (r && r.completed && r.day && String(r.day) < String(s)) {
+      var _n = new Date(r.day + 'T00:00:00'); _n.setDate(_n.getDate() + 1);
+      var _nS = _n.getFullYear() + '-' + ('0'+(_n.getMonth()+1)).slice(-2) + '-' + ('0'+_n.getDate()).slice(-2);
+      if (_nS === String(s)) return { day: s, gradual: true, tgtQ: 6, tgtInk: 60, fromDay: r.day };
+    }
     /* V364: 旧 key（day < 今天）才清理；day > 今天（未来污染）直接忽略不写 */
     if (r && r.day !== s) {
       if (String(r.day) > String(s)) return null;   /* 未来 key：不采信也不覆盖 */
@@ -2477,6 +2483,31 @@ function reqOf(s){
   try { _ensureRecovery(s); } catch(e){}   /* V357: 先确保 recovery key 已写 */
   /* V356: **recovery 日整体切换口径** —— 只要求 3 题 + 30 词
      这样环/门/欠账/pass 全部自动按最小重启算，不再出现「文字说赢、界面说输」 */
+  /* V374: **次日渐进档** —— 昨天恢复日完成 -> 今天目标 6 题/60 词（不是直接 12/120） */
+  try {
+    var _rkv = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    if (_rkv && _rkv.completed && _rkv.day && String(_rkv.day) < String(s)) {
+      /* 只在下一天生效（day+1 == s） */
+      var _nxt = new Date(_rkv.day + 'T00:00:00'); _nxt.setDate(_nxt.getDate() + 1);
+      var _nxtS = _nxt.getFullYear() + '-' + ('0'+(_nxt.getMonth()+1)).slice(-2) + '-' + ('0'+_nxt.getDate()).slice(-2);
+      if (_nxtS === String(s)) {
+        return { st: st, list: [
+          { k:'题', nm:'答题', t:6, ico:'✍️', ro:true },
+          { k:'背', nm:'墨墨', t:60, ico:'🔤', ro:false }
+        ], gradual: true };
+      }
+    }
+  } catch(e){}
+  /* V376: 渐进档（昨日重启完成）—— 优先于恢复日 */
+  try {
+    var _rg = _ensureRecovery(s);
+    if (_rg && _rg.gradual) {
+      return { st: st, list: [
+        { k:'题', nm:'答题', t:(_rg.tgtQ||6), ico:'✍️', ro:true },
+        { k:'背', nm:'墨墨', t:(_rg.tgtInk||60), ico:'🔤', ro:false }
+      ], gradual: true };
+    }
+  } catch(e){}
   if (_isRecoveryDay(s)) {
     var _r2 = null;
     try { _r2 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null'); } catch(e){}
@@ -2725,6 +2756,7 @@ function reqOf(s){
   } catch(e) { _gapOk = false; _recov = false; }
 
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
+  else if(cur.rq && cur.rq.gradual) msg = '🌤 <b>渐进第二天</b> —— 昨天重启成功，今天只要 <b>6 题</b> + <b>60 词</b>。<br>做完就收工，明天回到正常节奏。不用补任何欠账。';
   else if(_gapOk) msg = (function(){
     /* V349: recovery 真状态机 —— 目标 3 题(机判 c+w) + 30 词，当天不消失，达标给终态 */
     var _rq2 = 3, _rink2 = 30;
@@ -2736,6 +2768,11 @@ function reqOf(s){
     var _hitQ = (cur.quizOK === true) || (_doneQ >= _rq2 && cur.qualityOK === true && (cur.acc === null || cur.acc >= 0.6));
     var _hitInk = _doneInk >= _rink2;
     if (_hitQ && _hitInk) {
+      /* V374: 持久化 completed，供**次日渐进档**用（避免 3+30 -> 12+120 断崖） */
+      try {
+        var _rk2 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+        if (_rk2 && _rk2.day === T && !_rk2.completed) { _rk2.completed = 1; localStorage.setItem('dsh.347.recovery.v1', JSON.stringify(_rk2)); }
+      } catch(e){}
       return '🎉 <b>重启完成</b> —— 今天做了 <b>' + _doneQ + '</b> 题（机判）+ <b>' + _doneInk + '</b> 词。<br>'
         + '这就是赢了：<b>不需要补欠账</b>。今天到此为止，可以收工；明天按正常节奏接上。';
     }
@@ -2949,8 +2986,16 @@ function reqOf(s){
     if(!document.body.classList.contains('minimal-mode')){
       el.innerHTML = '<button type="button" id="minimalBtn">🔄 今日只做两件（重启）</button>';
     } else {
-      el.innerHTML = '<div class="mm-list">今天只做两件：<b>墨墨 120 词</b> + <b>按今日配额答题</b> —— 做完就算赢，欠账不追。</div>'
-        + '<a href="quiz/index.html" id="minimalQuizBtn" style="display:inline-block;min-height:44px;line-height:44px;padding:0 16px;background:#131210;color:#f2efe7;text-decoration:none;font-size:15px;margin-right:8px">▶ 开始今日答题</a>'
+      var _mmRec = false, _mmQ = 3, _mmInk = 30;
+      try {
+        var _mmR = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+        var _mmToday = _studyDaySafe();
+        if (_mmR && _mmR.day === _mmToday) { _mmRec = true; _mmQ = _mmR.tgtQ || 3; _mmInk = _mmR.tgtInk || 30; }
+      } catch(e){}
+      el.innerHTML = _mmRec
+        ? '<div class="mm-list">⭐ <b>重启日</b>只做两件：<b>墨墨 ' + _mmInk + ' 词</b> + <b>' + _mmQ + ' 题（机判）</b> —— 做完就算赢，欠账不追。</div>'
+        : '<div class="mm-list">今天只做两件：<b>墨墨 120 词</b> + <b>按今日配额答题</b> —— 做完就算赢，欠账不追。</div>'
+        + '<a href="quiz/index.html" id="minimalQuizBtn" style="display:inline-block;min-height:44px;line-height:44px;padding:0 16px;background:#131210;color:#f2efe7;text-decoration:none;font-size:15px;margin-right:8px">▶ ' + (_mmRec ? ('开始最小重启（' + _mmQ + ' 题）') : '开始今日答题') + '</a>'
         + '<button type="button" id="minimalBtn" style="min-height:44px;background:#f2efe7;color:#131210;border:1px solid #131210;padding:0 14px;font-size:14px;cursor:pointer">✓ 已开（点此关闭）</button>';
     }
     var b = $id('minimalBtn');
