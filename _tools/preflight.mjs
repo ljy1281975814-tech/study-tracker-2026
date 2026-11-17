@@ -217,6 +217,34 @@ async function main() {
   const parseOk = await evalJs(`(() => { const raw = localStorage.getItem('dsh.347.quiz.v3'); if (!raw) return 'no-key'; try { const p = JSON.parse(raw); return (p && typeof p === 'object' && p.q !== undefined) ? 'ok' : 'bad-shape'; } catch(e) { return 'bad-json'; } })()`);
   check('store JSON 可解析且结构正确', parseOk === 'ok', parseOk);
 
+  // H. 选择题机器判对必须计 days.c（P1 回归钉子：V299 曾传 selfJudged:true -> 单选全对 c=0）
+  await navigate(QUIZ);
+  const choiceDayC = await evalJs(`(() => {
+    const raw = localStorage.getItem('dsh.347.quiz.v3');
+    if (!raw) return { c: 0, a: 0, why: 'no-store' };
+    const p = JSON.parse(raw);
+    const t = (() => { const d = new Date(Date.now() - 4*3600e3); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); })();
+    const d = (p.days || {})[t] || {};
+    return { c: +d.c || 0, a: +d.a || 0 };
+  })()`);
+  check('选择题/文本判对计入 days.c（P1 回归）', choiceDayC.c > 0 || choiceDayC.a === 0,
+        'days.c=' + choiceDayC.c + ' days.a=' + choiceDayC.a);
+
+  // I. 三态自评不得导致完成页 200%（P2 回归钉子：selfJudged 与 partial 双计）
+  const doneAccOk = await evalJs(`(() => {
+    try {
+      const raw = localStorage.getItem('dsh.347.quiz.v3');
+      if (!raw) return { ok: true, why: 'no-store' };
+      const p = JSON.parse(raw);
+      // 结构性检查：任一记录同时置 selfJudged 与 partial 计数视为可疑
+      const qs = Object.values(p.q || {});
+      const suspicious = qs.filter(r => r && r.selfJudged && r.partial).length;
+      return { ok: suspicious === 0, suspicious };
+    } catch(e) { return { ok: true, why: 'err' }; }
+  })()`);
+  check('自评记录不叠加 partial（完成页 200% 回归）', doneAccOk.ok === true,
+        'suspicious=' + (doneAccOk.suspicious || 0));
+
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
 
