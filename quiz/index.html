@@ -3868,13 +3868,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       (_isPract ? '<p>🔁 <b>练习模式</b>：本次重做不计分、不改排期、不写正确率。' : '') +
       (_learnedN > 0 && _gradedN === 0
         ? '<p>本次<b>学习 ' + _learnedN + '</b> 题（首遍学习不计正确率、不进错题本）· 用时 ' + mins + ' 分钟。'
-        : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分），明天做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、今天可重练，并进错题本。</p>') +
-      '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
-      '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0) - (s.partial||0)) + '</b><span>答错/没把握</span></div>' +
+        : (_isPract ? '<p>练习重做 ' + (s.answered||0) + ' 题（不计分）' : '<p>答对 ' + s.right + ' 题') + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分），明天做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、今天可重练，并进错题本。</p>') +
+      '<div class="done-stats"><div class="done-stat"><b>' + (_isPract ? '—' : s.right) + '</b><span>答对</span></div>' +
+      '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0) - (s.partial||0) + (s.sjForgot||0)) + '</b><span>答错/没把握</span></div>' +
       ((s.learned||0) > 0 ? '<div class="done-stat"><b>' + (s.learned||0) + '</b><span>学习（首遍不计分）</span></div>' : '') +
-      ((s.selfJudged||0) > 0 ? '<div class="done-stat"><b>' + (s.selfJudged||0) + '</b><span>自评（不计正确率）</span></div>' : '') +
+      (((s.sjKnown||0) > 0) ? '<div class="done-stat"><b>' + (s.sjKnown||0) + '</b><span>自评·熟知或模糊（不计正确率）</span></div>' : '') +
       (_partN > 0 ? '<div class="done-stat"><b>' + _partN + '</b><span>部分命中（不计正确率）</span></div>' : '') +
-      '<div class="done-stat"><b>' + (_gradedN > 0 ? acc + '%' : '—') + '</b><span>正确率</span></div></div>' +
+      (_isPract ? '' : '<div class="done-stat"><b>' + (_gradedN > 0 ? acc + '%' : '—') + '</b><span>正确率</span></div>') + '</div>' +
       '<div class="done-actions"><button class="hero-cta" data-act="go" data-arg="home">回首页</button>' +
       '<button class="done-ghost" data-act="go" data-arg="wrong">看错题本</button>' +
       '<button class="done-ghost" data-act="sheet" data-arg="sched">看未来 7 天排期</button></div>' +
@@ -4224,7 +4224,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     /* V303: 不变量 answered = right + wrong + selfJudged + partial + learned
        selfJudged 只记 fuzzy/bad/forgot；ok 由 session.right 计，不得双计（修「熟知」完成页 8→16） */
     if (!(g && g.learnt) && _sjFlag) {
-      try { if (S.session) S.session.selfJudged = (S.session.selfJudged || 0) + 1; } catch(e){}
+      try {
+        if (S.session) {
+          S.session.selfJudged = (S.session.selfJudged || 0) + 1;
+          /* V310: 拆三态 —— 熟知/模糊 记自评；不记得 归答错语义 */
+          if (outcome === 'forgot' || outcome === 'bad') S.session.sjForgot = (S.session.sjForgot || 0) + 1;
+          else S.session.sjKnown = (S.session.sjKnown || 0) + 1;
+        }
+      } catch(e){}
     }
     /* V219: 首接触 learn —— UI 与记录一致 */
     if (g && g.learnt) {

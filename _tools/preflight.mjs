@@ -246,6 +246,23 @@ async function main() {
   const has38 = accJ.txt.indexOf('38%') >= 0;
   check('自评题次 sj 从正确率分母排除（a=8,c=3,sj=5 -> 100% 而非 38%）',
         has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
+  // J2（自校验对）：sj=0 时必须得到 38%（3/8）—— 与 J1 成对，证明断言真有区分力
+  await evalJs(`(() => {
+    const KEY = 'dsh.347.quiz.v3';
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    const p = { v: 3, q: {}, days: {} };
+    p.days[T] = { a: 8, c: 3, w: 0, la: 0, sj: 0 };
+    localStorage.setItem(KEY, JSON.stringify(p));
+    return T;
+  })()`);
+  await navigate(INDEX);
+  const accJ2 = await evalJs(`document.body.innerText`);
+  const has38b = accJ2.indexOf('38%') >= 0;
+  const has100b = /\b100\s*%/.test(accJ2);
+  check('自校验：sj=0 时正确率必为 38%（证明 J1 有区分力，非恒真）',
+        has38b && !has100b, 'has38=' + has38b + ' has100=' + has100b);
+
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
