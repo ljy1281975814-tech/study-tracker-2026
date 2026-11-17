@@ -3378,6 +3378,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     document.getElementById('PO-EBAR').style.width = ePct+'%';
     var match = ePct - tPct;
     var mEl = document.getElementById('PO-MATCH');
+    /* V268: 首次使用当日起算 —— 首日不再显示「落后 -15.8%」 */
+    try {
+      if (typeof FIRSTUSE !== 'undefined' && FIRSTUSE && String(FIRSTUSE) >= String(TODAY)) {
+        mEl.textContent = '匹配度 起步日'; mEl.style.color = '#6b7280';
+        document.getElementById('PO-EBAR').style.width = ePct + '%';
+        return;
+      }
+    } catch(e){}
     if(Math.abs(match) < 5){ mEl.textContent = '匹配度 持平 ('+match.toFixed(1)+'%)'; mEl.style.color='#059669'; }
     else if(match > 0){ mEl.textContent = '匹配度 超前 +'+match.toFixed(1)+'%'; mEl.style.color='#059669'; }
     else { mEl.textContent = '匹配度 落后 '+match.toFixed(1)+'%'; mEl.style.color='#dc2626'; }
