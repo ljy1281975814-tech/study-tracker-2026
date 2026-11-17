@@ -11,7 +11,7 @@
 python -m http.server 18080 --bind 127.0.0.1
 
 # 2. 跑预检（无第三方依赖，用本机 Edge --headless + 纯 CDP）
-node tools/preflight.mjs
+node _tools/preflight.mjs
 # 可选：--url http://127.0.0.1:18080   --edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 ```
 
@@ -47,3 +47,5 @@ node tools/preflight.mjs
 - 照抄 208/208 / 漏整句 113/113 全库批量判分
 
 这些目前靠 `_运行资产/_5flow.py`、`_choice_ok_verify.py` 等 python 脚本覆盖；后续应逐步并入本预检。
+
+> 注：`_tools/` 以下划线开头，GitHub Pages（Jekyll）默认**不发布**该目录 —— 回归用例留在仓库里，但不会随部署暴露。

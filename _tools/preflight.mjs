@@ -10,7 +10,7 @@
  *       三态穿透 / SE 双记 / 练习零写库 / 照抄批量 仍未覆盖（见 README「已知未覆盖」）。
  *
  * 用法：
- *   node tools/preflight.mjs [--url http://127.0.0.1:18080] [--edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
+ *   node _tools/preflight.mjs [--url http://127.0.0.1:18080] [--edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
  *
  * 依赖：无（纯 CDP，用本机 Edge/Chrome --headless）
  * 退出码：0 = 全过；1 = 有失败
@@ -196,7 +196,9 @@ async function main() {
   await navigate(INDEX);
   const poTxt = await evalJs(`(document.getElementById('PO-EPCT')||{}).textContent || ''`);
   const poPct = parseFloat(poTxt);
-  check('PO 事件进度累计非 0（X1 死代码回归）', poPct > 0, 'PO-EPCT=' + poTxt);
+  check('PO 事件进度累计 = 200/614（X1 死代码回归钉死）',
+        poPct >= 32.4 && poPct <= 32.8 && /200\/614/.test(poTxt),
+        'PO-EPCT=' + poTxt);
 
   // E. 门不裁剪（390 宽度）
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });

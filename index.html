@@ -2569,7 +2569,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
-  else if((cur._learnDay || cur.acc === null) && cur.quizAttend) msg = '📖 今天是<b>学习日</b>：学习 <b>'+cur.quizRowDone+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆做首次回忆。';   /* V232: 学习日不再劝「复盘空错题本」 */
+  else if((cur._learnDay || cur.acc === null) && cur.quizAttend) msg = '📖 今天是<b>学习日</b>：学习 <b>'+cur.quizRowDone+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。';   /* V232: 学习日不再劝「复盘空错题本」 */
   else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满，但<b>正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+'</b> 低于 60% ⇒ 不计入达标。先复盘错题，再补正确率（当前 '+(cur.acc===null?'—':Math.round((cur.quizRowDone||0)-(cur._learnN||0)))+' 题可判、对 '+(cur.acc===null?'—':Math.round(cur.acc*((cur.quizRowDone||0)-(cur._learnN||0))))+' 题，需对 '+(Math.ceil(((cur.quizRowDone||0)-(cur._learnN||0))*0.6))+' 题）。';  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
   else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（手动填 '+cur.selfHit+' 项，不计入）';
   else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';
@@ -3322,7 +3322,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(!D[T]) D[T] = {};
   // 阶段判定
   function stageOf(t){ if (t instanceof Date) { t = new Date(t.getFullYear(), t.getMonth(), t.getDate()); } for(var i=0;i<PM.ramp.length;i++){ var r=PM.ramp[i]; if(t>=parseMD(r.from)&&t<=parseMD(r.to)) return r; } return PM.ramp[PM.ramp.length-1]; }   /* V137: 日期归零防时分秒落空回退冲刺 */
-  var ST = stageOf(new Date());
+  var ST = (function () {
+    /* V299: 与 MOTIV 同口径（学习日 = now-4h），修 00:00-04:00 阶段/配额两套 */
+    try { var _t = new Date(Date.now() - 4 * 3600e3); return stageOf(_t); } catch(e) { return stageOf(new Date()); }
+  })();
   var TARGET_Q = 0; for(var i=0;i<PM.ramp.length;i++) TARGET_Q += PM.ramp[i].days * PM.ramp[i].题;
   // 渲染今日配额行
   var q = PM.quota;
