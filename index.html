@@ -2445,7 +2445,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var realTotal = 0;
   for(var z3=0;z3<rows.length;z3++){ var k3 = rows[z3].k; if(k3 === '题' || k3 === '背') realTotal++; }
   // V30: 环改【连续进度】——98/120 显示 41% 琥珀（near-win），不再全或无
-  var _qp = quizOK ? 1 : ((quizRow ? (quizRow.done / Math.max(1, quizRow.tgt)) : 0) * Math.max(0, Math.min(1, (acc||0))));  // V37: 出席比例×正确率，7/8全对=0.875不再0%
+  var _qp = quizOK ? 1
+    : ((quizRow ? (quizRow.done / Math.max(1, quizRow.tgt)) : 0)
+       * ((_isLearnDay || acc === null) ? 1 : Math.max(0, Math.min(1, acc))));
+   /* V231: 学习日/无正式作答时，答题贡献按「出席」给满 —— 不再因 acc=null 乘 0 导致 0% 红环 */  // V37: 出席比例×正确率，7/8全对=0.875不再0%
   var _ip = inkOK ? 1 : (inkRow && inkRow.tgt > 0 ? Math.min(1, inkRow.done / inkRow.tgt) : 0);
   // V67: 默写纳入完成度（读今日报数）
   var _mp = -1;
@@ -2467,7 +2470,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
        inkRowDone: inkRow ? inkRow.done : 0, inkRowTgt: inkRow ? inkRow.tgt : 0,  // V32: 供 coach 量化
-       acc:acc, qualityOK:qualityOK,
+       acc:acc, qualityOK:qualityOK, _learnDay: !!_isLearnDay,   /* V232: 供教练区分学习日 */
        // X3: pass = 真实部分全达标（答题质量 + 墨墨）
        pass: rq.list.length>0 && quizOK && inkOK,
        next:next, extra:extra,
@@ -2534,7 +2537,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
-  else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满，但<b>正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+'</b> 低于 60% ⇒ 不计入达标。先复盘错题，再补正确率（当前 '+(cur.quizRowDone||0)+' 题对 '+(cur.acc===null?'—':Math.round(cur.acc*(cur.quizRowDone||0)))+' 题，需对 '+(Math.ceil((cur.quizRowDone||0)*0.6))+' 题）。';  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
+  else if((cur._learnDay || cur.acc === null) && cur.quizAttend) msg = '📖 今天是<b>学习日</b>：学习 <b>'+cur.quizRowDone+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。明天按排期回来做首次回忆。';   /* V232: 学习日不再劝「复盘空错题本」 */
+  else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满，但<b>正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+'</b> 低于 60% ⇒ 不计入达标。先复盘错题，再补正确率（当前 '+(cur.quizRowDone||0)+' 题对 '+(cur.acc===null?'—':Math.round(cur.acc*(cur.quizRowDone||0)))+' 题，需对 '+(Math.ceil(((cur.quizRowDone||0)-(cur._learnN||0))*0.6))+' 题）。';  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
   else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（手动填 '+cur.selfHit+' 项，不计入）';
   else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';
   else if(cur.hit > 0) msg = '真实达标 <b>'+cur.realHit+'/2</b>（答题+墨墨）｜ 手动填 <b>'+cur.selfHit+'</b> 项（不计入完成度）'+((cur.inkRowDone||0) < (cur.inkRowTgt||120) && (cur.inkRowDone||0) > 0 ? '｜ 墨墨还差 <b>'+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+'</b> 词' : '')+((cur.quizRowDone||0) < (cur.quizRowTgt||8) ? '｜ 答题还差 <b>'+((cur.quizRowTgt||8)-(cur.quizRowDone||0))+'</b> 题' : '')+'. 下一步：'+nx;
