@@ -2825,43 +2825,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return n;
   }
   function saveProgress() {
-    /* V207 F3: 保存前先与磁盘最新快照做**记录级 merge**，防双标签旧内存整包覆盖对方记录 */
-    try {
-      if (typeof localStorage !== 'undefined') {
-        var _raw = localStorage.getItem(KEY);
-        if (_raw) {
-          var _disk = JSON.parse(_raw);
-          if (_disk && _disk.q && progress && progress.q) {
-            for (var _k in _disk.q) {
-              var _d = _disk.q[_k], _m = progress.q[_k];
-              if (!_d) continue;
-              if (!_m) { progress.q[_k] = _d; continue; }
-              /* 计数类取较大值（只增不减），时间/状态取较晚的 */
-              ['ok','bad','fuzzy','wrong','seen'].forEach(function (f) {
-                var a = +(_m[f] || 0), b = +(_d[f] || 0);
-                if (b > a) _m[f] = b;
-              });
-              if (_d.last && (!_m.last || String(_d.last) > String(_m.last))) {
-                _m.last = _d.last; _m.lastOutcome = _d.lastOutcome; _m.lastId = _d.lastId;
-                if (_d.due) _m.due = _d.due;
-              }
-              if (_d.revealedToday && !_m.revealedToday) _m.revealedToday = _d.revealedToday;
-              if (_d.mastered && !_m.mastered) { _m.mastered = _d.mastered; _m.interval = _d.interval; _m.due = _d.due; }
-            }
-          }
-          /* days 取每项较大值 */
-          if (_disk && _disk.days && progress && progress.days) {
-            for (var _dk in _disk.days) {
-              var _dd = _disk.days[_dk] || {}, _md = progress.days[_dk] || (progress.days[_dk] = {});
-              ['a','c','w'].forEach(function (f) {
-                var a = +(_md[f] || 0), b = +(_dd[f] || 0);
-                if (b > a) _md[f] = b;
-              });
-            }
-          }
-        }
-      }
-    } catch (e) {}
+    /* V211: 撤掉 V207 的记录级 merge —— 它每次把磁盘旧记录回灌内存，导致「清空进度/取消掌握/覆盖导入」全部失效。
+       跨标签一致性改由下方 storage 事件**重载**承担（每个标签内存始终新鲜，不会用陈旧内存覆盖别人）。 */
     try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch (e) {}
   }
   function rec(q) { return progress.q[KP(q)] || null; }
@@ -3125,7 +3090,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var r = _r0, done = answeredToday(q) && _lockByOk && !(S.session && S.session.practice);
     var p = {
       sel: (r && r.lastSel) || [],
-      text: (r && r.draft && !(r.last === TODAY && r.lastOutcome)) ? r.draft : '',   /* V187 P0-A: 今日已判过不预填（防「看答案→重进→直接熟知」） */
+      text: (r && r.draft && !r.lastOutcome) ? r.draft : '',   /* V211 R6: 只要判过（任何日期）就不预填 */   /* V187 P0-A: 今日已判过不预填（防「看答案→重进→直接熟知」） */
       revealed: !!done,
       restored: !!done,
       revisit: false,
@@ -3137,7 +3102,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     };
     /* V193 P0-A2: 今天已看过答案的题 —— 当天不给 ok（看过答案后的回忆=再认不是回忆） */
     try {
-      if (r && r.revealedToday === TODAY) { p.skipGrade = true; p._revealedBefore = true; }
+      /* V211 R2: 读**最新磁盘**的 revealedToday —— 封 MTB（旧页无 pend）/MTC（旧页别卡跳转）两条回填旁路 */
+      var _diskRev = null;
+      try {
+        var _rawR = localStorage.getItem(KEY);
+        if (_rawR) { var _dR = JSON.parse(_rawR); _diskRev = ((_dR && _dR.q) || {})[KP(q)]; }
+      } catch(e2){}
+      var _anyRev = (r && r.revealedToday === TODAY) || (_diskRev && _diskRev.revealedToday === TODAY);
+      if (_anyRev) { p.skipGrade = true; p._revealedBefore = true; }
     } catch(e){}
     S.pend[q.id] = p;
     return p;
@@ -3185,6 +3157,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     } else {
       /* 模糊（蒙对）：当天再练一次、不进阶、不进错题本；已积累的阶梯保留 */
       if (!(detail && detail.regrade)) r.fuzzy++;   /* V207 F1: 改判不自增 */
+          r.streak = Math.max(0, r.streak || 0); r.interval = 0; r.mastered = false;   /* V211 R4: 恢复排期复位（模糊=当天再练） */
     }
     r.lastOutcome = outcome;
     r.lastId = q.id;
@@ -4185,12 +4158,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           if (!ev || ev.key !== 'dsh.347.quiz.v3' || !ev.newValue) return;
           var _fresh = JSON.parse(ev.newValue);
           if (!_fresh || !_fresh.q) return;
+          /* V211: 先用别的标签页写入的最新进度**替换本页内存**（不是合并）——防陈旧内存覆盖 + 防旧记录回灌 */
+          try {
+            progress = _fresh;
+            if (typeof render === 'function') render();
+          } catch(e){}
           if (typeof S === 'undefined' || !S || !S.pend) return;
           for (var _pid in S.pend) {
             var _qq = BY[_pid];
             if (!_qq) continue;
             var _rk = KP(_qq);
-            var _fr = _fresh.q[_rk];
+            var _fr = progress.q[_rk];
             if (_fr && _fr.revealedToday === TODAY) {
               S.pend[_pid].skipGrade = true;
               S.pend[_pid]._revealedBefore = true;
