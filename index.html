@@ -2655,7 +2655,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     for(var i=0;i<selfKeys.length;i++){
       var k = selfKeys[i];
       var tgt = (k==='课')?6:(k==='英')?2:14;   /* V163: 与门目标一致（课6节/英2篇/政14讲） */
-      if(+(rec[k]||0) >= tgt) done++;
+      var _v = +(rec[k]||0);
+      if(k==='课' && _v > 6) _v = 0;   /* V167: 旧分钟值（>6）不算节数，与门禁 legacy 隔离一致 */
+      if(_v >= tgt) done++;
     }
     if(done === 0){ el.innerHTML = ''; return; }
     el.innerHTML = '📋 自报已完成 <b>' + done + '/' + total + '</b> 项（不计入真实完成度，但你的努力记在这里）';

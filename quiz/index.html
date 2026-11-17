@@ -2523,7 +2523,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   function normTxt(s) {
     /* V163: 额外清掉零宽字符 U+200B-U+200D（此前可绕过空答判定） */
-    return String(s || '').replace(/[\u200B-\u200D\s，。、；：？！,.;:?!"'“”‘’（）()【】\[\]…—\-－·]/g, '');
+    return String(s || '').replace(/[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\s，。、；：？！,.;:?!"'“”‘’（）()【】\[\]…—\-－·]/g, '');
   }
   function isChoice(q) { return q.t === '单选' || q.t === '多选'; }
   function isMulti(q) { return q.t === '多选'; }
@@ -2640,6 +2640,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             if (_part > hit) hit = _part;
           }
         }
+      } catch(e){}
+    }
+    /* V167 P1: 满额命中还须「长度够 且 得分点>=1」，封死「题干重复凑长度」假阳性 */
+    if (hit >= kw.length && kw.length > 0) {
+      try {
+        var _gAns = normTxt(q.ans || ''), _gTxt = normTxt(txt || '');
+        var _gLenOk = _gAns.length > 0 ? (_gTxt.length >= Math.max(6, Math.ceil(_gAns.length * 0.4))) : (_gTxt.length >= 6);
+        var _gPh = (typeof pointHits === 'function') ? pointHits(q, txt) : null;
+        var _gHasPts = !!(_gPh && _gPh.total > 0);
+        var _gPointOk = !!(_gPh && _gPh.hit >= 1);
+        if (!_gLenOk || (_gHasPts && !_gPointOk)) { hit = Math.max(0, kw.length - 1); }
       } catch(e){}
     }
     return { hit: hit, total: kw.length };
@@ -3781,7 +3792,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _txtA = normTxt(_pA && _pA.text || '');
           var _ansA = normTxt(_cqA.ans || '');
           var _needA = _ansA.length > 0 ? Math.max(6, Math.ceil(_ansA.length * 0.4)) : 6;
-          /* V165 P0: 非选择题要记 ok，写入长度必须够（封死「输 1 个字/1 个字母 + 熟知」伪造） */
+          /* V167 P0: 记 ok 必须**真通过判分**（重跑 scoreOf），不能只查长度
+             —— 封死「400 个 x / 题干重复 -> Ctrl+Enter -> Enter -> 答对了」键盘伪造 */
+          var _scA = null;
+          try { _scA = scoreOf(_cqA, _pA); } catch(e){}
+          var _passA = !!(_scA && _scA.auto === true && _scA.pass === true);
+          var _noScoreA = !!(_scA && _scA.auto === false);
+          var _okByLenA = _noScoreA && _txtA.length >= _needA;   /* 无得分点题才允许纯长度放行 */
+          if (!_passA && !_okByLenA) {
+            _pA.skipGrade = true;
+            try{ toast('未达判分线：只揭晓看答案，本次不记分（不计入正确率）'); }catch(e){}
+            try{ render(); }catch(e){}
+            return;
+          }
           if (!_txtA || _txtA.length < _needA) {
             _pA.skipGrade = true;
             try{ toast('写入过短：只揭晓看答案，本次不记分（不计入正确率）'); }catch(e){}
