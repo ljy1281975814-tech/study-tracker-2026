@@ -2446,9 +2446,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
   var _gradedN0 = Math.max(0, (qa ? (qa.a||0) : 0) - (qa ? (qa.la||0) : 0) - (qa ? (qa.sj||0) : 0));   /* V334 ②: 机判题次 */
- var qualityOK = !!(_isLearnDay ? quizAttend : (acc !== null && acc >= 0.6 && _gradedN0 >= 3));   /* V334 ②: n>=3 最小样本 */   /* V236 A: 学习日按出席算质量（不再恒 false -> 永远到不了 100%） */
+ var _learnAttend = !!(qa && (qa.a||0) >= (quizRow ? (quizRow.tgt||1) : 1));   /* V337 B1b: 学习日出席按 days.a */
+  var qualityOK = !!(_isLearnDay ? _learnAttend : (acc !== null && acc >= 0.6 && _gradedN0 >= 3));   /* V334 ②: n>=3 最小样本 */   /* V236 A: 学习日按出席算质量（不再恒 false -> 永远到不了 100%） */
   // 答题「达标」= 出席 + 正确率≥60%
-  var quizOK = quizAttend && qualityOK;
+  var quizOK = (quizAttend || (_isLearnDay && _learnAttend)) && qualityOK;   /* V336 B1c: 学习日出席也算 quizOK 的前置 */
   // 墨墨「达标」= 真实填的数量 ≥ 目标（默认 120）
   var inkOK = !!(inkRow && inkRow.done >= inkRow.tgt);
   var inkPartial = !!(inkRow && inkRow.tgt > 0 && inkRow.done >= Math.ceil(inkRow.tgt * 0.6));  // V27
@@ -2609,7 +2610,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
-  else if((cur._learnDay || cur.acc === null) && (cur.quizAttend || (cur._learnDay && (cur.quizRowDone||0) > 0))) msg = '📖 今天是<b>学习日</b>：学习 <b>'+cur.quizRowDone+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。';   /* V232: 学习日不再劝「复盘空错题本」 */
+  else if((cur._learnDay || cur.acc === null) && (cur.quizAttend || (cur._learnDay && (cur._learnN||0) > 0))) msg = '📖 今天是<b>学习日</b>：学习 <b>'+((cur._learnN||0) > 0 ? cur._learnN : (cur.quizRowDone||0))+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。';   /* V336 B1: 用 _learnN（此前用 c+w 的 quizRowDone -> 学习日恒 0 -> 分支永进不去） */   /* V232: 学习日不再劝「复盘空错题本」 */
   else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满。'+(cur.wrongN===0? '今天这些多为<b>自评题</b>，不计入机器正确率；明天按 1–2 天回来做机器判分会自动把正确率拉回来 —— 今天已经够了，先休息。': ('正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+' 低于 60% ⇒ 不计入达标。先复盘<b>错题本 '+cur.wrongN+' 道</b>，再补正确率。'));  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
   else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（手动填 '+cur.selfHit+' 项，不计入）';
   else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';

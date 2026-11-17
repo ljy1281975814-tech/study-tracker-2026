@@ -3786,7 +3786,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     /* V319 ②: 分母排除自评题次 sj（修进度页 63% vs 首页 100%） */
     var _sjT = 0;
     try { var _dSJ2 = progress.days[TODAY] || {}; _sjT = (+_dSJ2.sj || 0); } catch(e){}
-    var _denT = Math.max(0, total - _sjT);
+    /* V336 B4: 删 _denT（V324 后已无人使用） */
     /* V324 ②: 分子/分母统一用 **days 全史** 口径（修 267% —— 此前分子是全史 r.ok、分母只减了今日 sj） */
     var _okD = 0, _denD = 0;
     try {
@@ -3797,7 +3797,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       }
     } catch(e){}
     if (_denD > 0) { ok = _okD; }   /* 「答对」格也改用 days.c，与正确率同源 */
-    var acc = _denD > 0 ? Math.min(100, Math.round(_okD / _denD * 100)) : null;   /* V327: 展示层 clamp 兜底 */
+    var acc = _denD >= 3 ? Math.min(100, Math.round(_okD / _denD * 100)) : null;   /* V327 clamp + V336 B2: n>=3 最小样本（<3 显示 —） */
     var ws = wrongStats();
     var wrongN = ws.rolling.length, masteredN = ws.mastered.length;
     var dueN = realDueItems().length;

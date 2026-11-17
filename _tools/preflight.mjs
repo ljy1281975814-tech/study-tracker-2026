@@ -14,8 +14,6 @@
  *     若 sj 未从分母排除则得 38%，J 会 FAIL）。已用它钉住 V306 的 P1-R01。
  *   - K/L 曾试图做 DOM 级断言但提取器不稳（K 恒真、L 正则在模板字符串里转义失效），
  *     **已删除而不保留假断言**；待重写。
- *   - **M（进度页守卫）已删除**：DOM 文本提取不稳，多次尝试均无法做出有区分力的断言，
- *     **不保留假断言**。进度页/合并路径目前无自动化断言，需人工复验。（见 README「已知未覆盖」）。
  *
  * 用法：
  *   node _tools/preflight.mjs [--url http://127.0.0.1:18080] [--edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
@@ -286,13 +284,13 @@ async function main() {
   await sleep(1200);
   const invM1b = await evalJs(`(() => {
     const t = document.body.innerText || '';
-    const over = (t.match(/(\d{1,3})\s*%/g) || []).map(x => parseInt(x,10)).filter(n => n > 100);
+    const over = (t.match(/([0-9]{1,3})[ ]*%/g) || []).map(x => parseInt(x,10)).filter(n => n > 100);   /* V336 B5: 用 [0-9] 避开模板转义 */
     const accEl = document.querySelector('.acc-num');
     const accTxt = accEl ? (accEl.textContent || '').replace(/[^0-9]/g, '') : null;
     return { over: over, overCount: over.length, acc: accTxt ? parseInt(accTxt, 10) : null, isProg: /已答次数/.test(t) };
   })()`);
   check('M1 违规 days（c=9>cap=3）在**进度页**不渲染 >100%',
-        invM1.hasState === true && invM1b.isProg === true && invM1b.overCount === 0 && (invM1b.acc === null || invM1b.acc <= 100),
+        invM1.hasState === true && invM1b.isProg === true && invM1b.overCount === 0 && invM1b.acc !== null && invM1b.acc <= 100   /* V336 B5b: 不得 null 放行 */,
         'stateApi=' + invM1.hasState + ' isProg=' + invM1b.isProg + ' over=' + invM1b.overCount + ' acc=' + invM1b.acc);
 
   // M2. 【真实 kp 种子】用 __DSH_STATE().realKps 的**真键**种记录 + days -> 进度页 acc===100%
