@@ -3930,7 +3930,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function afterGradeScroll() { setTimeout(scrollToResult, 40); }
 
   function submitAnswer() {
-    /* V193 P0-A1: submitAnswer 揭晓瞬间冻结判分快照（此前只在 grade 入口冻结 -> 回填后再冻结就晚了） */
+    /* V196 P0-1: 只冻结快照，**绝不改 revealed**（V193 置 revealed 导致原 `if (p.revealed) return;` 直接返回，单选提交彻底失效） */
     try {
       var _qSA = currentQ();
       if (_qSA && typeof S !== 'undefined' && S.pend && S.pend[_qSA.id]) {
@@ -3938,13 +3938,6 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (_pSA && !_pSA._scSnap) {
           _pSA._scSnap = scoreOf(_qSA, _pSA);
           _pSA._ccSnap = clauseCover(_qSA, _pSA.text || '');
-          _pSA.revealed = true;
-          try {
-            var _rkSA = KP(_qSA);
-            if (!progress.q[_rkSA]) progress.q[_rkSA] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
-            progress.q[_rkSA].revealedToday = TODAY;   /* V194: 记录不存在也要建（首次接触也揭示过） */
-            saveProgress();
-          } catch(e){}
         }
       }
     } catch(e){}
@@ -4007,7 +4000,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     try{
       if (outcome === 'ok') {
         var _cqA = currentQ();
-        if (_cqA && !isChoice(_cqA)) {
+        if (_cqA) {   /* V196 P0-2: 选择题同样校验（原只查非选择题 -> 选错按Enter记答对了） */
           var _pA = S.pend[_cqA.id] || ensurePending();
           var _txtA = normTxt(_pA && _pA.text || '');
           var _ansA = normTxt(_cqA.ans || '');
@@ -4017,7 +4010,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
              —— 封死「400 个 x / 题干重复 -> Ctrl+Enter -> Enter -> 答对了」键盘伪造 */
           var _scA = null;
           try { _scA = scoreOf(_cqA, _pA); } catch(e){}
-          /* V168: 只认 scoreOf.pass（覆盖率>=0.55 或短答案精确包含），彻底取消「长度放行」 */
+          /* V196 P0-2: 选择题也走同一硬门 —— 选错按 Enter 不得记「答对了」 */
           var _passA = !!(_scA && _scA.pass === true);
           if (!_passA) {
             _pA.skipGrade = true;
@@ -4125,6 +4118,22 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
 
   /* ---------------- 渲染 ---------------- */
   function render() {
+    /* V196 P0-3: 只要某题处于「已揭示且不是恢复态」——无论走按钮/键盘/空答哪条路——都记 revealedToday，
+       这样「看过答案的题当天只练习不记分」对所有路径生效 */
+    try {
+      var _qR = (typeof currentQ === 'function') ? currentQ() : null;
+      if (_qR && typeof S !== 'undefined' && S && S.pend && S.pend[_qR.id]) {
+        var _pR = S.pend[_qR.id];
+        if (_pR && _pR.revealed && !_pR.restored) {
+          var _rkR = KP(_qR);
+          if (!progress.q[_rkR]) progress.q[_rkR] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
+          if (progress.q[_rkR].revealedToday !== TODAY) {
+            progress.q[_rkR].revealedToday = TODAY;
+            try{ saveProgress(); }catch(e){}
+          }
+        }
+      }
+    } catch(e){}
     /* V183 P0-A: 揭晓后禁止再编辑（防看答案回填） */
     try{ setTimeout(function(){ var _ta=document.getElementById('recallText'); if(_ta){ var _q0=currentQ(); var _p0=_q0?S.pend[_q0.id]:null; if(_p0 && _p0.revealed) _ta.readOnly = true; } },0); }catch(e){}var _rc = document.getElementById('resultCard'); if (_rc) { _rc.setAttribute('tabindex','-1'); try{ _rc.focus(); }catch(e){} }
     
