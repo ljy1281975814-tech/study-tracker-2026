@@ -2862,10 +2862,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       }
       return;
     }
-  var unit = (k === '背') ? '个词' : (k === '课' ? '节' : (k === '英' ? '篇' : '题'));
-    window.__showInput(g.nm, unit, tgt, (k === '背') ? 500 : (k === '课' ? 5 : (k === '英' ? 10 : 50)), function(ans){
+  /* LESSON_20261117：课只由课表弹层写入，这里不再保留课的数值输入分支 */
+  var unit = (k === '背') ? '个词' : (k === '英' ? '篇' : '题');
+    window.__showInput(g.nm, unit, tgt, (k === '背') ? 500 : (k === '英' ? 10 : 50), function(ans){
       if(ans === null || ans === '') return;
-      var _cap = (k === '背') ? 500 : (k === '课' ? 5 : (k === '英' ? 10 : 50));
+      var _cap = (k === '背') ? 500 : (k === '英' ? 10 : 50);
       var v = Math.max(0, Math.min(_cap, Math.round(+ans || 0)));
       rec[k] = v;
       saveOwn(o); render();
@@ -3255,7 +3256,6 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var rows = [
     ['背', '墨墨 '+q['背'].target===undefined?'':('120 词'), ST.题? '' : ''],
     ['题', '答题 ' + ST.题 + ' 题', ''],
-    ['课', '今日课表 6 节', ''],
     ['英语', '阅读 1 篇', ''],
     ['政治', '救命课 14 讲', ''],
     ['模拟考', '—(11/24、12/1)', '']
@@ -3263,7 +3263,6 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var ROWS = [
     ['背', 120, '词'],
     ['题', ST.题, '题'],
-    ['课', 6, '节'],
     ['英语', 1, '篇'],
     ['政治', 14, '讲'],
     ['模拟考', (T==='2026-11-24'||T==='2026-12-01')?1:0, '次']
@@ -3281,6 +3280,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   document.getElementById('PO-ROWS').innerHTML = html;
   document.getElementById('PO-ROWS').addEventListener('change', function(ev){
     var el = ev.target; if(!el.dataset.k) return;
+    if(el.dataset.k === '课') return;   /* LESSON_20261117：课由课表弹层唯一写 */
     var tgt = parseInt(el.dataset.t||'1',10);
     D[T][el.dataset.k] = el.checked ? tgt : 0;
     save(D); render();
