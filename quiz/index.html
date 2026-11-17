@@ -4663,6 +4663,9 @@ case 'rate': {
             break;
           }
           if (_argR === 'ok') {
+            /* V291: 必须在 applyGrade **之前**读 wasMastered（applyGrade 内部会把 streak 推到 mastered） */
+            var _wasM0 = false;
+            try { var _rM0 = (typeof rec === 'function') ? rec(_qr) : null; _wasM0 = !!(_rM0 && _rM0.mastered); } catch(e){}
             var _gR = applyGrade(_qr, 'ok', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             try {
               var _rkR = KP(_qr);
@@ -4673,10 +4676,11 @@ case 'rate': {
             try {
               var _rkS = KP(_qr); var _rS = progress.q[_rkS];
               if (_rS) {
-                var _wasM = !!_rS.mastered;
+                var _wasM = _wasM0;   /* V291: 用 applyGrade 前的快照 */
                 if (!_wasM) {
                   _rS.streak = Math.max(0, (+(_rS.streak || 0) - 1));
                   _rS.mastered = false;
+                  try { delete _rS.masteredAt; } catch(e){}   /* V291: 清 masteredAt 防止 stale 掌握标记 */
                   _rS._skipIntervalCap = false;
                 } else {
                   /* V289 X2r: 已掌握卡自评**完全不改** interval/due/streak/mastered（保持 30 天抽查承诺） */
