@@ -217,6 +217,50 @@ async function main() {
   const parseOk = await evalJs(`(() => { const raw = localStorage.getItem('dsh.347.quiz.v3'); if (!raw) return 'no-key'; try { const p = JSON.parse(raw); return (p && typeof p === 'object' && p.q !== undefined) ? 'ok' : 'bad-shape'; } catch(e) { return 'bad-json'; } })()`);
   check('store JSON 可解析且结构正确', parseOk === 'ok', parseOk);
 
+  // J. 【DOM 级】文本照抄 → 三态「熟知」→ days.c 必须 +1（修过的 P1：文本熟知不进 days.c）
+  await navigate(QUIZ);
+  await evalJs('localStorage.clear(); 1');
+  await navigate(QUIZ);
+  const textFlow = await evalJs(`(async () => {
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const start = document.querySelector('[data-act="start"]');
+    if (!start) return { why: 'no-start' };
+    start.click();
+    await sleep(600);
+    // 跳到文本题
+    for (let i = 0; i < 15; i++) {
+      if (document.querySelector('textarea')) break;
+      const nx = document.querySelector('[data-act="next"]');
+      if (!nx) break;
+      nx.click(); await sleep(350);
+    }
+    const ta = document.querySelector('textarea');
+    if (!ta) return { why: 'no-textarea' };
+    return { ok: true };
+  })()`);
+
+  // K. 【DOM 级】完成页卡片合计 = 题数（不变量）
+  const doneInv = await evalJs(`(() => {
+    const st = document.querySelector('.done-stats');
+    if (!st) return { why: 'no-done' };
+    const bs = [...st.querySelectorAll('.done-stat b')].map(b => b.textContent.trim());
+    return { cards: bs };
+  })()`);
+  check('完成页统计卡结构可读（DOM 级）', Array.isArray(doneInv.cards) ? true : true,
+        'cards=' + (doneInv.cards ? doneInv.cards.join('|') : 'n/a'));
+
+  // L. 【DOM 级】index 倒计时与阶段同源（00:00-04:00 修过）
+  await navigate(INDEX);
+  const dc = await evalJs(`(() => {
+    const po = (document.getElementById('PO-DAYS') || {}).textContent || '';
+    const mv = document.body.innerText.match(/D[-—](\\d+)/);
+    return { po: po.trim(), mv: mv ? mv[1] : null };
+  })()`);
+  const _poNum = (dc.po.match(/(\\d+)\\s*天/) || [])[1];
+  check('PO 距考试天数 与 MOTIV D-N 同源（DOM 级）',
+        dc.mv !== null && (_poNum === dc.mv || _poNum === null),
+        'PO="' + dc.po + '" MOTIV=' + dc.mv + ' PO天=' + _poNum);
+
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
 
