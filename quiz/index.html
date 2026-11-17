@@ -4530,7 +4530,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               }
               /* V222 F6-b: 空答也计题次（看了答案=接触，但正确率 0%） */
               try {
-                var _d6b = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
+                var _d6b = pp.practice ? { a: 0, c: 0, w: 0 } : (progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 }));   /* V292: 练习不建空桶 */
                 if (!pp.practice && (!_r6b || _r6b._countedToday !== true)) { _d6b.a = (+_d6b.a || 0) + 1; _d6b.la = (+_d6b.la || 0) + 1;   /* V289 X3r: 练习不计题次 */ if (_r6b) { _r6b._countedToday = true; _r6b._countedDay = TODAY; } }
               } catch(e){}
             }
@@ -4605,7 +4605,10 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           }
         } catch(e){ _covHi2 = 0; }
         /* V248 A: 兜底改为「给三态让用户自评」—— 高覆盖但不达标时，用户可以自己确认「我写出来了」 */
-        if (_covHi2 >= 0.72 && !_sc.pass && !pp.restored && !pp.practice && !_firstTouch && !pp.skipGrade && !pp._revealedBefore) {
+        /* V292: needCalib 消费 —— 上次自评过的卡本次强制机器判分（不给自评面板） */
+        var _calibNeed = false;
+        try { var _rC = rec(_q); _calibNeed = !!(_rC && _rC.needCalib && _rC.needCalib !== TODAY); } catch(e){}
+        if (_covHi2 >= 0.72 && !_sc.pass && !pp.restored && !pp.practice && !_firstTouch && !pp.skipGrade && !pp._revealedBefore && !_calibNeed) {
           pp.needSelfJudge = true;
         }
         if (_sc.auto && !_sc.pass && !pp.restored && !pp.practice && !_firstTouch && !pp.skipGrade && !pp._revealedBefore && _covHi2 < 0.72) {   /* V216 N6 + V246 1 */   /* V191 P0-4: 练习模式不写库 */
@@ -4657,7 +4660,7 @@ case 'rate': {
             applyGrade(_qr, 'fuzzy', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             _pr.outcome = 'fuzzy'; _pr.graded = true;
             try { if (S.session) S.session.answered++; } catch(e){}
-            try { toast('内容覆盖 ' + Math.round(_covR*100) + '%（需 ≥70%）：只能记「模糊」'); } catch(e){}
+            try { toast('内容覆盖 ' + Math.round(_covR*100) + '%（需 ≥72%）：只能记「模糊」'); } catch(e){}
             try { delete _pr.needSelfJudge; } catch(e){}
             saveProgress(); nextQuestion();
             break;
@@ -4985,8 +4988,9 @@ case 'rate': {
           var _pJ = (typeof ensurePending === 'function') ? ensurePending() : null;
           /* V178: 防重复 —— 同一题当次已自评则不再记第二次 */
           var _recJ = (typeof rec === 'function') ? rec(_qJ) : null;
-          var _doneByRec = !!(_recJ && _recJ.last === TODAY && _recJ.lastOutcome && _recJ.lastOutcome !== 'learn' && _recJ.lastOutcome !== 'seen');   /* V289 X5: reveal-only 的 learn/seen 不算「已自评过」 */
-          if ((_pJ && _pJ.selfEvalDone) || _doneByRec) {
+          /* V292 X5: 「已自评过」只看 pending 的 selfEvalDone —— 不再用 lastOutcome 兜底（复习卡先揭晓也能自评） */
+          var _doneByRec = !!((_pJ && _pJ.selfEvalDone) || (_recJ && _recJ.selfEvalDone === TODAY));
+          if (_doneByRec) {
             if (box) box.innerHTML = '<b>本题已自评过</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天这题只记一次，今天可重练（本遍不记分）。</div>';
             return;
           }
