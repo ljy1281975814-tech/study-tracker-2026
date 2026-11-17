@@ -231,7 +231,7 @@ async function main() {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
     const p = { v: 3, q: {}, days: {} };
-    p.days[T] = { a: 15, c: 12, w: 0, la: 0, sj: 3 };   /* V328: c+w=12 满足达标, acc=12/(15-3)=100%(未排除sj则80%) */
+    p.days[T] = { a: 24, c: 18, w: 0, la: 0, sj: 6 };   /* V330: c+w=18 覆盖 8/12/18 档, acc=18/(24-6)=100%(未排除sj则75%) */
     localStorage.setItem(KEY, JSON.stringify(p));
     return T;
   })()`);
@@ -245,7 +245,7 @@ async function main() {
   const _pctJ1 = await evalJs(`(() => { const e = document.getElementById('mv-pct'); return e ? (e.textContent||'').trim() : ''; })()`);
   const has100 = /\b100\s*%/.test(accJ.txt) || accJ.txt.indexOf('100%') >= 0;
   const has38 = accJ.txt.indexOf('38%') >= 0;
-  check('自评题次 sj 从正确率分母排除（a=15,c=12,sj=3 -> 100% 而非 80%）',
+  check('自评题次 sj 从正确率分母排除（a=24,c=18,sj=6 -> 100% 而非 75%）',
         has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
   // J2（自校验对·相对断言）：sj=0 时的 ring 百分比必须与 J1(sj=5) 不同
   // 若 sj 未从正确率分母排除，两次 ring 相同 -> 本断言 FAIL
@@ -273,10 +273,20 @@ async function main() {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
     // 用真实考点记录（从 store 现有 kp 键或构造 kp 形状）
+    // V330 P1b: 用**真实 kp 键**（题库 id 形状如 px-4-1），否则 progressHTML 聚合不到
     const q = {};
-    for (let i = 0; i < 8; i++) {
-      // 用考点键形状：s|c，尽量贴合 KP() 产物
-      q['PF|考点' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+    try {
+      const raw = localStorage.getItem('dsh.347.quiz.v3');
+      const prev = raw ? JSON.parse(raw) : null;
+      const keys = prev && prev.q ? Object.keys(prev.q) : [];
+      const realKp = keys.filter(k => /^[a-z一-龥]+-\d+-\d+$/.test(k)).slice(0, 8);
+      for (let i = 0; i < realKp.length; i++) q[realKp[i]] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+      // 若没有真实 kp，退回构造 px-4-N 形状（题库普心第4章真实 id 前缀）
+      if (Object.keys(q).length === 0) {
+        for (let i = 1; i <= 8; i++) q['px-4-' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+      }
+    } catch(e) {
+      for (let i = 1; i <= 8; i++) q['px-4-' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
     }
     localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:q, days: { [T]: { a:8, c:3, w:0, la:0, sj:5 } } }));
     return T;
@@ -299,7 +309,7 @@ async function main() {
     const t = document.body.innerText || '';
     const has267 = /267\s*%/.test(t);
     const over = (t.match(/(\d{1,3})\s*%/g) || []).filter(x => parseInt(x,10) > 100);
-    const isProg = /已答次数|考点见过|进度/.test(t);
+    const isProg = /已答次数/.test(t);   /* V330: 收紧，防首页 tabbar「进度」假阳性 */
     return { has267: has267, over: over.length, isProg: isProg, nav: ${JSON.stringify('')} };
   })()`);
   check('进度页守卫（M）：真导航后正确率 ≤100% 且页面真渲染（钉死 267%/200%/300%）',

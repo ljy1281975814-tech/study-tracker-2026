@@ -2443,7 +2443,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var qa = QD_ACC[s] || null;
   var _den2 = qa ? (qa.a - (qa.la || 0) - (qa.sj || 0)) : 0;   /* V306: 排除 学习(la)+自评(sj) */
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
- var acc = (qa && _den2 > 0 && !_isLearnDay) ? (qa.c / _den2) : null;   /* V227: learn 不计入正确率分母（修「新学日被判 0%」） */
+ var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
   var qualityOK = !!(_isLearnDay ? quizAttend : (acc !== null && acc >= 0.6));   /* V236 A: 学习日按出席算质量（不再恒 false -> 永远到不了 100%） */
   // 答题「达标」= 出席 + 正确率≥60%
@@ -3386,6 +3386,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   try {
     var p = JSON.parse(localStorage.getItem(KEY_QUIZ)||'{}');
     if(p && p.q){ for(var k in p.q){ var r=p.q[k]; if(r && r.last===T){ quizN++; } } }
+    /* V330 P1c: 「已答」改读 Σdays.a（与「答对」days.c 同源，修 12/9 隐含 75% vs 首页 100%） */
+    try {
+      var _aD = (p && p.days && p.days[T] && typeof p.days[T].a === 'number') ? p.days[T].a : null;
+      if (_aD !== null) quizN = _aD;
+    } catch(e){}
     /* V315: 「答对」改读 days.c（单一事实源，修 PO-QUIZ 与进度页/完成页 3/8/8 三套口径） */
     try {
       var _dc = (p && p.days && p.days[T] && typeof p.days[T].c === 'number') ? p.days[T].c : null;

@@ -4049,6 +4049,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var srcQ = migrateQ(data.progress.q || {});
     var added = 0, updated = 0, skipped = 0, merged = 0;
     if (mode === 'replace') { progress.q = {}; progress.days = {}; progress.unlocked = data.progress.unlocked || []; try { progress._replaceAt = Date.now(); } catch(e){} }   /* V280: 覆盖导入标记（跨标签整包替换） */
+    /* V330 P1a: replace 分支也要 clamp（此前 !a 直接赋值绕过 -> 导入 a12c12sj5 首页 171%） */
+    try {
+      for (var _rpk in progress.days) {
+        var _rpd = progress.days[_rpk] || {};
+        var _rpc = Math.max(0, (+_rpd.a||0) - (+_rpd.la||0) - (+_rpd.sj||0));
+        if ((+_rpd.c||0) > _rpc) _rpd.c = _rpc;
+      }
+    } catch(e){}
     Object.keys(srcQ).forEach(function (k) {
       var b = srcQ[k], a = progress.q[k];
       if (!BY[k] && !KP_ITEMS[k]) { skipped++; return; }
@@ -4062,7 +4070,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     });
     Object.keys(srcD).forEach(function (k) {
       var a = progress.days[k], b = srcD[k];
-      if (!a) { progress.days[k] = b; return; }
+      if (!a) {
+        /* V330 P1a: 新日也 clamp（此前直接赋值 -> 新设备首日导入即 171%） */
+        try { var _nbc = Math.max(0, (+b.a||0) - (+b.la||0) - (+b.sj||0)); if ((+b.c||0) > _nbc) b.c = _nbc; } catch(e){}
+        progress.days[k] = b; return;
+      }
       progress.days[k] = {
         a: Math.max(a.a || 0, b.a || 0), c: Math.max(a.c || 0, b.c || 0), w: Math.max(a.w || 0, b.w || 0),
         /* V324: 补 la/sj/sec（此前只并 a/c/w -> 导入丢学习与自评题次，正确率分母塌陷） */
