@@ -2367,12 +2367,20 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  }
  function dayOf(o, QD, s){
   var rq = reqOf(s), rec = o.days[s] || {}, rows = [], hit = 0, next = null, extra = 0;
+  /* LESSON_SINCE_20261117：节数口径上线日。此后若没有课表勾选数据（dsh.347.course.v1[日]）
+     却有「课」值，只可能是 D0065 的分钟残留——1~6 分钟也不能当节数（H0336 必修项）。 */
+  var LESSON_SINCE = '2026-11-17';
+  var _cday = null;
+  try { _cday = (loadCourse() || {})[s] || null; } catch(e) { _cday = null; }
   for(var i=0;i<rq.list.length;i++){
    var g = rq.list[i], v = +(rec[g.k] || 0);
    if(g.k === '题'){ v = QD[s] || 0; }
-   /* LESSON_20261117：课改节数后，历史/测试里按分钟存的值（>节数上限）不得被当成节数，也不静默算达标 */
+   /* LESSON_20261117：课改节数后，旧分钟值不得被当成节数，也不静默算达标 */
    var legacyCourse = 0;
-   if(g.k === '课' && v > COURSE_TOTAL){ legacyCourse = v; v = 0; }
+   if(g.k === '课' && v > 0){
+     var _oldMinute = (v > COURSE_TOTAL) || (!_cday && s >= LESSON_SINCE);
+     if(_oldMinute){ legacyCourse = v; v = 0; }
+   }
    var ok = v >= g.t;
    if(ok) hit++;
    else { var _gap = g.t - v; var _isReal = (g.k === '题' || g.k === '背'); var _score = _gap - (_isReal ? 1000 : 0);  // V57: 真实门优先(减1000让其排前)
@@ -2787,7 +2795,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
      return '<label style="display:flex;align-items:center;gap:10px;min-height:52px;border-bottom:1px dotted #d6d3d1;font-size:15px">' +
        '<input type="checkbox" data-i="' + i + '"' + (on ? ' checked' : '') + ' style="width:22px;height:22px;flex:0 0 auto">' +
        '<span style="flex:1">' + c.nm + '</span>' +
-       '<span style="font-size:12px;color:#57534e">计划 ' + (c.tk === '政' ? '政治线' : '第' + (i + 1) + '节') + '</span>' +
+       '<span style="font-size:12px;color:#57534e;text-align:right">计划 ' + (c.tk === '政' ? '政治线' : '第' + (i + 1) + '节') +
+       ' · 约 ' + c.min + '′</span>' +
        '</label>';
     }).join('') +
     '<p id="cs-sum" style="margin:10px 0 0;font-size:13px;color:#57534e"></p>';
