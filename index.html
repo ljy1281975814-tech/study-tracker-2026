@@ -2615,22 +2615,79 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var nx = cur.next ? (cur.next.ico+' '+cur.next.nm+' '+cur.next.t) : '';
   var msg;
   var _isPast = (T >= EXAM);  // V52: 考试日当天也终态
-  /* V346: 断档检测 —— 距上次真实学习 >=2 天，首屏给「欢迎回来 + 最小重启」而不是审判 */
-  var _gapDays = 0, _gapOk = false;
+  /* V348: 断档检测（**多源**：quiz 答题 / 墨墨填数 / 手报门 / 报数，任一有记录即算「学过」）
+     + recovery 日持久化（当天不因答了题而消失） */
+  var _gapDays = 0, _gapOk = false, _recov = false;
   try {
-    var _qraw = localStorage.getItem('dsh.347.quiz.v3') || '{}';
-    var _qobj = JSON.parse(_qraw);
-    var _dkeys = Object.keys((_qobj && _qobj.days) || {}).filter(function(k){ return (( _qobj.days[k]||{}).a||0) > 0; }).sort();
-    if (_dkeys.length) {
-      var _lastD = _dkeys[_dkeys.length - 1];
+    var _srcDates = {};
+    /* a) quiz 答题日 */
+    try {
+      var _qobj = JSON.parse(localStorage.getItem('dsh.347.quiz.v3') || '{}');
+      var _dd = _qobj.days || {};
+      for (var _k in _dd) { if (((_dd[_k] || {}).a || 0) > 0) _srcDates[_k] = 1; }
+    } catch(e){}
+    /* b) 墨墨 / 手报门（D 存储） */
+    try {
+      var _Dobj = loadD();
+      for (var _k2 in (_Dobj || {})) {
+        var _row = _Dobj[_k2] || {};
+        for (var _k3 in _row) { if ((+_row[_k3] || 0) > 0) _srcDates[_k2] = 1; }
+      }
+    } catch(e){}
+    /* c) 报数（report） */
+    try {
+      var _Robj = JSON.parse(localStorage.getItem('dsh.347.report.v1') || '{}') || {};
+      for (var _k4 in _Robj) { var _rr = _Robj[_k4] || {}; if ((+_rr.mo || 0) > 0 || (+_rr.zuo || 0) > 0) _srcDates[_k4] = 1; }
+    } catch(e){}
+    var _allDates = Object.keys(_srcDates).sort();
+    var _lastD = _allDates.length ? _allDates[_allDates.length - 1] : null;
+    if (_lastD && _lastD < T) {
       var _t0 = new Date(T + 'T00:00:00'), _t1 = new Date(_lastD + 'T00:00:00');
       _gapDays = Math.round((_t0 - _t1) / 86400000);
-      _gapOk = _gapDays >= 2 && _lastD < T;
+      if (_gapDays >= 2) {
+        /* 首次识别 -> 写 recovery 日（持久，今天不再消失） */
+        var _RK = 'dsh.347.recovery.v1';
+        var _rcur = null;
+        try { _rcur = JSON.parse(localStorage.getItem(_RK) || 'null'); } catch(e){}
+        if (!_rcur || _rcur.day !== T) {
+          _rcur = { day: T, gapDays: _gapDays, tgtQ: 3, tgtInk: 30 };
+          try { localStorage.setItem(_RK, JSON.stringify(_rcur)); } catch(e){}
+        }
+        _recov = true;
+        _gapOk = true;
+      }
     }
-  } catch(e) { _gapOk = false; }
+    /* recovery 日：即使今天已答了题，也保持 recov（当天不消失） */
+    if (!_recov) {
+      try {
+        var _rc2 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+        if (_rc2 && _rc2.day === T) { _recov = true; _gapOk = true; _gapDays = _rc2.gapDays || 0; }
+      } catch(e){}
+    }
+  } catch(e) { _gapOk = false; _recov = false; }
 
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
-  else if(_gapOk) msg = '👋 <b>欢迎回来</b>（距上次学习 <b>' + _gapDays + '</b> 天）。<br>不用补欠账 —— <b>今天只做最小重启</b>：<b>3 道</b>题（机判）+ <b>30 个</b>墨墨词，做完今天就算赢。之前欠的都不追，从明天正常节奏接上。';   /* V346: 失败者再入场 */
+  else if(_gapOk) msg = (function(){
+    /* V349: recovery 真状态机 —— 目标 3 题(机判 c+w) + 30 词，当天不消失，达标给终态 */
+    var _rq2 = 3, _rink2 = 30;
+    try { var _rc = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null'); if (_rc) { _rq2 = _rc.tgtQ || 3; _rink2 = _rc.tgtInk || 30; } } catch(e){}
+    var _doneQ = +(cur.quizRowDone || 0);          /* 机判题次 = c+w */
+    var _doneInk = +(cur.inkRowDone || 0);
+    var _hitQ = _doneQ >= _rq2, _hitInk = _doneInk >= _rink2;
+    if (_hitQ && _hitInk) {
+      return '🎉 <b>重启完成</b> —— 今天做了 <b>' + _doneQ + '</b> 题（机判）+ <b>' + _doneInk + '</b> 词。<br>'
+        + '这就是赢了：<b>不需要补欠账</b>。今天到此为止，可以收工；明天按正常节奏接上。';
+    }
+    return '👋 <b>欢迎回来</b>（距上次学习 <b>' + _gapDays + '</b> 天）。<br>'
+      + '不用补欠账 —— <b>今天只做最小重启</b>：'
+      + (function(){ var segs = [];
+          if (!_hitQ) segs.push('<b>' + _rq2 + ' 道</b>题（机判，已 ' + _doneQ + '/' + _rq2 + '）');
+          if (!_hitInk) segs.push('<b>' + _rink2 + ' 个</b>墨墨词（已 ' + _doneInk + '/' + _rink2 + '）');
+          return segs.join(' + ');
+        })()
+      + '。<br>' + (_hitQ || _hitInk ? '<b>有一项已经完成</b>，继续把剩下那件做掉。' : '做完这两件，今天就算重启成功。')
+      + '之前欠的都不追，明天正常节奏接上。';
+  })();   /* V349: recovery 真状态机（不再一答题就消失） */
 
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
