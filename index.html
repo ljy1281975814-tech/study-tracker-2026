@@ -2157,11 +2157,11 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    <aside class="hero-side" aria-label="阶段与今日首项">
     <div class="side-top">
      <span class="side-kicker">阶段</span>
-     <span class="side-phase-code mono">PHASE 02</span>
+     <span class="side-phase-code mono" id="heroPhaseCode">PHASE 02</span>
     </div>
 
-    <h2 class="phase-title"><b>P2</b><span>铺开</span></h2>
-    <p class="phase-desc">主观题输出强化期</p>
+    <h2 class="phase-title" id="heroPhaseTitle"><b>P2</b><span>铺开</span></h2>
+    <p class="phase-desc" id="heroPhaseDesc">主观题输出强化期</p>
 
     <div class="ratio">
      <span class="ratio-num">84</span>
@@ -2610,7 +2610,14 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
-  else if((cur._learnDay || cur.acc === null) && (cur.quizAttend || (cur._learnDay && (cur._learnN||0) > 0))) msg = '📖 今天是<b>学习日</b>：学习 <b>'+((cur._learnN||0) > 0 ? cur._learnN : (cur.quizRowDone||0))+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。';   /* V336 B1: 用 _learnN（此前用 c+w 的 quizRowDone -> 学习日恒 0 -> 分支永进不去） */   /* V232: 学习日不再劝「复盘空错题本」 */
+  else if((cur._learnDay || cur.acc === null) && (cur._learnN||0) > 0) msg = (function(){
+    var _ln = (cur._learnN||0), _lt = (cur.quizRowTgt||0);
+    var _capped = _lt > 0 && _ln >= _lt;
+    /* V338 2: 学习日**未达配额**不得说「今日答题完成」（修 8/12 仍宣称完成的 overclaim） */
+    return _capped
+      ? '📖 今天是<b>学习日</b>：学习 <b>'+_ln+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。'
+      : '📖 今天是<b>学习日</b>：已学习 <b>'+_ln+'/'+_lt+'</b> 题，还差 <b>'+(_lt-_ln)+'</b> 题。首遍学习不计正确率（所以环不亮是正常的），把配额学完今天就有交代。';
+  })();   /* V232: 学习日不再劝「复盘空错题本」 */
   else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满。'+(cur.wrongN===0? '今天这些多为<b>自评题</b>，不计入机器正确率；明天按 1–2 天回来做机器判分会自动把正确率拉回来 —— 今天已经够了，先休息。': ('正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+' 低于 60% ⇒ 不计入达标。先复盘<b>错题本 '+cur.wrongN+' 道</b>，再补正确率。'));  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
   else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（手动填 '+cur.selfHit+' 项，不计入）';
   else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';
@@ -2620,6 +2627,30 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    : '下一步：'+nx;  // V34: 兜底也量化
   if(cur.pass && !cur.reportOK){ msg += '<br><b style="color:#b45309">⚠️ 但今日报数未达标</b>（需默≥80/做≥60），报数区补上才算完整。'; }
   if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
+
+  /* V340: 静态 hero 阶段接真实 RAMP（修「11-28 后 PO-DAYS 说加速18 但 hero 仍 P2铺开」） */
+  try {
+    var _heroRamp = null;
+    for (var _hr = 0; _hr < RAMP.length; _hr++) {
+      if (T >= RAMP[_hr].from && T <= RAMP[_hr].to) { _heroRamp = RAMP[_hr]; break; }
+    }
+    if (_heroRamp) {
+      var _hIdx = RAMP.indexOf(_heroRamp) + 1;
+      var _hCode = $id('heroPhaseCode'), _hTitle = $id('heroPhaseTitle'), _hDesc = $id('heroPhaseDesc');
+      var _hCn = ['一','二','三','四','五'][_hIdx - 1] || String(_hIdx);
+      if (_hCode && _hCode.textContent !== 'PHASE 0' + _hIdx) _hCode.textContent = 'PHASE 0' + _hIdx;
+      if (_hTitle) {
+        var _want = '<b>P' + _hIdx + '</b><span>' + _heroRamp.step + '</span>';
+        if (_hTitle.innerHTML !== _want) _hTitle.innerHTML = _want;
+      }
+      if (_hDesc) {
+        var _descMap = { '起步': '主观题输出启动期', '铺开': '主观题输出强化期', '加速': '主观题输出加速期', '冲刺': '主观题输出冲刺期' };
+        var _wantD = _descMap[_heroRamp.step] || ('主观题输出' + _heroRamp.step + '期');
+        if (_hDesc.textContent !== _wantD) _hDesc.textContent = _wantD;
+      }
+    }
+  } catch(e) {}
+
 
   // 超额（真实多做的量，单独显示，不进完成度）
   var ext = cur.extra > 0 ? ('⚡ 超额 +'+cur.extra+'（真实多做的，不计入完成度以免虚报；⚠️ 超额只算本项，不抵其他项欠账）') : '';
