@@ -2626,6 +2626,15 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       var _dd = _qobj.days || {};
       for (var _k in _dd) { if (((_dd[_k] || {}).a || 0) > 0) _srcDates[_k] = 1; }
     } catch(e){}
+    /* b0) MOTIV 存储：真实墨墨在 dsh.347.motiv.v3.days[日期]（**嵌套 days**，V355 修） */
+    try {
+      var _mv = JSON.parse(localStorage.getItem('dsh.347.motiv.v3') || '{}');
+      var _mvd = (_mv && _mv.days) || {};
+      for (var _mk in _mvd) {
+        var _mrow = _mvd[_mk] || {};
+        for (var _mf in _mrow) { if ((+_mrow[_mf] || 0) > 0) { _srcDates[_mk] = 1; break; } }
+      }
+    } catch(e){}
     /* b) 墨墨 / 手报门：扫描所有 dsh.347.* 存储里的 {日期: {键: 数值}} 形状（V350: 修 loadD 未定义） */
     try {
       for (var _si = 0; _si < localStorage.length; _si++) {
@@ -2646,7 +2655,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     /* c) 报数（report） */
     try {
       var _Robj = JSON.parse(localStorage.getItem('dsh.347.report.v1') || '{}') || {};
-      for (var _k4 in _Robj) { var _rr = _Robj[_k4] || {}; if ((+_rr.mo || 0) > 0 || (+_rr.zuo || 0) > 0) _srcDates[_k4] = 1; }
+      for (var _k4 in _Robj) { var _rr = _Robj[_k4] || {}; if ((+_rr.mo || 0) > 0 || (+_rr.do || 0) > 0 || (+_rr.zuo || 0) > 0) _srcDates[_k4] = 1; }   /* V355: do 是真字段，zuo 保留兼容 */
     } catch(e){}
     var _allDates = Object.keys(_srcDates).sort();
     var _lastD = _allDates.length ? _allDates[_allDates.length - 1] : null;
