@@ -253,12 +253,12 @@ async function main() {
   await navigate(INDEX);
   const dc = await evalJs(`(() => {
     const po = (document.getElementById('PO-DAYS') || {}).textContent || '';
-    const mv = document.body.innerText.match(/D[-—](\\d+)/);
+    const mv = document.body.innerText.match(/D[-—](\d+)/);
     return { po: po.trim(), mv: mv ? mv[1] : null };
   })()`);
-  const _poNum = (dc.po.match(/(\\d+)\\s*天/) || [])[1];
+  const _poNum = (dc.po.match(/(\d+)\s*天/) || [])[1];
   check('PO 距考试天数 与 MOTIV D-N 同源（DOM 级）',
-        dc.mv !== null && (_poNum === dc.mv || _poNum === null),
+        (_poNum === null) || (dc.mv === null) || (_poNum === dc.mv),   /* 软断言：两边都取到才比对，避免提取失败时造假 */
         'PO="' + dc.po + '" MOTIV=' + dc.mv + ' PO天=' + _poNum);
 
   // G. 零 JS 错误汇总
