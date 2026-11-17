@@ -2589,11 +2589,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   var CLAUSE_SPLIT_RE = /[；;。！!]/;
   function answerClauses(ans) {
     var raw = String(ans || '').split(CLAUSE_SPLIT_RE), out = [];
-    for (var i = 0; i < raw.length; i++) { if (normTxt(raw[i])) out.push(raw[i]); }
+    for (var i = 0; i < raw.length; i++) {
+      if (!normTxt(raw[i])) continue;
+      /* V191 P0-3: 过滤「纯学习指令句」（如「…背下来」「记关键词」），避免学生写对内容反而不过 */
+      var _stripped = String(raw[i]).replace(ANS_NOISE_RE, '').trim();
+      if (!normTxt(_stripped)) continue;                 /* 整句都是指令 -> 跳过 */
+      out.push(raw[i]);
+    }
     if (!out.length) out.push(String(ans || ''));
     return out;
   }
   function clauseRatio(clause, txt) {
+    /* V191 P0-3: 比对前两侧都剥掉学习指令词，让「只写内容」也能命中 */
+    try { clause = String(clause || '').replace(ANS_NOISE_RE, ''); txt = String(txt || '').replace(ANS_NOISE_RE, ''); } catch(e){}
     /* V177: 改「最长公共子串」连续匹配（子序列会把「只写 1/3」误判成全中） */
     var a = normTxt(clause || ''), t = normTxt(txt || '');
     if (!a || !t) return 0;
@@ -2867,12 +2875,32 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var h = p.hits || kwHits(q, p.text || '');
     var cov = 0;
     try { cov = ansCoverage(q, p.text || ''); } catch(e){ cov = 0; }
-    /* V173: pass/partial 由分句覆盖决定（顺序无关） */
     var cc = { total: 0, hit: 0, ratio: 0, items: [] };
     try { cc = clauseCover(q, p.text || ''); } catch(e){}
-    var cov = cc.ratio;
-    var _pass = cc.ratio >= 1.0;   /* V180 P0: 必须命中**全部**答案分句（0.80 允许漏 1/5 句=假掌握） */
-    var _partial = (!_pass && cc.ratio >= 0.30);
+    /* V190: 双放行路径
+       A. 分句全覆盖（逐句 ≥75% 命中）—— 防漏整句/防作弊
+       B. 术语全覆盖（答案内 kw 全部出现 + 长度 ≥ 答案 25%）—— 对齐「要点齐全即可」与考试按术语给分
+       任一满足即 pass；partial 供模糊档 */
+    var _passA = (cc.ratio >= 1.0);
+    var _normAns = normTxt(q && q.ans || '');
+    var _normTxtP = normTxt(p && p.text || '');
+    var _kws = [];
+    try {
+      var _rawKw = (q && q.kw) || [];
+      for (var _ki = 0; _ki < _rawKw.length; _ki++) {
+        var _nk = normTxt(_rawKw[_ki]);
+        if (_nk && _normAns.indexOf(_nk) >= 0) _kws.push(_nk);
+      }
+    } catch(e){ _kws = []; }
+    var _kHit = 0;
+    for (var _kj = 0; _kj < _kws.length; _kj++) {
+      if (_normTxtP.indexOf(_kws[_kj]) >= 0) _kHit++;
+    }
+    var _lenOk = _normTxtP.length >= Math.max(4, Math.ceil(_normAns.length * 0.25));
+    var _passB = (_kws.length > 0) && (_kHit >= _kws.length) && _lenOk;
+    var _pass = _passA || _passB;
+    var _kwRatio = _kws.length ? (_kHit / _kws.length) : 0;
+    var _partial = (!_pass && (cc.ratio >= 0.30 || _kwRatio >= 0.50));
     return { auto: true, pass: _pass, partial: _partial, cov: cov,
              hit: h.hit, total: (ek && ek.length) || h.total || 0 };
   }
@@ -3086,17 +3114,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     var wasMastered = !!r.mastered;
     if (detail && detail.regrade) {
-      var prev = r.lastOutcome;
-      if (prev === 'ok') r.ok = Math.max(0, r.ok - 1);
-      else if (prev === 'bad') { r.bad = Math.max(0, r.bad - 1); r.wrong = Math.max(0, r.wrong - 1); }
-      else if (prev === 'fuzzy') r.fuzzy = Math.max(0, r.fuzzy - 1);
-      // 当天计数同步回退：改判不是「又答了一次」
-      var dd = progress.days[TODAY];
-      if (dd) {
-        if (prev === 'ok') dd.c = Math.max(0, (dd.c || 0) - 1);
-        else if (prev === 'bad') dd.w = Math.max(0, (dd.w || 0) - 1);
-        progress.days[TODAY] = dd;
-      }
+      /* V191 P0-2: 改判**只改排期，不改历史计数**（失败不能被按钮抹除） */
     }
     if (wasMastered) {
       // 30 天抽查：过了继续挂 30 天，没过打回当天重学（MEMORY_LOGIC 统一：忘/模糊都当天再现）
@@ -3138,10 +3156,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
       } else if (outcome === 'ok' && !r._okCountedToday) {
         /* V175: 当天重做改判对 —— 补记正确率并回退错题计数，避免 done 100% 与首页 0% 打架 */
+        /* V191 P0-2: 失败历史只增不减 —— 重做答对只补正确率，不回退 bad/wrong/w（错题本才有意义） */
         d.c = (+d.c || 0) + 1; r._okCountedToday = true;
-        if ((r.bad || 0) > 0) r.bad = Math.max(0, r.bad - 1);
-        if ((r.wrong || 0) > 0) r.wrong = Math.max(0, r.wrong - 1);
-        d.w = Math.max(0, (+d.w || 0) - 1);
         progress.days[TODAY] = d;
       }
     }
@@ -3948,6 +3964,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     afterGradeScroll();
   }
   function grade(outcome) {
+    /* V191 P0-1: 任何入口进入 grade 前若还没快照，立即冻结当前判分（含 Ctrl+Enter 路径） */
+    try {
+      var _qG = currentQ();
+      if (_qG && typeof S !== 'undefined' && S.pend && S.pend[_qG.id]) {
+        var _pG = S.pend[_qG.id];
+        if (_pG && !_pG._scSnap) {
+          _pG._scSnap = scoreOf(_qG, _pG);
+          _pG._ccSnap = clauseCover(_qG, _pG.text || '');
+        }
+      }
+    } catch(e){}
     try{ var _cq0 = currentQ(); var _sp = _cq0 ? S.pend[_cq0.id] : null; if (_sp && _sp.skipGrade) { return; } }catch(e){}   /* V158 P0: 空答只揭晓，按题 id 查 skipGrade */
     /* V161 P0 硬门：非选择题 + 文本为空 + 判 ok => 拒绝记账（封死空答伪造 8/8·100%） */
     try{
@@ -4182,7 +4209,10 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         var _sc = scoreOf(_q, pp);
         try { pp._scSnap = _sc; pp._ccSnap = clauseCover(_q, pp.text || ''); } catch(e){}   /* V183 P0-A: 冻结 */
         try { var _rk = KP(_q); if (progress.q[_rk]) { delete progress.q[_rk].draft; saveProgress(); } } catch(e){}   /* V187 P0-A: 揭晓即清草稿 */
-        if (_sc.auto && !_sc.pass && !pp.restored) {
+        /* V191 P0-5: 首次接触（无任何历史记录）视为「学习模式」——揭晓不记 bad，不进错题本 */
+        var _firstTouch = false;
+        try { var _rc5 = rec(_q); _firstTouch = !(_rc5 && (_rc5.seen || _rc5.ok || _rc5.bad || _rc5.fuzzy || _rc5.wrong)); } catch(e){}
+        if (_sc.auto && !_sc.pass && !pp.restored && !pp.practice && !_firstTouch) {   /* V191 P0-4: 练习模式不写库 */
           /* V169: 三档 —— 部分命中(30%~55%)记「模糊」不惩罚；<30% 才记「不记得」
              且不再排回（排回的是锁定卡，只会白增步数，属假承诺） */
           var _outc = _sc.partial ? 'fuzzy' : 'bad';
@@ -4466,6 +4496,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _doneByRec = !!(_recJ && _recJ.last === TODAY && _recJ.lastOutcome);
           if ((_pJ && _pJ.selfEvalDone) || _doneByRec) {
             if (box) box.innerHTML = '<b>本题已自评过</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天这题只记一次，明天按排期回来。</div>';
+            return;
+          }
+          var _pJp = (typeof ensurePending === 'function') ? ensurePending() : null;
+          if (_pJp && _pJp.practice) {   /* V191 P0-4: 练习模式自评不写库 */
+            if (box) box.innerHTML = '<b>练习模式</b><div style="font-size:13px;color:#6b7280;margin-top:6px">只看对错与解析，不记分、不改排期。</div>';
             return;
           }
           var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
