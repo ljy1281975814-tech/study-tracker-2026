@@ -2062,7 +2062,7 @@
 .pt:last-child{border-bottom:0}
 .pt-i{font-family:var(--mono);font-size:11px;color:var(--muted)}
 .pt-t{overflow-wrap:anywhere}
-.pt-k{font-size:11px;color:var(--muted);white-space:nowrap;max-width:42%;overflow:hidden;text-overflow:ellipsis}
+.pt-k{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;min-width:52px;text-align:right;flex:0 0 auto}
 .pt.is-on .pt-i{color:var(--ok-deep);font-weight:700}
 .pt.is-on .pt-k{color:var(--ok-deep)}
 .roll--quiet{border-color:var(--line-soft)}
@@ -3051,7 +3051,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var r = _r0, done = answeredToday(q) && _lockByOk && !(S.session && S.session.practice);
     var p = {
       sel: (r && r.lastSel) || [],
-      text: (r && r.draft) || '',
+      text: (r && r.draft && !(r.last === TODAY && r.lastOutcome)) ? r.draft : '',   /* V187 P0-A: 今日已判过不预填（防「看答案→重进→直接熟知」） */
       revealed: !!done,
       restored: !!done,
       revisit: false,
@@ -3234,7 +3234,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="advice-title">' + nc.l.s + ' · 第' + nc.l.c + '章 ' + esc(nc.l.name) + '</div>' +
       '<p>新题 <b>' + n + ' 道</b> · 本章已答 <b>' + seenIn + '/' + kps.length + '</b> 考点（' +
       chapterItems(nc.l.s, nc.l.c).length + ' 题）· 手册卡 ' + nc.l.a + '–' + nc.l.b + '</p>' +
-      '<p class="advice-order">先清到期 ' + dueN + ' 题（全库口径；今日队列仅 ' + MAXQ + '）' + '，再进本章；答对按间隔回队列（次日起 1/3/7/14/26 天），不记得或模糊的题插回当天后续，隔 3 道再练。</p></div>';
+      '<p class="advice-order">先清到期 ' + dueN + ' 题（全库口径；今日队列仅 ' + MAXQ + '）' + '，再进本章；答对按间隔回队列（次日起 1/3/7/14/26 天），不记得或模糊的题按排期明天再来。</p></div>';
   }
   function entriesHTML(due, ws, last) {
     var _rd = realDueItems().length; var sched = _rd ? '今天有 ' + _rd + ' 道待复习题' : '今天待复习 0 道';
@@ -3429,7 +3429,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var hitsHTML = '';
     /* V174: 与判分完全同源 —— 用 clauseCover 渲染「答案分句命中」，不再用 pointHits（它少算、与判分两张皮） */
     var _ccDisp = null;
-    try { _ccDisp = p._ccSnap || ((!isChoice(q)) ? clauseCover(q, p.text || '') : null); } catch(e){ _ccDisp = null; }   /* V183: 用揭晓快照 */
+    try {
+      /* V187 P0-B: 优先用「判定时快照」；restored 读记录里的 ccHit/ccTotal（判后编辑不改口径） */
+      if (p._ccSnap) { _ccDisp = p._ccSnap; }
+      else if (p.restored && r && typeof r.ccTotal === 'number' && r.ccTotal > 0) {
+        _ccDisp = { total: r.ccTotal, hit: (r.ccHit || 0), ratio: r.ccTotal ? (r.ccHit || 0) / r.ccTotal : 0, items: [] };
+      } else { _ccDisp = (!isChoice(q)) ? clauseCover(q, p.text || '') : null; }
+    } catch(e){ _ccDisp = null; }
     if (_ccDisp && _ccDisp.total > 0 && !p.selfEvalDone) {
       var _passLine = _ccDisp.ratio >= 1.0;
       hitsHTML = '<div class="pts"><div class="pts-h">答案分句 ' + _ccDisp.total + ' 句 · 命中 ' + _ccDisp.hit +
@@ -4002,6 +4008,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     p.outcome = outcome;
     p.graded = true;
+    /* V187 P0-B: 判定时把命中快照写进记录 —— restored 显示只读快照，判后编辑不影响结果卡 */
+    try {
+      var _rk2 = KP(q);
+      if (progress.q[_rk2]) {
+        var _ccS = p._ccSnap || clauseCover(q, p.text || '');
+        progress.q[_rk2].ccHit = _ccS.hit; progress.q[_rk2].ccTotal = _ccS.total;
+      }
+    } catch(e){}
     if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
     if (S.session && !p.practice && outcome !== 'ok') {
       /* V181: 取消「已排回今天第N题」假承诺（插回的是锁定卡，点进去不能重做，只增空步数） */
@@ -4155,7 +4169,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (pp.restored) { toast('这张卡今天已经判过了。'); break; }
         // V155: 空作答不记账——只揭晓看答案，不判负、不进错题本、不排回
         if (!pp.text || !normTxt(pp.text)) {
-          try{ toast('空作答：只揭晓看答案，本次不记分（不计入正确率）'); }catch(e){}
+          try{ toast('自评：本次已记录（不计入正确率）'); }catch(e){}
           pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
           pp.skipGrade = true;
           render();
@@ -4167,6 +4181,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         recordTiming(_q, timerSec()); timerPause();
         var _sc = scoreOf(_q, pp);
         try { pp._scSnap = _sc; pp._ccSnap = clauseCover(_q, pp.text || ''); } catch(e){}   /* V183 P0-A: 冻结 */
+        try { var _rk = KP(_q); if (progress.q[_rk]) { delete progress.q[_rk].draft; saveProgress(); } } catch(e){}   /* V187 P0-A: 揭晓即清草稿 */
         if (_sc.auto && !_sc.pass && !pp.restored) {
           /* V169: 三档 —— 部分命中(30%~55%)记「模糊」不惩罚；<30% 才记「不记得」
              且不再排回（排回的是锁定卡，只会白增步数，属假承诺） */
