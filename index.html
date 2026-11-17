@@ -2262,6 +2262,18 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  // MOTIV_V3_20261115
  var KEY = 'dsh.347.motiv.v3', KEY_OLD = 'dsh.347.daily', KEY_Q = 'dsh.347.quiz.v3';
  var EXAM = '2026-12-19', START = '2026-11-11', END = '2026-12-18';
+ /* V265 B2: 首次使用日自记（不再依赖 quiz days，修「真首日仍欠 56」） */
+ var KEY_FIRST = 'dsh.347.firstuse';
+ var FIRSTUSE = (function () {
+   try {
+     var _v = localStorage.getItem(KEY_FIRST);
+     if (_v) return _v;
+     var _t = new Date(); _t.setHours(_t.getHours() - 4);
+     var _s = _t.getFullYear() + '-' + ('0'+(_t.getMonth()+1)).slice(-2) + '-' + ('0'+_t.getDate()).slice(-2);
+     localStorage.setItem(KEY_FIRST, _s);
+     return _s;
+   } catch(e) { return null; }
+ })();
  var TOTAL_Q = 614, CUTOFF = 4;
  var RAMP = [
   { step:'起步', from:'2026-11-11', to:'2026-11-17', q:8 },
@@ -2485,7 +2497,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   try {
     var _ks = Object.keys(QD || {}), _first = null;
     for (var _i = 0; _i < _ks.length; _i++) { if (!_first || String(_ks[_i]) < String(_first)) _first = _ks[_i]; }
-    if (_first && String(_first) > String(START)) d = _first;
+    /* V265 B2: 起点 = max(START, FIRSTUSE, 最早 quiz 日) —— 真首日不再欠 56 */
+    var _cand = [String(START)];
+    try { if (typeof FIRSTUSE !== 'undefined' && FIRSTUSE) _cand.push(String(FIRSTUSE)); } catch(e){}
+    if (_first) _cand.push(String(_first));
+    _cand.sort();
+    d = _cand[_cand.length - 1];
   } catch(e){}
   while(d <= T){
    planned += stageOf(d).q;
