@@ -375,6 +375,56 @@ async function main() {
         m4.achieved === false && m4b.machineDone === 8 && m4b.gateDone === 8,   /* V353: 混合日门必须显示 c+w=8，不是 days.a=20 */
         'achieved=' + m4.achieved + ' machineDone=' + m4b.machineDone + ' gateDone=' + m4b.gateDone);
 
+  // M5/M6. 【恢复日断言】B 方指出的盲区：禁掉整段 recovery 逻辑此前仍 16/16 PASS
+  // M5: 恢复日门目标必须 = 3 题 / 30 词
+  await navigate(INDEX);
+  const seedM5 = await evalJs(`(() => {
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    /* 造断档：只在 3 天前有学习记录；firstuse 设成 3 天前（避免新用户守卫误拦） */
+    const d3 = new Date(T + 'T00:00:00'); d3.setDate(d3.getDate() - 3);
+    const D3 = d3.toISOString().slice(0,10);
+    localStorage.removeItem('dsh.347.recovery.v1');
+    localStorage.setItem('dsh.347.firstuse', D3);
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:{}, days: { [D3]: { a:8, c:5, w:2, la:1, sj:0 } } }));
+    return T;
+  })()`);
+  await navigate(INDEX);
+  const m5 = await evalJs(`(() => {
+    const gs = [...document.querySelectorAll('#mv-gates .mv-gate')];
+    const txts = gs.map(g => (g.textContent||'').replace(/\s+/g,''));
+    const req = gs.filter(g => !/不要求/.test(g.textContent||'')).map(g => (g.textContent||'').replace(/\s+/g,''));
+    const coach = (document.getElementById('mv-coach')||{}).innerText || '';
+    return { total: gs.length, reqN: req.length, req: req, coach: coach.slice(0, 80),
+             recov: localStorage.getItem('dsh.347.recovery.v1') };
+  })()`);
+  check('M5 恢复日门目标 = 3 题 / 30 词（禁 recovery 逻辑必 FAIL）',
+        m5.reqN === 2 && m5.req.some(function(x){ return /\/3/.test(x); }) && m5.req.some(function(x){ return /\/30/.test(x); }) && /欢迎回来/.test(m5.coach),
+        'reqN=' + m5.reqN + ' req=' + JSON.stringify(m5.req) + ' coach=' + m5.coach.slice(0, 40));
+
+  // M6: 恢复日完成 3 题 + 30 词 -> 环必须 100%（绿）、coach 含「重启完成」
+  await evalJs(`(() => {
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    const q = {};
+    for (let i = 1; i <= 3; i++) q['px-4-' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:q, days: { [T]: { a:3, c:3, w:0, la:0, sj:0 } , ...JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}').days } }));
+    /* 墨墨 30（真实键 motiv.v3.days[T].背） */
+    let mv = {}; try { mv = JSON.parse(localStorage.getItem('dsh.347.motiv.v3') || '{}'); } catch(e){}
+    mv.days = mv.days || {}; mv.days[T] = mv.days[T] || {}; mv.days[T]['背'] = 30;
+    localStorage.setItem('dsh.347.motiv.v3', JSON.stringify(mv));
+    return 1;
+  })()`);
+  await navigate(INDEX);
+  const m6 = await evalJs(`(() => {
+    const pct = document.getElementById('mv-pct');
+    const coach = (document.getElementById('mv-coach')||{}).innerText || '';
+    return { pct: pct ? pct.textContent : '', color: pct ? pct.style.color : '', coach: coach.slice(0, 60) };
+  })()`);
+  check('M6 恢复日完成 3 题+30 词 -> 环 100% 且 coach 含「重启完成」',
+        String(m6.pct).indexOf('100') >= 0 && /重启完成/.test(m6.coach),
+        'pct="' + m6.pct + '" color=' + m6.color + ' coach=' + m6.coach.slice(0, 30));
+
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
 
