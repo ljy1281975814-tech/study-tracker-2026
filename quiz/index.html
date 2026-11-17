@@ -2546,6 +2546,32 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return total ? hit / total : 0;
   }
 
+  /* V172: LCS 比例 —— 「答案有多少字按顺序被写出来」
+     比 2-gram 覆盖率和 pointHits 都稳：不依赖关键词表质量，也不惩罚正确照抄 */
+  function ansLcs(q, txt) {
+    var a = normTxt(q && q.ans || ''), t = normTxt(txt || '');
+    if (!a || !t) return 0;
+    if (a.length <= 4) return (t.indexOf(a) >= 0) ? 1 : 0;
+    var n = a.length, m = t.length;
+    if (n * m > 4000000) {   /* V172b: 护栏放宽（此前长答案照抄被误判 0）*/
+      var hits = 0, step = Math.max(1, Math.floor(n / 40));
+      for (var s = 0; s < n; s += step) { if (t.indexOf(a.substr(s, 2)) >= 0) hits++; }
+      return hits / Math.ceil(n / step);
+    }
+    var prev = new Array(m + 1), cur = new Array(m + 1);
+    for (var j0 = 0; j0 <= m; j0++) { prev[j0] = 0; cur[j0] = 0; }
+    for (var i = 1; i <= n; i++) {
+      var ai = a.charAt(i - 1);
+      cur[0] = 0;
+      for (var j = 1; j <= m; j++) {
+        cur[j] = (ai === t.charAt(j - 1)) ? (prev[j - 1] + 1)
+               : (prev[j] > cur[j - 1] ? prev[j] : cur[j - 1]);
+      }
+      var tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[m] / n;
+  }
+
   function isChoice(q) { return q.t === '单选' || q.t === '多选'; }
   function isMulti(q) { return q.t === '多选'; }
 
@@ -2766,17 +2792,12 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var h = p.hits || kwHits(q, p.text || '');
     var cov = 0;
     try { cov = ansCoverage(q, p.text || ''); } catch(e){ cov = 0; }
-    /* V171 P0: pass 需同时「覆盖率够」+「得分点覆盖够」
-       —— 修「题干+1个得分点 / 首分句」被判答对（UI 显示命中 1/3 却答错不了） */
-    var _phPts = null;
-    try { _phPts = pointHits(q, p.text || ''); } catch(e){ _phPts = null; }
-    var _ptsTotal = (_phPts && _phPts.total) || 0;
-    var _ptsHit = (_phPts && _phPts.hit) || 0;
-    var _ptsNeed = _ptsTotal > 0 ? Math.ceil(_ptsTotal * 0.6) : 0;
-    var _ptsOk = (_ptsTotal === 0) ? true : (_ptsHit >= _ptsNeed);
-    var _covPass = cov >= 0.65;
-    var _pass = _covPass && _ptsOk;
-    var _partial = (!_pass && (cov >= 0.30));
+    /* V172: pass = LCS 比例（答案按序写出多少）；不再用 pointHits 门（它本身少算） */
+    var cov = 0, _lcs = 0;
+    try { cov = ansCoverage(q, p.text || ''); } catch(e){ cov = 0; }
+    try { _lcs = ansLcs(q, p.text || ''); } catch(e){ _lcs = 0; }
+    var _pass = _lcs >= 0.70;   /* V172b: 0.60->0.70，多句答案首分句误判 8.0%->2.7% */
+    var _partial = (!_pass && _lcs >= 0.25);
     return { auto: true, pass: _pass, partial: _partial, cov: cov,
              hit: h.hit, total: (ek && ek.length) || h.total || 0 };
   }
