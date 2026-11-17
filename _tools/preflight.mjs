@@ -7,7 +7,13 @@
  *       固化成可复跑的断言，避免「改 A 坏 B」和「声称修但没生效」。
  *
  * 注意：本工具当前只覆盖「基础可用 + 空答不记账 + PO 累计 + 门不裁剪 + 0 JS」；
- *       三态穿透 / SE 双记 / 练习零写库 / 照抄批量 仍未覆盖（见 README「已知未覆盖」）。
+ *       三态穿透 / SE 双记 / 练习零写库 / 照抄批量 仍未覆盖
+ *
+ * ⚠️ 断言强度说明（2026-11-18）：
+ *   - **J 是本轮唯一真正有区分力的口径断言**（种子 a=8,c=3,sj=5 -> 期望 100%；
+ *     若 sj 未从分母排除则得 38%，J 会 FAIL）。已用它钉住 V306 的 P1-R01。
+ *   - K/L 曾试图做 DOM 级断言但提取器不稳（K 恒真、L 正则在模板字符串里转义失效），
+ *     **已删除而不保留假断言**；待重写为「真走完一轮到完成页并断言卡合计」的形式。（见 README「已知未覆盖」）。
  *
  * 用法：
  *   node _tools/preflight.mjs [--url http://127.0.0.1:18080] [--edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
@@ -217,49 +223,29 @@ async function main() {
   const parseOk = await evalJs(`(() => { const raw = localStorage.getItem('dsh.347.quiz.v3'); if (!raw) return 'no-key'; try { const p = JSON.parse(raw); return (p && typeof p === 'object' && p.q !== undefined) ? 'ok' : 'bad-shape'; } catch(e) { return 'bad-json'; } })()`);
   check('store JSON 可解析且结构正确', parseOk === 'ok', parseOk);
 
-  // J. 【DOM 级】文本照抄 → 三态「熟知」→ days.c 必须 +1（修过的 P1：文本熟知不进 days.c）
-  await navigate(QUIZ);
-  await evalJs('localStorage.clear(); 1');
-  await navigate(QUIZ);
-  const textFlow = await evalJs(`(async () => {
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-    const start = document.querySelector('[data-act="start"]');
-    if (!start) return { why: 'no-start' };
-    start.click();
-    await sleep(600);
-    // 跳到文本题
-    for (let i = 0; i < 15; i++) {
-      if (document.querySelector('textarea')) break;
-      const nx = document.querySelector('[data-act="next"]');
-      if (!nx) break;
-      nx.click(); await sleep(350);
-    }
-    const ta = document.querySelector('textarea');
-    if (!ta) return { why: 'no-textarea' };
-    return { ok: true };
-  })()`);
-
-  // K. 【DOM 级】完成页卡片合计 = 题数（不变量）
-  const doneInv = await evalJs(`(() => {
-    const st = document.querySelector('.done-stats');
-    if (!st) return { why: 'no-done' };
-    const bs = [...st.querySelectorAll('.done-stat b')].map(b => b.textContent.trim());
-    return { cards: bs };
-  })()`);
-  check('完成页统计卡结构可读（DOM 级）', Array.isArray(doneInv.cards) ? true : true,
-        'cards=' + (doneInv.cards ? doneInv.cards.join('|') : 'n/a'));
-
-  // L. 【DOM 级】index 倒计时与阶段同源（00:00-04:00 修过）
+  // ===== J/K：口径断言（种子注入 -> 读 index 渲染）=====
+  // J. 自评题次(sj)必须从正确率分母排除 —— 种 a=8,c=3,sj=5 期望 3/(8-0-5)=100%，若未排除则 3/8=38%
   await navigate(INDEX);
-  const dc = await evalJs(`(() => {
-    const po = (document.getElementById('PO-DAYS') || {}).textContent || '';
-    const mv = document.body.innerText.match(/D[-—](\d+)/);
-    return { po: po.trim(), mv: mv ? mv[1] : null };
+  const seedJ = await evalJs(`(() => {
+    const KEY = 'dsh.347.quiz.v3';
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    const p = { v: 3, q: {}, days: {} };
+    p.days[T] = { a: 8, c: 3, w: 0, la: 0, sj: 5 };
+    localStorage.setItem(KEY, JSON.stringify(p));
+    return T;
   })()`);
-  const _poNum = (dc.po.match(/(\d+)\s*天/) || [])[1];
-  check('PO 距考试天数 与 MOTIV D-N 同源（DOM 级）',
-        (_poNum === null) || (dc.mv === null) || (_poNum === dc.mv),   /* 软断言：两边都取到才比对，避免提取失败时造假 */
-        'PO="' + dc.po + '" MOTIV=' + dc.mv + ' PO天=' + _poNum);
+  await navigate(INDEX);
+  const accJ = await evalJs(`(() => {
+    const t = document.body.innerText;
+    const m = t.match(/(\d+)%/) || [];
+    return { txt: t.slice(0, 4000), pct: m[1] || null };
+  })()`);
+  // 断言：页面内出现 100%（或至少不出现 38%）
+  const has100 = /\b100\s*%/.test(accJ.txt) || accJ.txt.indexOf('100%') >= 0;
+  const has38 = accJ.txt.indexOf('38%') >= 0;
+  check('自评题次 sj 从正确率分母排除（a=8,c=3,sj=5 -> 100% 而非 38%）',
+        has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');

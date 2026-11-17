@@ -2369,7 +2369,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var n = (v && typeof v.a === 'number') ? v.a : (typeof v === 'number' ? v : null);
     var cn = (v && typeof v.c === 'number') ? v.c : 0;
     var ln2 = (v && typeof v.la === 'number') ? v.la : 0;   /* V227: learn 题次 */
-    if(n !== null && isFinite(n) && n >= 0){ out[d] = n; QD_ACC[d] = {a:n, c:cn, la:ln2}; }
+     var sj2 = (v && typeof v.sj === 'number') ? v.sj : 0;   /* V306: 自评题次 */
+    if(n !== null && isFinite(n) && n >= 0){ out[d] = n; QD_ACC[d] = {a:n, c:cn, la:ln2, sj:sj2}; }
    }
    // 最后兜底：只有当「顶层/包装层都没有 days」时，才用 q[*].last 估算（且不覆盖已有）
    if(!Object.keys(out).length && q.q){
@@ -2430,7 +2431,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    else if(rows[z].k === '背'){ inkRow = rows[z]; }
   }
   var qa = QD_ACC[s] || null;
-  var _den2 = qa ? (qa.a - (qa.la || 0)) : 0;
+  var _den2 = qa ? (qa.a - (qa.la || 0) - (qa.sj || 0)) : 0;   /* V306: 排除 学习(la)+自评(sj) */
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? (qa.c / _den2) : null;   /* V227: learn 不计入正确率分母（修「新学日被判 0%」） */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
