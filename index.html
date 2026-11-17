@@ -2626,12 +2626,21 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       var _dd = _qobj.days || {};
       for (var _k in _dd) { if (((_dd[_k] || {}).a || 0) > 0) _srcDates[_k] = 1; }
     } catch(e){}
-    /* b) 墨墨 / 手报门（D 存储） */
+    /* b) 墨墨 / 手报门：扫描所有 dsh.347.* 存储里的 {日期: {键: 数值}} 形状（V350: 修 loadD 未定义） */
     try {
-      var _Dobj = loadD();
-      for (var _k2 in (_Dobj || {})) {
-        var _row = _Dobj[_k2] || {};
-        for (var _k3 in _row) { if ((+_row[_k3] || 0) > 0) _srcDates[_k2] = 1; }
+      for (var _si = 0; _si < localStorage.length; _si++) {
+        var _sk = localStorage.key(_si);
+        if (!_sk || _sk.indexOf('dsh.347.') !== 0) continue;
+        if (_sk.indexOf('quiz.v3') >= 0 || _sk.indexOf('report.v1') >= 0 || _sk.indexOf('recovery') >= 0) continue;
+        var _sv = null;
+        try { _sv = JSON.parse(localStorage.getItem(_sk) || 'null'); } catch(e){ continue; }
+        if (!_sv || typeof _sv !== 'object') continue;
+        for (var _dk in _sv) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(_dk)) continue;
+          var _row = _sv[_dk];
+          if (!_row || typeof _row !== 'object') continue;
+          for (var _fk in _row) { if ((+_row[_fk] || 0) > 0) { _srcDates[_dk] = 1; break; } }
+        }
       }
     } catch(e){}
     /* c) 报数（report） */

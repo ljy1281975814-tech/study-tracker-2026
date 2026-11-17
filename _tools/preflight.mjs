@@ -335,7 +335,8 @@ async function main() {
   await evalJs(`(() => {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
-    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:{}, days: { [T]: { a:12, c:0, w:0, la:12, sj:0 } } }));
+    /* V353: 混合日（非学习日）—— 才能咬住 c+w 回归（纯学习日会被 learn 文案掩盖） */
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:{}, days: { [T]: { a:20, c:8, w:0, la:12, sj:0 } } }));
     return T;
   })()`);
   await navigate(INDEX);
@@ -346,9 +347,31 @@ async function main() {
     const achieved = /答题已达标/.test(t);
     return { done: gate[1] ? +gate[1] : null, tgt: gate[2] ? +gate[2] : null, achieved: achieved, learnGate: learnGate };
   })()`);
+  /* V352: 独立取 machineDone(c+w) 与门 cls，避开模板转义 */
+  const m4b = await evalJs(`(() => {
+    var md = 0;
+    try {
+      var st = window.__DSH_STATE ? window.__DSH_STATE() : null;
+      var dd = (st && st.days && st.days[st.today]) || {};
+      md = (+dd.c || 0) + (+dd.w || 0);
+    } catch(e){}
+    var gateOk = null, gateDone = null;
+    try {
+      var gs = document.querySelectorAll('#mv-gates .mv-gate');
+      for (var gi = 0; gi < gs.length; gi++) {
+        if ((gs[gi].textContent || '').indexOf('答题') >= 0) {
+          var gxx = gs[gi].querySelector('.gx');
+                    var _txt = (gxx ? gxx.textContent : '') || ''; var _parts = _txt.split('/'); if (_parts.length >= 2) { gateDone = parseInt(_parts[0].replace(/[^0-9]/g, ''), 10); }
+          if (mm2) gateDone = parseInt(mm2[1], 10);
+          break;
+        }
+      }
+    } catch(e){}
+    return { machineDone: md, gateOk: gateOk, gateDone: gateDone };
+  })()`);
   check('M4 空揭晓 12 次（la=12）-> 门不是机判达标（学习日态，钉死 V328 的 c+w）',
-        m4.achieved === false && (m4.done === 0 || m4.learnGate === true),
-        'gate=' + m4.done + '/' + m4.tgt + ' achieved=' + m4.achieved + ' learnGate=' + m4.learnGate);
+        m4.achieved === false && m4b.machineDone === 8 && m4b.gateDone === 8,   /* V353: 混合日门必须显示 c+w=8，不是 days.a=20 */
+        'achieved=' + m4.achieved + ' machineDone=' + m4b.machineDone + ' gateDone=' + m4b.gateDone);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
