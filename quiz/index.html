@@ -4154,6 +4154,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     function _judge(ok) {
       var box = document.getElementById('SE-BOX');
       if (box) box.innerHTML = '<b>' + (ok ? '✅ 记为会' : '❌ 记为不会，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对（不计分，避免自评不诚实）</div>';
+      // V147(P1): 点「想出来了✓」= 用户已掌握 → 把答案填进 pending.text，reveal 判分必对（不再误判 bad）
+      try {
+        if (ok) {
+          var _p = ensurePending();
+          var _q2 = currentQ();
+          if (_p && _q2) { _p.text = String(_q2.ans || ''); _p.selfOk = true; }
+        }
+      } catch (e) {}
       try {
         var b = document.querySelector('[data-act="reveal"]') || document.querySelector('.bar-primary') || document.querySelector('button[id*="reveal"]');
         if (b) b.click();
