@@ -231,7 +231,7 @@ async function main() {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
     const p = { v: 3, q: {}, days: {} };
-    p.days[T] = { a: 12, c: 9, w: 0, la: 0, sj: 3 };   /* V327: a=12 覆盖起步8/铺开12 两档，脱日期脆弱 */
+    p.days[T] = { a: 15, c: 12, w: 0, la: 0, sj: 3 };   /* V328: c+w=12 满足达标, acc=12/(15-3)=100%(未排除sj则80%) */
     localStorage.setItem(KEY, JSON.stringify(p));
     return T;
   })()`);
@@ -245,7 +245,7 @@ async function main() {
   const _pctJ1 = await evalJs(`(() => { const e = document.getElementById('mv-pct'); return e ? (e.textContent||'').trim() : ''; })()`);
   const has100 = /\b100\s*%/.test(accJ.txt) || accJ.txt.indexOf('100%') >= 0;
   const has38 = accJ.txt.indexOf('38%') >= 0;
-  check('自评题次 sj 从正确率分母排除（a=12,c=9,sj=3 -> 100% 而非 75%）',
+  check('自评题次 sj 从正确率分母排除（a=15,c=12,sj=3 -> 100% 而非 80%）',
         has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
   // J2（自校验对·相对断言）：sj=0 时的 ring 百分比必须与 J1(sj=5) 不同
   // 若 sj 未从正确率分母排除，两次 ring 相同 -> 本断言 FAIL
