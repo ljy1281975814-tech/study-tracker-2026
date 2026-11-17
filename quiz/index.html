@@ -4569,7 +4569,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         break;
       }
       case 'grade': grade(arg);
-      case 'rate': {
+      break;   /* V261 1: 补 break（V255 漏掉 -> 掉入 case rate 双记下一题） */
+case 'rate': {
         /* V255: 三态自评独立通道 —— 高覆盖但未达线的卡，由用户自评；不写 lastOutcome 为 ok 的「机器判对」
            ok: 记 ok 但打 selfJudged 标记（绕过 V167 硬门）；fuzzy/forgot: 正常记 */
         try {
@@ -4578,6 +4579,20 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           if (!_qr || !_pr) return;
           if (_pr.outcome) { nextQuestion(); return; }
           var _argR = arg || 'fuzzy';
+          /* V261 2: 自评「ok」必须**全部答案分句命中**（防漏整句也能自评放水） */
+          var _ccR = null;
+          try { _ccR = clauseCover(_qr, _pr.text || ''); } catch(e){ _ccR = null; }
+          var _fullR = !!(_ccR && _ccR.total > 0 && _ccR.hit >= _ccR.total);
+          if (_argR === 'ok' && !_fullR) {
+            /* 未全命中：只能按模糊记，不能自评「会」 */
+            applyGrade(_qr, 'fuzzy', { text: _pr.text, sel: _pr.sel, selfJudged: true });
+            _pr.outcome = 'fuzzy'; _pr.graded = true;
+            try { if (S.session) S.session.answered++; } catch(e){}
+            try { toast('答案分句命中 ' + (_ccR ? _ccR.hit + '/' + _ccR.total : '0/0') + '：只能记「模糊」，写全要点后才能自评「熟知」'); } catch(e){}
+            try { delete _pr.needSelfJudge; } catch(e){}
+            saveProgress(); nextQuestion();
+            break;
+          }
           if (_argR === 'ok') {
             var _gR = applyGrade(_qr, 'ok', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             try {
@@ -4585,8 +4600,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               if (progress.q[_rkR]) { progress.q[_rkR].selfJudged = TODAY; progress.q[_rkR].selfJudgedOk = 1; }
             } catch(e){}
             _pr.outcome = 'ok'; _pr.graded = true;
-            try { if (S.session) { S.session.answered++; S.session.right++; } } catch(e){}
-            try { toast('已自评为「熟知」（本题判分未达线，按自评记为会）'); } catch(e){}
+            try { if (S.session) { S.session.answered++; } } catch(e){}   /* V261 2: 自评 ok 不计入 session.right（正确率不虚高） */
+            try { toast('已自评为「熟知」（本题判分未达线，按自评记为会；不计入正确率）'); } catch(e){}
           } else if (_argR === 'fuzzy') {
             applyGrade(_qr, 'fuzzy', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             _pr.outcome = 'fuzzy'; _pr.graded = true;
@@ -4632,6 +4647,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         var uq = BY[arg], ur = uq ? rec(uq) : null;
         if (uq && ur) {
           ur.mastered = false; ur.interval = 1; ur.due = addDays(TODAY, 1);
+          ur.last = TODAY; ur.lastAt = new Date().toISOString();   /* V261 3: 更新 last 让跨标签降级能传播 */
           saveProgress(); toast('已取消掌握：回到 1 天滚动，重新进错题本。'); render();
         }
         break;
@@ -4896,9 +4912,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (box) box.innerHTML = (_grLast && _grLast.learnt)
         ? '<b>📖 首遍学习过（不计分、不进错题本）</b><div style="font-size:13px;color:#6b7280;margin-top:6px">明天按排期回来做首次回忆。自评题不计入「真实答题」的正确率。</div>'
         : ('<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>');
+      /* V262: 不再合成点击 reveal（会走 submitAnswer 空答分支 -> session 双记）；直接标已揭示 */
       try {
-        var b = document.querySelector('[data-act="reveal"]') || document.querySelector('.bar-primary') || document.querySelector('button[id*="reveal"]');
-        if (b) b.click();
+        var _pr2 = (typeof ensurePending === 'function') ? ensurePending() : null;
+        if (_pr2) { _pr2.revealed = true; }
+        if (typeof render === 'function') render();
       } catch (e) {}
       try{ if (typeof render === 'function') render(); }catch(e){}
     }
