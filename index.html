@@ -2506,11 +2506,12 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _ks = Object.keys(QD || {}), _first = null;
     for (var _i = 0; _i < _ks.length; _i++) { if (!_first || String(_ks[_i]) < String(_first)) _first = _ks[_i]; }
     /* V265 B2: 起点 = max(START, FIRSTUSE, 最早 quiz 日) —— 真首日不再欠 56 */
-    var _cand = [String(START)];
-    try { if (typeof FIRSTUSE !== 'undefined' && FIRSTUSE) _cand.push(String(FIRSTUSE)); } catch(e){}
-    if (_first) _cand.push(String(_first));
-    _cand.sort();
-    d = _cand[_cand.length - 1];
+    /* V280 3: 起点以「最早 quiz 日」为主；无历史时才用 FIRSTUSE 兜底（修「已完成48/欠8」矛盾） */
+    if (_first) d = String(_first);
+    else {
+      try { if (typeof FIRSTUSE !== 'undefined' && FIRSTUSE) d = String(FIRSTUSE); } catch(e){}
+    }
+    if (String(d) < String(START)) d = START;
   } catch(e){}
   while(d <= T){
    planned += stageOf(d).q;

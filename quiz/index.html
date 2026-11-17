@@ -3752,9 +3752,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var ok = 0, bad = 0, fuzzy = 0;
     kpAll.forEach(function (q) { var r = rec(q); if (!r) return; ok += r.ok || 0; bad += r.bad || 0; fuzzy += r.fuzzy || 0; });
     var total = ok + bad + fuzzy;
-    var _laT = 0;
-    try { var _dT = progress.days[TODAY] || {}; _laT = (+_dT.la || 0); } catch(e){}
-    var _totalAll = total + _laT;   /* V268: 已答次数含今日学习题次（跨页与 index 一致） */
+    var _laT = 0, _allT = 0;
+    try {
+      var _dT = progress.days[TODAY] || {}; _laT = (+_dT.la || 0);
+      /* V279 2: 累计题次 = sum(days.*.a)（含历史学习日，跨页与 index 一致） */
+      for (var _dk2 in progress.days) { _allT += (+((progress.days[_dk2] || {}).a) || 0); }
+    } catch(e){}
+    var _totalAll = Math.max(total + _laT, _allT);   /* V279 2: 取累计与今日较大者 */
     var acc = total ? Math.round(ok / total * 100) : null;
     var ws = wrongStats();
     var wrongN = ws.rolling.length, masteredN = ws.mastered.length;
@@ -3834,7 +3838,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var s = S.session || { answered: 0, right: 0, start: Date.now() };
     var mins = Math.max(1, Math.round((Date.now() - s.start) / 60000));
     var _learnedN = s.learned || 0;
-    var _gradedN = Math.max(0, (s.answered || 0) - _learnedN);   /* V240 A2: 正式判分题次（排除学习）*/
+    var _gradedN = Math.max(0, (s.answered || 0) - _learnedN - (s.selfJudged || 0));   /* V281 F6: 正式判分题次（排除学习 + 自评）*/
     var acc = _gradedN ? Math.round(s.right / _gradedN * 100) : 0;
     return masthead() + '<section class="done shell">' +
       '<span class="done-stamp">本次完成</span>' +
@@ -4003,7 +4007,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     // 旧版按题 id 存，新版按考点 kp 存 → 一律先映射到 kp 再合并
     var srcQ = migrateQ(data.progress.q || {});
     var added = 0, updated = 0, skipped = 0, merged = 0;
-    if (mode === 'replace') { progress.q = {}; progress.days = {}; progress.unlocked = data.progress.unlocked || []; }
+    if (mode === 'replace') { progress.q = {}; progress.days = {}; progress.unlocked = data.progress.unlocked || []; try { progress._replaceAt = Date.now(); } catch(e){} }   /* V280: 覆盖导入标记（跨标签整包替换） */
     Object.keys(srcQ).forEach(function (k) {
       var b = srcQ[k], a = progress.q[k];
       if (!BY[k] && !KP_ITEMS[k]) { skipped++; return; }
@@ -4277,6 +4281,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _fresh = JSON.parse(ev.newValue);
           if (!_fresh || !_fresh.q) return;
           /* V234 X5: 改为**记录级合并**（V211 的整体替换会让本页在途作答丢失 -> A 的三态被静默吞掉） */
+          /* V279 1: 覆盖导入（磁盘 _replaceAt 更新）-> 整包替换，防旧记录复活 */
+          try {
+            var _rtD = +((_fresh && _fresh._replaceAt) || 0);
+            var _rtM = +((progress && progress._replaceAt) || 0);
+            if (_rtD && _rtD > _rtM) {
+              progress.q = JSON.parse(JSON.stringify(_fresh.q || {}));
+              progress.days = JSON.parse(JSON.stringify(_fresh.days || {}));
+              progress._replaceAt = _rtD;
+              if (typeof render === 'function') render();
+              try { toast('另一标签页已覆盖导入，本页已同步。'); } catch(e){}
+              return;
+            }
+          } catch(e){}
           /* V258 A1: 磁盘被清空（reset）或被覆盖导入 —— 本页必须跟着清，不能把旧记录写回 */
           try {
             var _dKeys = Object.keys(_fresh.q || {});
@@ -4634,7 +4651,17 @@ case 'rate': {
               if (progress.q[_rkR]) { progress.q[_rkR].selfJudged = TODAY; progress.q[_rkR].selfJudgedOk = 1; }
             } catch(e){}
             _pr.outcome = 'ok'; _pr.graded = true;
-            try { if (S.session) { S.session.answered++; } } catch(e){}   /* V261 2: 自评 ok 不计入 session.right（正确率不虚高） */
+            /* V281 F1b: 自评 ok 的间隔上限压到 2 天（防「漏整句也能推满间隔」），并标记需校准 */
+            try {
+              var _rkI = KP(_qr);
+              var _rI = progress.q[_rkI];
+              if (_rI) {
+                _rI.interval = Math.min(+(_rI.interval || 1), 2);
+                _rI.due = addDays(TODAY, _rI.interval);
+                _rI.needCalib = TODAY;
+              }
+            } catch(e){}
+            try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; } } catch(e){}   /* V281: 自评题次单独计，不进正确率分母 */
             try { toast('已自评为「熟知」（本题判分未达线，按自评记为会；不计入正确率）'); } catch(e){}
           } else if (_argR === 'fuzzy') {
             applyGrade(_qr, 'fuzzy', { text: _pr.text, sel: _pr.sel, selfJudged: true });
@@ -4938,7 +4965,7 @@ case 'rate': {
               try { if (S.session) S.session.answered++; } catch(e){}
               try {
                 var _dSE = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
-                if (_pJ._seCounted !== TODAY) { _dSE.a = (+_dSE.a || 0) + 1; _dSE.la = (+_dSE.la || 0) + 1; _pJ._seCounted = TODAY; saveProgress(); }   /* V276 4: SE 自评记 la，不进正确率分母 */
+                if (_pJ._seCounted !== TODAY) { _dSE.a = (+_dSE.a || 0) + 1; _dSE.la = (+_dSE.la || 0) + 1; _pJ._seCounted = TODAY; try { if (S.session) S.session.selfJudged = (S.session.selfJudged || 0) + 1; } catch(e){} saveProgress(); }   /* V281: SE 自评记 la 且计 selfJudged */
               } catch(e){}
             }
             _pJ.selfEvalDone = true; _pJ.selfEvalOk = !!ok;
