@@ -2261,6 +2261,14 @@
 .chip--imp-later{background:#e5e7eb;color:#4b5563}
 
   body.in-session #ROUND-BAND{display:none!important}  /* V133: 答题时收起，只在首页显示 */
+
+  /* V230 C: 320×568 quiz 首页主 CTA 不被固定底栏/tabbar 遮住（此前 CSS 错放在 index） */
+  @media (max-width:380px) and (max-height:640px){
+    body:not(.in-session) .cta-row, body:not(.in-session) .home-cta{
+      padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
+    }
+    body:not(.in-session) .frame{ padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))!important; }
+  }
 </style>
 </head>
 <body>
@@ -3486,6 +3494,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var title = ok ? (wasMastered ? '抽查通过' : '答对了')
               : bad ? '答错了'
               : _isLearn2 ? '首遍学习过（不计分）'
+              : (p.outcome === 'learn' || (r && r.last === TODAY && r.lastOutcome === 'learn' && !p.outcome)) ? '首遍学习过（不计分）'
               : fuzzy ? (p.selfEvalDone ? '算你对（自评「想出来了」）' : '部分命中，按模糊记')
               : (_tOut === 'learn') ? '首遍学习过（不计分）'
               : p._revealedBefore ? '今天已看过答案（本遍不记分）'   /* V207 F5: 不读本帧刚写的 revealedToday，避免首揭示就误报 */
@@ -3905,10 +3914,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var _dcnt = {}; _dk.forEach(function(d){ _dcnt[d.c] = (_dcnt[d.c]||0)+1; });
       var _ddesc = Object.keys(_dcnt).sort().map(function(c){ return '第' + c + ' 章 ' + _dcnt[c] + ' 条'; }).join('、');
       body = '<p class="sheet-lead">这 ' + _dk.length + ' 条只存在于运行时真源 zyk.json，题库_v1.json 没有：' + _ddesc + '（逐章数量为运行时统计）。</p>' +
-        '<div class="rows">' + BANK.diff.filter(function (d) {
-          /* V228 R7: 真实差异 = 社心 1/2/3/5 章的 zyk-only 条目（此前 3 次都取错集合） */
-          return d && d.s === '社心' && ([1, 2, 3, 5].indexOf(+d.c) >= 0);
-        }).slice(0, Math.max(1, META.diff || 63)).map(function (d) {   /* V214 R7: 标题说 63 条就只渲染 63 条（原渲染全量 859） */
+        '<div class="rows">' + _dk.map(function (d) {   /* V230 B: 用与标题/导语同一个集合，不再 slice（此前 104/63/63 三处互斥） */   /* V214 R7: 标题说 63 条就只渲染 63 条（原渲染全量 859） */
           return '<div class="row"><span>' + d.s + ' 第' + d.c + '章 · ' + esc(d.t) + ' · ' + esc(clamp(d.stem, 26)) + '</span><b class="is-red">' + d.id + '</b></div>';
         }).join('') + '</div>';
     } else if (s.type.indexOf('answer:') === 0) {
@@ -4400,7 +4406,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               /* V222 F6-b: 空答也计题次（看了答案=接触，但正确率 0%） */
               try {
                 var _d6b = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
-                if (!_r6b || _r6b._countedToday !== true) { _d6b.a = (+_d6b.a || 0) + 1; if (_r6b) { _r6b._countedToday = true; _r6b._countedDay = TODAY; } }
+                if (!_r6b || _r6b._countedToday !== true) { _d6b.a = (+_d6b.a || 0) + 1; _d6b.la = (+_d6b.la || 0) + 1;   /* V230 A1: 空答看答案也是学习，记 la */ if (_r6b) { _r6b._countedToday = true; _r6b._countedDay = TODAY; } }
               } catch(e){}
             }
           } catch(e){}

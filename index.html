@@ -2410,7 +2410,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    else if(rows[z].k === '背'){ inkRow = rows[z]; }
   }
   var qa = QD_ACC[s] || null;
-  var _den2 = qa ? (qa.a - (qa.la || 0)) : 0; var acc = (qa && _den2 > 0) ? (qa.c / _den2) : null;   /* V227: learn 不计入正确率分母（修「新学日被判 0%」） */
+  var _den2 = qa ? (qa.a - (qa.la || 0)) : 0;
+ var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
+ var acc = (qa && _den2 > 0 && !_isLearnDay) ? (qa.c / _den2) : null;   /* V227: learn 不计入正确率分母（修「新学日被判 0%」） */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
   var qualityOK = (acc !== null && acc >= 0.6);
   // 答题「达标」= 出席 + 正确率≥60%
