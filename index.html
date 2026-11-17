@@ -2255,7 +2255,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  var GATES = [
   { k:'背',  nm:'墨墨词数', t:120, ico:'🔤', ro:false },
   { k:'题',  nm:'答题',   t:0, ico:'✍️', ro:true },
-  { k:'课',  nm:'课',    t:380, ico:'🎬', ro:false },   /* COURSE_20261117：按今日课表应听分钟计 */
+  { k:'课',  nm:'课',    t:6,   ico:'🎬', ro:false },   /* LESSON_20261117：按今日课表完成节数计（6 门＝6 节） */
   { k:'英',  nm:'阅读',   t:2, ico:'📖', ro:false },
   { k:'政',  nm:'政治',   t:14, ico:'🏛️', ro:false },  /* POLITY_20261117：按救命课讲次/专题计 */
   { k:'模考', nm:'模考',   t:0, ico:'🧪', ro:false }
@@ -2360,6 +2360,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   for(var i=0;i<rq.list.length;i++){
    var g = rq.list[i], v = +(rec[g.k] || 0);
    if(g.k === '题'){ v = QD[s] || 0; }
+   /* LESSON_20261117：课改节数后，历史/测试里按分钟存的值（>节数上限）不得被当成节数，也不静默算达标 */
+   var legacyCourse = 0;
+   if(g.k === '课' && v > COURSE_TOTAL){ legacyCourse = v; v = 0; }
    var ok = v >= g.t;
    if(ok) hit++;
    else { var _gap = g.t - v; var _isReal = (g.k === '题' || g.k === '背'); var _score = _gap - (_isReal ? 1000 : 0);  // V57: 真实门优先(减1000让其排前)
@@ -2369,7 +2372,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _base = (g.k === '背') ? 120 : g.t;
     if(v > _base) extra += (v - _base);
    }
-   rows.push({ k:g.k, nm:g.nm, ico:g.ico, ro:g.ro, done:v, tgt:g.t, ok:ok });
+   rows.push({ k:g.k, nm:g.nm, ico:g.ico, ro:g.ro, done:v, tgt:g.t, ok:ok, legacy:legacyCourse });
   }
   var need = Math.ceil(rq.list.length * PASS);
   // X1+X2+X3_20261115: 完成度 = 达标项/要求项（含墨墨真实数）
@@ -2553,7 +2556,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    }
    var cls = 'mv-gate' + (row.ok?' ok':'') + (cur.next && cur.next.k===g2.k?' next':'') + (row.ro?' ro':' self');
    var lbl = row.ro ? ('答题 '+row.done+'/'+row.tgt+'（真实，自动从做题系统读）')
-            : (g2.k === '课' ? ('课 已听 ' + row.done + '/' + row.tgt + ' 分钟' + (row.ok ? '，已达标' : '，点一下填分钟'))
+            : (g2.k === '课' ? ('课 完成 ' + row.done + '/' + row.tgt + ' 节' + (row.ok ? '，已达标' : (row.legacy ? '，旧口径 ' + row.legacy + ' 分钟需按节重勾' : '，点一下勾节数')))
               : g2.k === '政' ? ('政治 讲到第 ' + row.done + '/' + row.tgt + ' 讲' + (row.ok ? '，已达标' : '，点一下填讲次'))
               : (g2.nm + ' ' + row.done + '/' + row.tgt + '（手动填）' + (row.ok ? '，点一下清空' : '，点一下填数量')));
    gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
@@ -2727,7 +2730,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   { nm:'研方法速成营 第5期收尾+第6期', min:60, tk:'', real:292.8, src:'统计专题一149.6+二143.2' },
   { nm:'保命班 统计专题 2节', min:60, tk:'', real:null, src:'预估' }
  ];
- var COURSE_TOTAL = COURSE_PLAN.reduce(function(a,c){ return a + c.min; }, 0);
+ var COURSE_TOTAL = COURSE_PLAN.length;   /* LESSON_20261117：分母＝今日应听课节数 */
  var POLITY = [
   { nm:'专题一 唯物论', from:1, to:2 },
   { nm:'专题二 唯物辩证法', from:3, to:5 },
@@ -2765,35 +2768,30 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var T = studyDay(), o = loadOwn(), rec = o.days[T] = o.days[T] || {};
   var cdata = loadCourse(), day = cdata[T] = cdata[T] || {};
   var s = sheetOpen(function(body, close){
-   body.innerHTML = '<h3 style="margin:0 0 4px;font-size:18px">课：今天听到哪了</h3>' +
-    '<p style="margin:0 0 12px;font-size:13px;color:#57534e">按今日课表逐门填「已听分钟」，比例自动算；不再数「完成几节」。</p>' +
+   body.innerHTML = '<h3 style="margin:0 0 4px;font-size:18px">课：今天完成了几节</h3>' +
+    '<p style="margin:0 0 12px;font-size:13px;color:#57534e">按今日课表逐门勾「完成」，一节算一节；不填分钟、不折算比例。</p>' +
     COURSE_PLAN.map(function(c, i){
-     var v = +(day[i] || 0);
-     return '<label style="display:block;margin:10px 0">' +
-       '<span style="display:block;font-size:15px;margin-bottom:4px">' + c.nm +
-       ' <b style="color:#57534e;font-weight:400">今日 ' + c.min + '′</b>' +
-       (c.real ? '<span style="font-size:12px;color:#0b74c4"> · 全片 ' + c.real + '′</span>' : '<span style="font-size:12px;color:#b45309"> · 时长预估</span>') +
-       '</span>' +
-       '<input data-i="' + i + '" type="number" inputmode="numeric" min="0" max="' + c.min + '" value="' + v + '" ' +
-       'style="width:100%;box-sizing:border-box;padding:10px;font-size:17px;border:1px solid #131210;background:#fff">' +
+     var on = (+day[i] ? true : false);
+     return '<label style="display:flex;align-items:center;gap:10px;min-height:52px;border-bottom:1px dotted #d6d3d1;font-size:15px">' +
+       '<input type="checkbox" data-i="' + i + '"' + (on ? ' checked' : '') + ' style="width:22px;height:22px;flex:0 0 auto">' +
+       '<span style="flex:1">' + c.nm + '</span>' +
+       '<span style="font-size:12px;color:#57534e">计划 ' + (c.tk === '政' ? '政治线' : '第' + (i + 1) + '节') + '</span>' +
        '</label>';
     }).join('') +
-    '<p id="cs-sum" style="margin:8px 0 0;font-size:13px;color:#57534e"></p>';
+    '<p id="cs-sum" style="margin:10px 0 0;font-size:13px;color:#57534e"></p>';
    var sumEl = body.querySelector('#cs-sum');
    function recalc(){
     var tot = 0;
-    body.querySelectorAll('input[data-i]').forEach(function(inp){ tot += Math.max(0, Math.min(+inp.max, +inp.value || 0)); });
-    var _real = COURSE_PLAN.filter(function(c){ return c.real; }).length;
-    sumEl.textContent = '合计已听 ' + tot + ' / ' + COURSE_TOTAL + ' 分钟（' + Math.round(tot / COURSE_TOTAL * 100) + '%）· ' +
-      _real + '/6 门有录像真源，其余按计划估算';
+    body.querySelectorAll('input[data-i]').forEach(function(inp){ if(inp.checked) tot++; });
+    sumEl.textContent = '已完成 ' + tot + ' / ' + COURSE_TOTAL + ' 节（' + Math.round(tot / COURSE_TOTAL * 100) + '%）';
    }
-   body.addEventListener('input', recalc); recalc();
+   body.addEventListener('change', recalc); recalc();
    body.__collect = function(){
     var tot = 0;
     body.querySelectorAll('input[data-i]').forEach(function(inp){
      var i = +inp.getAttribute('data-i');
-     var v = Math.max(0, Math.min(COURSE_PLAN[i].min, Math.round(+inp.value || 0)));
-     day[i] = v; tot += v;
+     day[i] = inp.checked ? 1 : 0;
+     if(inp.checked) tot++;
     });
     cdata[T] = day; saveCourse(cdata);
     rec['课'] = tot; saveOwn(o); render();
@@ -3238,7 +3236,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 </section>
 <script>
 (function(){
-  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "讲", "target": 14, "weekly": {"unit": "题", "target": 300}}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
+  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 6}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "讲", "target": 14, "weekly": {"unit": "题", "target": 300}}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
   var KEY_DAILY = 'dsh.347.daily';
   var KEY_QUIZ  = 'dsh.347.quiz.v3';
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
