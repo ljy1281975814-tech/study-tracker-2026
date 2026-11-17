@@ -2572,6 +2572,49 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return prev[m] / n;
   }
 
+  /* V173: 分句覆盖（顺序无关）—— 判分与结果页共用同一函数，杜绝「两张皮」 */
+  var CLAUSE_SPLIT_RE = /[；;。！!]/;
+  function answerClauses(ans) {
+    var raw = String(ans || '').split(CLAUSE_SPLIT_RE), out = [];
+    for (var i = 0; i < raw.length; i++) { if (normTxt(raw[i])) out.push(raw[i]); }
+    if (!out.length) out.push(String(ans || ''));
+    return out;
+  }
+  function clauseRatio(clause, txt) {
+    var a = normTxt(clause || ''), t = normTxt(txt || '');
+    if (!a || !t) return 0;
+    var n = a.length, m = t.length;
+    if (n * m > 4000000) return 0;
+    var prev = new Array(m + 1), cur = new Array(m + 1), j0;
+    for (j0 = 0; j0 <= m; j0++) { prev[j0] = 0; cur[j0] = 0; }
+    for (var i = 1; i <= n; i++) {
+      var ai = a.charAt(i - 1); cur[0] = 0;
+      for (var j = 1; j <= m; j++) {
+        cur[j] = (ai === t.charAt(j - 1)) ? (prev[j - 1] + 1)
+               : (prev[j] > cur[j - 1] ? prev[j] : cur[j - 1]);
+      }
+      var tmp = prev; prev = cur; cur = tmp;
+    }
+    return prev[m] / n;
+  }
+  function clauseCover(q, txt) {
+    var ans = normTxt(q && q.ans || '');
+    if (!ans) return { total: 0, hit: 0, ratio: 0, items: [], short: false };
+    if (ans.length <= 4) {
+      var okShort = normTxt(txt || '').indexOf(ans) >= 0;
+      return { total: 1, hit: okShort ? 1 : 0, ratio: okShort ? 1 : 0,
+               items: [{ t: ans, r: okShort ? 1 : 0, ok: okShort }], short: true };
+    }
+    var cs = answerClauses(q.ans), items = [], hit = 0;
+    for (var k = 0; k < cs.length; k++) {
+      var r = clauseRatio(cs[k], txt);
+      var ok = r >= 0.75;
+      if (ok) hit++;
+      items.push({ t: cs[k], r: r, ok: ok });
+    }
+    return { total: cs.length, hit: hit, ratio: cs.length ? hit / cs.length : 0, items: items, short: false };
+  }
+
   function isChoice(q) { return q.t === '单选' || q.t === '多选'; }
   function isMulti(q) { return q.t === '多选'; }
 
@@ -2792,12 +2835,12 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var h = p.hits || kwHits(q, p.text || '');
     var cov = 0;
     try { cov = ansCoverage(q, p.text || ''); } catch(e){ cov = 0; }
-    /* V172: pass = LCS 比例（答案按序写出多少）；不再用 pointHits 门（它本身少算） */
-    var cov = 0, _lcs = 0;
-    try { cov = ansCoverage(q, p.text || ''); } catch(e){ cov = 0; }
-    try { _lcs = ansLcs(q, p.text || ''); } catch(e){ _lcs = 0; }
-    var _pass = _lcs >= 0.70;   /* V172b: 0.60->0.70，多句答案首分句误判 8.0%->2.7% */
-    var _partial = (!_pass && _lcs >= 0.25);
+    /* V173: pass/partial 由分句覆盖决定（顺序无关） */
+    var cc = { total: 0, hit: 0, ratio: 0, items: [] };
+    try { cc = clauseCover(q, p.text || ''); } catch(e){}
+    var cov = cc.ratio;
+    var _pass = cc.ratio >= 0.80;
+    var _partial = (!_pass && cc.ratio >= 0.30);
     return { auto: true, pass: _pass, partial: _partial, cov: cov,
              hit: h.hit, total: (ek && ek.length) || h.total || 0 };
   }
@@ -3050,11 +3093,25 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (detail && detail.text) r.draft = detail.text; else if (!detail || !detail.regrade) delete r.draft;
     if (detail && detail.sel) r.lastSel = detail.sel;
     progress.q[k] = r;
-    if (!(detail && detail.regrade) && !r._countedToday) {
+    /* V175: 计数口径修正 */
+    if (r._countedDay !== TODAY) { r._countedToday = false; r._okCountedToday = false; r._countedDay = TODAY; }
+    var _isSelfEval = !!(detail && detail.selfEval);
+    if (!(detail && detail.regrade) && !_isSelfEval) {
       var d = progress.days[TODAY] || { a: 0, c: 0, w: 0 };
-      d.a = (+d.a || 0) + 1; if (outcome === 'ok') d.c = (+d.c || 0) + 1; if (outcome === 'bad') d.w = (+d.w || 0) + 1;   /* V123 P0: 防 recordTiming 建的无 a/c/w 对象导致 NaN */
-      progress.days[TODAY] = d;
-      r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
+      if (!r._countedToday) {
+        d.a = (+d.a || 0) + 1;
+        if (outcome === 'ok') { d.c = (+d.c || 0) + 1; r._okCountedToday = true; }
+        if (outcome === 'bad') d.w = (+d.w || 0) + 1;
+        progress.days[TODAY] = d;
+        r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
+      } else if (outcome === 'ok' && !r._okCountedToday) {
+        /* V175: 当天重做改判对 —— 补记正确率并回退错题计数，避免 done 100% 与首页 0% 打架 */
+        d.c = (+d.c || 0) + 1; r._okCountedToday = true;
+        if ((r.bad || 0) > 0) r.bad = Math.max(0, r.bad - 1);
+        if ((r.wrong || 0) > 0) r.wrong = Math.max(0, r.wrong - 1);
+        d.w = Math.max(0, (+d.w || 0) - 1);
+        progress.days[TODAY] = d;
+      }
     }
     saveProgress();
     return { locked: false, r: r, wasMastered: wasMastered };
@@ -3331,17 +3388,20 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       score = (p.practice ? '当前排期<br>' : (r && r.mastered ? '抽查排期<br>' : '下次复习<br>')) +
         '<b>' + relDue(rDue) + '</b><br>' + mdLabel(rDue);
     }
-    var hitsHTML = '';
     var _ek = effKw(q);
-    if (!isChoice(q) && _ek.length) {
-      var ph = pointHits(q, p.text);
-      hitsHTML = '<div class="pts"><div class="pts-h">得分点 ' + ph.total + ' 个 · 命中 ' + ph.hit +
-        '（按答案分句拆分，逐点算分）</div>' +
-        ph.pts.map(function (pt, i) {
-          return '<div class="pt' + (pt._hit ? ' is-on' : '') + '">' +
+    var hitsHTML = '';
+    /* V174: 与判分完全同源 —— 用 clauseCover 渲染「答案分句命中」，不再用 pointHits（它少算、与判分两张皮） */
+    var _ccDisp = null;
+    try { _ccDisp = (!isChoice(q)) ? clauseCover(q, p.text || '') : null; } catch(e){ _ccDisp = null; }
+    if (_ccDisp && _ccDisp.total > 0) {
+      var _passLine = _ccDisp.ratio >= 0.80;
+      hitsHTML = '<div class="pts"><div class="pts-h">答案分句 ' + _ccDisp.total + ' 句 · 命中 ' + _ccDisp.hit +
+        '（每句按字序比对 ≥75% 记命中；命中 ≥80% 算会' + (_passLine ? ' ✅ 已达线' : '') + '）</div>' +
+        _ccDisp.items.map(function (it, i) {
+          return '<div class="pt' + (it.ok ? ' is-on' : '') + '">' +
             '<span class="pt-i">' + (i + 1) + '</span>' +
-            '<span class="pt-t">' + esc(clamp(pt.t, 46)) + '</span>' +
-            '<span class="pt-k">' + (pt.kw.length ? pt.kw.map(function (k) { return esc(clamp(k, 12)); }).join(' / ') : '原文点') + '</span>' +
+            '<span class="pt-t">' + esc(clamp(it.t, 46)) + '</span>' +
+            '<span class="pt-k">' + (it.ok ? '✓ ' : '') + Math.round(it.r * 100) + '%</span>' +
             '</div>';
         }).join('') + '</div>';
     }
@@ -4343,7 +4403,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       try{
         var _qJ = (typeof currentQ === 'function') ? currentQ() : null;
         if (_qJ && typeof applyGrade === 'function') {
-          applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [] });
+          applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });   /* V175: 自评不计入日正确率 */
         }
       }catch(e){}
       if (box) box.innerHTML = '<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>';
