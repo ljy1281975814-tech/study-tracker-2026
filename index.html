@@ -2687,13 +2687,16 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
  /* COURSE_20261117：今日课表（源＝计划数据 rest 的课程条目）与政治讲次表
     课程按「已听分钟 / 计划分钟」算，不再按「完成几节」；政治按专题讲次算 */
+ /* 真源：_运行资产\_课程真实时长.json（录像实际时长；无录像文件的标 null）
+    min＝今日应听分钟（计划）；real＝该讲全片时长（真源）。日进度按 min 计，real 只做标注，
+    因为 6 门真源全片合计 703′ ≫ 计划 440′/日，拿全片当日内目标会直接不可达。 */
  var COURSE_PLAN = [
-  { nm:'政治 第3讲 + 配套题', min:65, tk:'政' },
-  { nm:'社心 强化第1讲收口',  min:85, tk:'' },
-  { nm:'英语 27阅读课·阅读理论课', min:70, tk:'' },
-  { nm:'答题营 第2期（回放）', min:40, tk:'' },
-  { nm:'研方法速成营 第5期收尾+第6期', min:60, tk:'' },
-  { nm:'保命班 统计专题 2节', min:60, tk:'' }
+  { nm:'政治 第3讲 + 配套题', min:65, tk:'政', real:null, src:'预估' },
+  { nm:'社心 强化第1讲收口',  min:85, tk:'',  real:175.5, src:'社心强化-第1-3章.ts' },
+  { nm:'英语 27阅读课·阅读理论课', min:70, tk:'', real:null, src:'预估' },
+  { nm:'答题营 第2期（回放）', min:40, tk:'',  real:null, src:'预估' },
+  { nm:'研方法速成营 第5期收尾+第6期', min:60, tk:'', real:292.8, src:'统计专题一149.6+二143.2' },
+  { nm:'保命班 统计专题 2节', min:60, tk:'', real:null, src:'预估' }
  ];
  var COURSE_TOTAL = COURSE_PLAN.reduce(function(a,c){ return a + c.min; }, 0);
  var POLITY = [
@@ -2738,7 +2741,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     COURSE_PLAN.map(function(c, i){
      var v = +(day[i] || 0);
      return '<label style="display:block;margin:10px 0">' +
-       '<span style="display:block;font-size:15px;margin-bottom:4px">' + c.nm + ' <b style="color:#57534e;font-weight:400">计划 ' + c.min + '′</b></span>' +
+       '<span style="display:block;font-size:15px;margin-bottom:4px">' + c.nm +
+       ' <b style="color:#57534e;font-weight:400">今日 ' + c.min + '′</b>' +
+       (c.real ? '<span style="font-size:12px;color:#0b74c4"> · 全片 ' + c.real + '′</span>' : '<span style="font-size:12px;color:#b45309"> · 时长预估</span>') +
+       '</span>' +
        '<input data-i="' + i + '" type="number" inputmode="numeric" min="0" max="' + c.min + '" value="' + v + '" ' +
        'style="width:100%;box-sizing:border-box;padding:10px;font-size:17px;border:1px solid #131210;background:#fff">' +
        '</label>';
@@ -2748,7 +2754,9 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    function recalc(){
     var tot = 0;
     body.querySelectorAll('input[data-i]').forEach(function(inp){ tot += Math.max(0, Math.min(+inp.max, +inp.value || 0)); });
-    sumEl.textContent = '合计已听 ' + tot + ' / ' + COURSE_TOTAL + ' 分钟（' + Math.round(tot / COURSE_TOTAL * 100) + '%）';
+    var _real = COURSE_PLAN.filter(function(c){ return c.real; }).length;
+    sumEl.textContent = '合计已听 ' + tot + ' / ' + COURSE_TOTAL + ' 分钟（' + Math.round(tot / COURSE_TOTAL * 100) + '%）· ' +
+      _real + '/6 门有录像真源，其余按计划估算';
    }
    body.addEventListener('input', recalc); recalc();
    body.__collect = function(){
@@ -2767,18 +2775,38 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  function openPolitySheet(){
   var T = studyDay(), o = loadOwn(), rec = o.days[T] = o.days[T] || {};
   var cur = +(rec['政'] || 0);
+  /* POLITY_DUAL_20261117：日维度＝讲次（门禁用），周维度＝题量（300 题），分键存储、同层呈现 */
+  var PK = 'dsh.347.polity.v1';
+  var pol = {}; try{ pol = JSON.parse(localStorage.getItem(PK) || '{}') || {}; }catch(e){ pol = {}; }
+  var weekQ = +(pol.weekQ || 0);
   var s = sheetOpen(function(body, close){
-   body.innerHTML = '<h3 style="margin:0 0 4px;font-size:18px">政治：听到第几讲</h3>' +
-    '<p style="margin:0 0 10px;font-size:13px;color:#57534e">按救命课讲次推进，专题自动归位（当前共 14 讲）。</p>' +
+   body.innerHTML = '<h3 style="margin:0 0 4px;font-size:18px">政治：讲到第几讲 · 本周做了多少题</h3>' +
+    '<p style="margin:0 0 10px;font-size:13px;color:#57534e">日维度看讲次（救命课 14 讲），周维度看题量（300 题）；两个维度分开记，不互相顶替。</p>' +
     '<input id="cs-lec" type="range" min="0" max="14" step="1" value="' + cur + '" style="width:100%;min-height:44px">' +
-    '<p id="cs-pt" style="margin:6px 0 0;font-size:15px"></p>';
+    '<p id="cs-pt" style="margin:6px 0 14px;font-size:15px"></p>' +
+    '<label style="display:block;font-size:15px;margin-bottom:4px">本周已做政治题数 <b style="color:#57534e;font-weight:400">目标 300</b></label>' +
+    '<input id="cs-wq" type="number" inputmode="numeric" min="0" max="300" value="' + weekQ + '" ' +
+    'style="width:100%;box-sizing:border-box;padding:10px;font-size:17px;border:1px solid #131210;background:#fff">' +
+    '<p id="cs-wp" style="margin:6px 0 0;font-size:13px;color:#57534e"></p>';
    var lec = body.querySelector('#cs-lec'), pt = body.querySelector('#cs-pt');
-   function paint(){
+   var wq = body.querySelector('#cs-wq'), wp = body.querySelector('#cs-wp');
+   function paintLec(){
     var v = +lec.value, p = polityOf(v);
     pt.innerHTML = v === 0 ? '还没开始（0 讲）' : ('讲到 <b>第 ' + v + ' 讲</b> · ' + p.nm + '（本专题第 ' + (v - p.from + 1) + '/' + (p.to - p.from + 1) + ' 讲）');
    }
-   lec.addEventListener('input', paint); paint();
-   body.__collect = function(){ rec['政'] = +lec.value; saveOwn(o); render(); };
+   function paintWq(){
+    var v = Math.max(0, Math.min(300, Math.round(+wq.value || 0)));
+    wp.textContent = '本周 ' + v + ' / 300 题（' + Math.round(v / 3) + '%）';
+   }
+   lec.addEventListener('input', paintLec); wq.addEventListener('input', paintWq);
+   paintLec(); paintWq();
+   body.__collect = function(){
+    rec['政'] = +lec.value;
+    pol.weekQ = Math.max(0, Math.min(300, Math.round(+wq.value || 0)));
+    pol.updated = new Date().toISOString();
+    try{ localStorage.setItem(PK, JSON.stringify(pol)); }catch(e){}
+    saveOwn(o); render();
+   };
   });
   s.wrap.querySelector('#cs-ok').onclick = function(){ s.body.__collect(); s.close(); };
  }
@@ -3181,7 +3209,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 </section>
 <script>
 (function(){
-  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "题", "target": 300}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
+  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "讲", "target": 14, "weekly": {"unit": "题", "target": 300}}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
   var KEY_DAILY = 'dsh.347.daily';
   var KEY_QUIZ  = 'dsh.347.quiz.v3';
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
