@@ -3639,7 +3639,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-grade bar-grade--bad" data-act="rate" data-arg="forgot">不记得<span>明天再练</span></button>' +
           '<button class="bar-grade bar-grade--mid" data-act="rate" data-arg="fuzzy">模糊<span>明天再练</span></button>' +
-          '<button class="bar-grade bar-grade--ok" data-act="rate" data-arg="ok">熟知<span>自评</span></button></div>';   /* V255: 走独立自评通道（grade 的硬门会拒绝） */
+          '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' + (last ? '完成本次' : '下一题') + '<span>本题判分未达线（只能记模糊/不记得）</span></button></div>';   /* V270 3: rate-ok 死分支移除（全句命中时 scoreOf 本身 pass，永不进此分支） */
       }
       // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已明天再练第 0 题」
       if (p._revealedBefore) {
@@ -3919,8 +3919,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         row('两者差异', META.diff + ' 条') +
         row('普心 / 社心', '613 / 261') +
         row('已学 7 章', META.learned + ' 题 / ' + Math.max(1, reps(available()).length) + ' 考点', true) +
-        row('唯一题面', META.learnedStems + ' 条（61 组同题只留一条）') +
-        row('重要程度（全库 768 题，去重后按题面计）', '核心 ' + (META.imp && META.imp.core || 0) + ' / 次要 ' + (META.imp && META.imp.support || 0) + ' / 深入 ' + (META.imp && META.imp.later || 0), true) +
+        row('唯一题面', META.learnedStems + ' 条（0 组同题（逐条唯一））') +
+        row('重要程度（全库 859 题，去重后按题面计）', '核心 ' + (META.imp && META.imp.core || 0) + ' / 次要 ' + (META.imp && META.imp.support || 0) + ' / 深入 ' + (META.imp && META.imp.later || 0), true) +
         row('轮次口径', 'A 档＝默写/问答主线（402，含研方法单选）／B 档＝再认·提词回忆（305）——与重要程度是两件事，勿混算') +
         row('二次回忆', META.alt + ' 条（同卡简答/论述再回忆一次）') +
         row('唯一答案', '167 段手册原文') +
@@ -4910,7 +4910,14 @@ case 'rate': {
           var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
           try { _grLast = _gr; } catch(e){}
           if (_pJ) {
-            /* V252 2: 删除 V250 2 的 session.answered++（applyGrade 已计 -> 双记 8→16） */
+            /* V270 1: SE 非首触复习也计题次（applyGrade 的 selfEval 分支跳过 days 计数 -> 完成页 0 题） */
+            if (!(_gr && _gr.learnt)) {
+              try { if (S.session) S.session.answered++; } catch(e){}
+              try {
+                var _dSE = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
+                if (_pJ._seCounted !== TODAY) { _dSE.a = (+_dSE.a || 0) + 1; _pJ._seCounted = TODAY; saveProgress(); }
+              } catch(e){}
+            }
             _pJ.selfEvalDone = true; _pJ.selfEvalOk = !!ok;
             /* V238: 首触 learn 时 UI 也按 learn（此前赋值被这里覆盖 = 假修复） */
             _pJ.outcome = (_gr && _gr.learnt) ? 'learn' : (ok ? 'fuzzy' : 'bad');
