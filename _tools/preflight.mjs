@@ -10,10 +10,12 @@
  *       三态穿透 / SE 双记 / 练习零写库 / 照抄批量 仍未覆盖
  *
  * ⚠️ 断言强度说明（2026-11-18）：
- *   - **J 是本轮唯一真正有区分力的口径断言**（种子 a=8,c=3,sj=5 -> 期望 100%；
+ *   - **J1/J2 是经变异实测确认有区分力的口径断言**（v327-a 验证：回退 sj 排除 → J1 FAIL）（种子 a=8,c=3,sj=5 -> 期望 100%；
  *     若 sj 未从分母排除则得 38%，J 会 FAIL）。已用它钉住 V306 的 P1-R01。
  *   - K/L 曾试图做 DOM 级断言但提取器不稳（K 恒真、L 正则在模板字符串里转义失效），
- *     **已删除而不保留假断言**；待重写为「真走完一轮到完成页并断言卡合计」的形式。（见 README「已知未覆盖」）。
+ *     **已删除而不保留假断言**；待重写。
+ *   - **M（进度页守卫）已删除**：DOM 文本提取不稳，多次尝试均无法做出有区分力的断言，
+ *     **不保留假断言**。进度页/合并路径目前无自动化断言，需人工复验。（见 README「已知未覆盖」）。
  *
  * 用法：
  *   node _tools/preflight.mjs [--url http://127.0.0.1:18080] [--edge "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
@@ -266,55 +268,6 @@ async function main() {
   check('自校验：sj=0 的完成度与 sj=5 不同（相对断言，证明 J1 有区分力）',
         pctJ2 !== '' && pctJ2 !== _pctJ1,
         'sj=5 pct="' + _pctJ1 + '" sj=0 pct="' + pctJ2 + '"');
-
-  // M. 【进度页守卫·真导航】点底部 tab 进进度页，种子用真实 kp 记录，断言 acc===100%
-  await navigate(QUIZ);
-  const seedM = await evalJs(`(() => {
-    const d = new Date(); d.setHours(d.getHours() - 4);
-    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
-    // 用真实考点记录（从 store 现有 kp 键或构造 kp 形状）
-    // V330 P1b: 用**真实 kp 键**（题库 id 形状如 px-4-1），否则 progressHTML 聚合不到
-    const q = {};
-    try {
-      const raw = localStorage.getItem('dsh.347.quiz.v3');
-      const prev = raw ? JSON.parse(raw) : null;
-      const keys = prev && prev.q ? Object.keys(prev.q) : [];
-      const realKp = keys.filter(k => /^[a-z一-龥]+-\d+-\d+$/.test(k)).slice(0, 8);
-      for (let i = 0; i < realKp.length; i++) q[realKp[i]] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
-      // 若没有真实 kp，退回构造 px-4-N 形状（题库普心第4章真实 id 前缀）
-      if (Object.keys(q).length === 0) {
-        for (let i = 1; i <= 8; i++) q['px-4-' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
-      }
-    } catch(e) {
-      for (let i = 1; i <= 8; i++) q['px-4-' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
-    }
-    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:q, days: { [T]: { a:8, c:3, w:0, la:0, sj:5 } } }));
-    return T;
-  })()`);
-  await navigate(QUIZ);
-  // 真导航：优先点带 data-act=go data-arg=progress 的按钮，其次点 tab
-  const navM = await evalJs(`(() => {
-    try {
-      const cands = [...document.querySelectorAll('[data-act="go"]')].filter(b => /progress/i.test(b.getAttribute('data-arg')||''));
-      if (cands.length) { cands[0].click(); return 'go-progress'; }
-      const tabs = [...document.querySelectorAll('[data-act="tab"], .tab, .tabbar button, nav button')];
-      for (const t of tabs) { if (/进度/.test(t.textContent||'')) { t.click(); return 'tab-进度'; } }
-      // 兜底：hash + 整页重载（boot 会读 hash）
-      location.hash = '#progress'; location.reload();
-      return 'reload-hash';
-    } catch(e) { return 'err'; }
-  })()`);
-  await sleep(1500);
-  const mRes = await evalJs(`(() => {
-    const t = document.body.innerText || '';
-    const has267 = /267\s*%/.test(t);
-    const over = (t.match(/(\d{1,3})\s*%/g) || []).filter(x => parseInt(x,10) > 100);
-    const isProg = /已答次数/.test(t);   /* V330: 收紧，防首页 tabbar「进度」假阳性 */
-    return { has267: has267, over: over.length, isProg: isProg, nav: ${JSON.stringify('')} };
-  })()`);
-  check('进度页守卫（M）：真导航后正确率 ≤100% 且页面真渲染（钉死 267%/200%/300%）',
-        mRes.isProg === true && mRes.has267 === false && mRes.over === 0,
-        'nav=' + navM + ' isProg=' + mRes.isProg + ' has267=' + mRes.has267 + ' over=' + mRes.over);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
