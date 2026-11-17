@@ -3770,7 +3770,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       for (var _dk2 in progress.days) { _allT += (+((progress.days[_dk2] || {}).a) || 0); }
     } catch(e){}
     var _totalAll = Math.max(total + _laT, _allT);   /* V279 2: 取累计与今日较大者 */
-    var acc = total ? Math.round(ok / total * 100) : null;
+    /* V319 ②: 分母排除自评题次 sj（修进度页 63% vs 首页 100%） */
+    var _sjT = 0;
+    try { var _dSJ2 = progress.days[TODAY] || {}; _sjT = (+_dSJ2.sj || 0); } catch(e){}
+    var _denT = Math.max(0, total - _sjT);
+    var acc = _denT > 0 ? Math.round(ok / _denT * 100) : null;
     var ws = wrongStats();
     var wrongN = ws.rolling.length, masteredN = ws.mastered.length;
     var dueN = realDueItems().length;
@@ -3851,7 +3855,6 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var _learnedN = s.learned || 0;
     var _gradedN = Math.max(0, (s.answered || 0) - _learnedN - (s.selfJudged || 0) - (s.partial || 0));   /* V298: 正式判分题次（排除学习 + 自评 + 部分命中）*/
     var _partN = s.partial || 0;
-    if (_isPract) { _gradedN = 0; }   /* V313: 练习不计分 -> 正文正确率显示—，修'不写正确率'与'正确率100%'同屏矛盾 */
     var acc = _gradedN ? Math.round(s.right / _gradedN * 100) : 0;
     /* V305: 练习/重做会话标识（错题本重做零写库，但完成页此前仍显示「答对1·正确率100%」误导） */
     var _isPract = false;
@@ -3862,6 +3865,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (_p0 && _p0.practice) _isPract = true;
       }
     } catch(e){}
+    /* V318 ⑥: 练习会话 -> 判分题次置 0（正文正确率显示—），此处已在 _isPract 声明之后 */
+    if (_isPract) { _gradedN = 0; }
     return masthead() + '<section class="done shell">' +
       '<span class="done-stamp">' + (_isPract ? '本次完成 · 重做不计分' : '本次完成') + '</span>' +
       '<div class="done-num">' + s.answered + '</div><span class="done-unit">题</span>' +
@@ -5047,11 +5052,13 @@ case 'rate': {
             if (box) box.innerHTML = '<b>练习模式</b><div style="font-size:13px;color:#6b7280;margin-top:6px">只看对错与解析，不记分、不改排期。</div>';
             return;
           }
+          /* V318 ④: **必须在 applyGrade 之前**捕获 wasMastered（V316 写在之后 -> applyGrade 已置 false -> 守卫恒不成立 = 死代码） */
+          var _wasMSE = false;
+          try { var _rPreSE = (typeof rec === 'function') ? rec(_qJ) : null; _wasMSE = !!(_rPreSE && _rPreSE.mastered); } catch(e){}
           var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
-          /* V316: SE 自评对已掌握卡**不降级**（修「一次没想起来清零 30 天掌握」） */
           try {
             var _rkSEm = KP(_qJ); var _rSEm = progress.q[_rkSEm];
-            if (_rSEm && _rSEm.mastered && ok) {
+            if (_rSEm && _wasMSE && ok) {
               _rSEm.mastered = true; _rSEm.interval = 30;
               _rSEm.due = addDays(TODAY, 30); _rSEm.streak = Math.max(6, +(_rSEm.streak||0));
             }

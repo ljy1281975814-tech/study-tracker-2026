@@ -2496,7 +2496,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
        pass: rq.list.length>0 && quizOK && inkOK,
        next:next, extra:extra,
        pct: realPct,
-       selfPct: 0 };
+       selfPct: 0 , wrongN: (function(){ try { return wrongStats().rolling.length; } catch(e){ return 0; } })()};
  }
 
  // 缺口 = ramp 欠账（B 的处方）
