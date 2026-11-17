@@ -4012,10 +4012,27 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var nc = nextChapter();
     return nc ? nc.l.s + ' 第' + nc.l.c + '章 ' + nc.l.name : '今日复习';
   }
-  function openSheet(type) { S.sheet = { type: type }; try{ document.body.style.overflow='hidden'; }catch(e){} render();
+  function openSheet(type) { try{ window.__sheetPrevFocus = document.activeElement; }catch(e){} S.sheet = { type: type }; try{ document.body.style.overflow='hidden'; }catch(e){} render();
     try{ setTimeout(function(){ var b=document.querySelector('.sheet-close'); if(b) b.focus(); }, 50); }catch(e){}
+    // V150: sheet focus trap + 关闭回焦
+    try{
+      if (!window.__sheetTrap) {
+        window.__sheetTrap = function(e){
+          if (!S.sheet) return;
+          if (e.key !== 'Tab') return;
+          var sh = document.querySelector('.sheet');
+          if (!sh) return;
+          var f = sh.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+          if (!f.length) return;
+          var first = f[0], last = f[f.length-1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        };
+        document.addEventListener('keydown', window.__sheetTrap, true);
+      }
+    }catch(e){}
   }
-  function closeSheet() { S.sheet = null; try{ document.body.style.overflow=''; }catch(e){} render(); }
+  function closeSheet() { var _prev = window.__sheetPrevFocus; S.sheet = null; try{ document.body.style.overflow=''; }catch(e){} render(); try{ if(_prev && _prev.focus) _prev.focus(); }catch(e){} }
   function toast(msg) {
     var el = $('#toast');
     el.textContent = msg; el.classList.add('is-show');
