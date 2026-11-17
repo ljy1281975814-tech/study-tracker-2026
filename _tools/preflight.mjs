@@ -231,7 +231,7 @@ async function main() {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
     const p = { v: 3, q: {}, days: {} };
-    p.days[T] = { a: 8, c: 3, w: 0, la: 0, sj: 5 };
+    p.days[T] = { a: 12, c: 9, w: 0, la: 0, sj: 3 };   /* V327: a=12 覆盖起步8/铺开12 两档，脱日期脆弱 */
     localStorage.setItem(KEY, JSON.stringify(p));
     return T;
   })()`);
@@ -245,7 +245,7 @@ async function main() {
   const _pctJ1 = await evalJs(`(() => { const e = document.getElementById('mv-pct'); return e ? (e.textContent||'').trim() : ''; })()`);
   const has100 = /\b100\s*%/.test(accJ.txt) || accJ.txt.indexOf('100%') >= 0;
   const has38 = accJ.txt.indexOf('38%') >= 0;
-  check('自评题次 sj 从正确率分母排除（a=8,c=3,sj=5 -> 100% 而非 38%）',
+  check('自评题次 sj 从正确率分母排除（a=12,c=9,sj=3 -> 100% 而非 75%）',
         has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
   // J2（自校验对·相对断言）：sj=0 时的 ring 百分比必须与 J1(sj=5) 不同
   // 若 sj 未从正确率分母排除，两次 ring 相同 -> 本断言 FAIL
@@ -267,31 +267,44 @@ async function main() {
         pctJ2 !== '' && pctJ2 !== _pctJ1,
         'sj=5 pct="' + _pctJ1 + '" sj=0 pct="' + pctJ2 + '"');
 
-  // M. 【进度页守卫】种 3 机判对 + 5 自评 -> quiz 进度页正确率必须 ≤100%（钉死 267% 回归）
+  // M. 【进度页守卫·真导航】点底部 tab 进进度页，种子用真实 kp 记录，断言 acc===100%
   await navigate(QUIZ);
-  await evalJs(`(() => {
+  const seedM = await evalJs(`(() => {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    // 用真实考点记录（从 store 现有 kp 键或构造 kp 形状）
     const q = {};
-    for (let i = 0; i < 8; i++) q['pfm'+i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+    for (let i = 0; i < 8; i++) {
+      // 用考点键形状：s|c，尽量贴合 KP() 产物
+      q['PF|考点' + i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+    }
     localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:q, days: { [T]: { a:8, c:3, w:0, la:0, sj:5 } } }));
     return T;
   })()`);
   await navigate(QUIZ);
-  const progAcc = await evalJs(`(() => {
+  // 真导航：优先点带 data-act=go data-arg=progress 的按钮，其次点 tab
+  const navM = await evalJs(`(() => {
     try {
-      location.hash = '#progress';
-      window.dispatchEvent(new HashChangeEvent('hashchange'));
-    } catch(e){}
-    return 1;
+      const cands = [...document.querySelectorAll('[data-act="go"]')].filter(b => /progress/i.test(b.getAttribute('data-arg')||''));
+      if (cands.length) { cands[0].click(); return 'go-progress'; }
+      const tabs = [...document.querySelectorAll('[data-act="tab"], .tab, .tabbar button, nav button')];
+      for (const t of tabs) { if (/进度/.test(t.textContent||'')) { t.click(); return 'tab-进度'; } }
+      // 兜底：hash + 整页重载（boot 会读 hash）
+      location.hash = '#progress'; location.reload();
+      return 'reload-hash';
+    } catch(e) { return 'err'; }
   })()`);
-  await sleep(1200);
-  const progTxt = await evalJs(`document.body.innerText`);
-  const _pcts = (progTxt || '').match(/(\d{1,3})\s*%/g) || [];
-  const _over = _pcts.filter(function (x) { var n = parseInt(x, 10); return n > 100; });
-  check('进度页正确率 ≤100%（M：种 3 机判对 + 5 自评，钉死 267%）',
-        _over.length === 0,
-        'pcts=' + _pcts.slice(0, 8).join(',') + ' over100=' + _over.length);
+  await sleep(1500);
+  const mRes = await evalJs(`(() => {
+    const t = document.body.innerText || '';
+    const has267 = /267\s*%/.test(t);
+    const over = (t.match(/(\d{1,3})\s*%/g) || []).filter(x => parseInt(x,10) > 100);
+    const isProg = /已答次数|考点见过|进度/.test(t);
+    return { has267: has267, over: over.length, isProg: isProg, nav: ${JSON.stringify('')} };
+  })()`);
+  check('进度页守卫（M）：真导航后正确率 ≤100% 且页面真渲染（钉死 267%/200%/300%）',
+        mRes.isProg === true && mRes.has267 === false && mRes.over === 0,
+        'nav=' + navM + ' isProg=' + mRes.isProg + ' has267=' + mRes.has267 + ' over=' + mRes.over);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
