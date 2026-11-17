@@ -5048,6 +5048,14 @@ case 'rate': {
             return;
           }
           var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
+          /* V316: SE 自评对已掌握卡**不降级**（修「一次没想起来清零 30 天掌握」） */
+          try {
+            var _rkSEm = KP(_qJ); var _rSEm = progress.q[_rkSEm];
+            if (_rSEm && _rSEm.mastered && ok) {
+              _rSEm.mastered = true; _rSEm.interval = 30;
+              _rSEm.due = addDays(TODAY, 30); _rSEm.streak = Math.max(6, +(_rSEm.streak||0));
+            }
+          } catch(e){}
           try { _grLast = _gr; } catch(e){}
           if (_pJ) {
             /* V270 1 + V283 2: SE 计题次；若已通过「先揭晓」计过则跳过（修双记 a=2） */
