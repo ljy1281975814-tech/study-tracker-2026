@@ -3036,7 +3036,15 @@ function reqOf(s){
   var store = {};
   try{ store = JSON.parse(localStorage.getItem('dsh.347.report.v1')||'{}') || {}; }catch(e){ store = {}; }
   var r = store[day];
-  if(!r || (r.mo==='' && r.do==='')){ el.innerHTML = '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>'; return; }
+  /* V379: 恢复日不显示报数红链（恢复日定义里不要求报数） */
+  var _recH = null; try { _recH = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
+  var _isRecH = !!(_recH && _recH.day === day);
+  if(!r || (r.mo==='' && r.do==='')){
+    el.innerHTML = _isRecH
+      ? '📝 <span style="color:#6b7280">重启日不要求报数 —— 做完 3 题 + 30 词就算赢</span>'
+      : '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>';
+    return;
+  }
   var mo = parseInt(r.mo||'', 10), doP = parseInt(r.do||'', 10);
   var parts = [];
   if(!isNaN(mo)) parts.push((mo>=80?'✅':'⚠️')+' 默写 '+mo+'%'+(mo>=80?'':'（需≥80）'));
@@ -3629,9 +3637,14 @@ function reqOf(s){
       }
     } catch(e2){}
   } catch(e){}
-  document.getElementById('PO-QUIZ').innerHTML = quizN>0
-    ? '🎯 做题系统今日已答 <b>'+quizN+'</b> 题，其中答对 <b>'+quizOk+'</b> 题（自动同步）'
-    : '🎯 做题系统今日暂无记录（在 /quiz/ 作答后这里会自动显示）';
+  /* V379: 恢复日 PO-QUIZ 显示最小重启进度 */
+  var _recI = null; try { _recI = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
+  var _isRecI = !!(_recI && _recI.day === T);
+  document.getElementById('PO-QUIZ').innerHTML = _isRecI
+    ? ('⭐ 重启日进度：答题 <b>' + quizN + '/' + ((_recI.tgtQ)||3) + '</b> 题（机判）· 墨墨 <b>' + ((D[T]&&D[T]['背'])||0) + '/' + ((_recI.tgtInk)||30) + '</b> 词 —— 做完就算赢，不追欠账')
+    : (quizN>0
+      ? '🎯 做题系统今日已答 <b>'+quizN+'</b> 题，其中答对 <b>'+quizOk+'</b> 题（自动同步）'
+      : '🎯 做题系统今日暂无记录（在 /quiz/ 作答后这里会自动显示）');
   // 统计
   function render(){
     var totalQ = 0, doneQ = 0, totalMin = 0, doneMin = 0;

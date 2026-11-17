@@ -3327,7 +3327,23 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var _qNewN = newItemsIn(q).length, _qDueN = q.length - _qNewN;
       /* V375: 恢复日首页改最小重启口径（此前仍显示 12 题队列） */
       if (_isQuizRecovery(TODAY)) {
-        title = '⭐ 重启日 · 今天只需 ' + ((JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'{}').tgtQ) || 3) + ' 题';
+        /* V379: 恢复日**终态** —— 3 题做完后不再拉回队列 */
+        var _recJ = {}; try { _recJ = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'{}'); } catch(e){}
+        var _dq = 0;
+        try {
+          var _pj = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+          var _dj = (_pj.days && _pj.days[TODAY]) || {};
+          _dq = (+_dj.c || 0) + (+_dj.w || 0);
+        } catch(e){}
+        var _tqj = _recJ.tgtQ || 3;
+        if (_dq >= _tqj) {
+          return masthead() +
+            '<section class="hero shell"><h1>🎉 今天已完成 · 收工</h1>' +
+            '<p class="hero-lead">重启日只要 <b>' + _tqj + ' 题</b>，你已经做了 <b>' + _dq + '</b> 题。<br>' +
+            '这就是赢了 —— <b>不用补欠账</b>，明天回到正常节奏。</p>' +
+            '<p class="hero-foot">今天不必再刷题，把 30 个墨墨词做完更划算。</p></section>';
+        }
+        title = '⭐ 重启日 · 今天只需 ' + _tqj + ' 题';
         lead = '最小重启：<b>3 题</b>（机判）+ <b>30 个</b>墨墨词。做完就算赢，<b>不用补欠账</b>。';
         cta = '开始最小重启';
         ctaArg = 'daily';
