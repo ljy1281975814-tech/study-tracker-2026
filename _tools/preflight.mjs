@@ -419,10 +419,10 @@ async function main() {
   const m6 = await evalJs(`(() => {
     const pct = document.getElementById('mv-pct');
     const coach = (document.getElementById('mv-coach')||{}).innerText || '';
-    return { pct: pct ? pct.textContent : '', color: pct ? pct.style.color : '', coach: coach.slice(0, 60) };
+    return { pct: pct ? pct.textContent : '', color: pct ? pct.style.color : '', coach: coach.slice(0, 60), gap: (document.getElementById('mv-gap')||{}).innerText || '' };
   })()`);
   check('M6 恢复日完成 3 题+30 词 -> 环 100% 且 coach 含「重启完成」',
-        String(m6.pct).indexOf('100') >= 0 && /重启完成/.test(m6.coach),
+        String(m6.pct).indexOf('100') >= 0 && /重启完成/.test(m6.coach) && /rgb\(5,\s*150,\s*105\)|#059669/i.test(m6.color) && !/欠\s*\d/.test(m6.gap || ''),
         'pct="' + m6.pct + '" color=' + m6.color + ' coach=' + m6.coach.slice(0, 30));
 
   // G. 零 JS 错误汇总
