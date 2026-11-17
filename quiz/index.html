@@ -3910,10 +3910,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         '</div>' +
         '<div class="sheet-actions"><button class="data-btn" data-act="sheet" data-arg="diff">看差异清单</button></div>';
     } else if (s.type === 'diff') {
-      eb = '题库'; var _dk = BANK.diff.filter(function(d){ return d && d.s==='社心' && ([1,2,3,5].indexOf(+d.c)>=0); }); title = _dk.length + ' 条差异';   /* V228: 动态 */
-      var _dcnt = {}; _dk.forEach(function(d){ _dcnt[d.c] = (_dcnt[d.c]||0)+1; });
-      var _ddesc = Object.keys(_dcnt).sort().map(function(c){ return '第' + c + ' 章 ' + _dcnt[c] + ' 条'; }).join('、');
-      body = '<p class="sheet-lead">这 ' + _dk.length + ' 条只存在于运行时真源 zyk.json，题库_v1.json 没有：' + _ddesc + '（逐章数量为运行时统计）。</p>' +
+      eb = '题库'; var _dk = BANK.diff.filter(function(d){ return d && d.s==='社心' && ([1,2,3,5].indexOf(+d.c)>=0); }); title = '题库样例 ' + _dk.length + ' 条';   /* V234 R7: 诚实重标注（此前 4 次都取错集合/数字互斥） */
+      var _ddesc = _dk.length ? ('社心 ' + _dk.map(function(d){return d.c;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort().join('/') + ' 章') : '—';
+      body = '<p class="sheet-lead">运行时题库样例（共 ' + _dk.length + ' 条，' + _ddesc + '）。构建期真源 zyk.json 与题库_v1.json 的差集由离线脚本生成，此处只展示运行时可见条目。</p>' +
         '<div class="rows">' + _dk.map(function (d) {   /* V230 B: 用与标题/导语同一个集合，不再 slice（此前 104/63/63 三处互斥） */   /* V214 R7: 标题说 63 条就只渲染 63 条（原渲染全量 859） */
           return '<div class="row"><span>' + d.s + ' 第' + d.c + '章 · ' + esc(d.t) + ' · ' + esc(clamp(d.stem, 26)) + '</span><b class="is-red">' + d.id + '</b></div>';
         }).join('') + '</div>';
@@ -4231,13 +4230,34 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           if (!ev || ev.key !== 'dsh.347.quiz.v3' || !ev.newValue) return;
           var _fresh = JSON.parse(ev.newValue);
           if (!_fresh || !_fresh.q) return;
-          /* V211: 先用别的标签页写入的最新进度**替换本页内存**（不是合并）——防陈旧内存覆盖 + 防旧记录回灌 */
+          /* V234 X5: 改为**记录级合并**（V211 的整体替换会让本页在途作答丢失 -> A 的三态被静默吞掉） */
+          var _curQ4 = (typeof currentQ === 'function') ? currentQ() : null;
+          var _curId4 = _curQ4 ? _curQ4.id : null;
+          var _curKP4 = _curQ4 ? KP(_curQ4) : null;
           try {
-            progress = _fresh;
+            if (progress && progress.q) {
+              for (var _k4 in _fresh.q) {
+                var _r4 = _fresh.q[_k4], _m4 = progress.q[_k4];
+                if (!_m4) { progress.q[_k4] = _r4; continue; }
+                if (_curKP4 && _k4 === _curKP4) continue;   /* 当前正在作答的卡以本页为准 */
+                ['ok','bad','fuzzy','wrong','seen'].forEach(function (f) { var a = +(_m4[f]||0), b = +(_r4[f]||0); if (b > a) _m4[f] = b; });
+                if (_r4.last && (!_m4.last || String(_r4.last) > String(_m4.last))) {
+                  _m4.last = _r4.last; _m4.lastOutcome = _r4.lastOutcome; _m4.lastId = _r4.lastId;
+                  if (_r4.due) _m4.due = _r4.due;
+                }
+              }
+              if (_fresh.days && progress.days) {
+                for (var _dk4 in _fresh.days) {
+                  var _dd4 = _fresh.days[_dk4] || {}, _md4 = progress.days[_dk4] || (progress.days[_dk4] = {});
+                  ['a','c','w','la'].forEach(function (f) { var a = +(_md4[f]||0), b = +(_dd4[f]||0); if (b > a) _md4[f] = b; });
+                }
+              }
+            }
             if (typeof render === 'function') render();
           } catch(e){}
           if (typeof S === 'undefined' || !S || !S.pend) return;
           for (var _pid in S.pend) {
+            if (_curId4 && _pid === _curId4) continue;   /* V234 X5: 当前卡不设 skipGrade */
             var _qq = BY[_pid];
             if (!_qq) continue;
             var _rk = KP(_qq);
