@@ -3389,7 +3389,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     /* V268: 首次使用当日起算 —— 首日不再显示「落后 -15.8%」 */
     try {
       var _FU = (typeof window !== 'undefined' && window.FIRSTUSE) ? window.FIRSTUSE : (typeof FIRSTUSE !== 'undefined' ? FIRSTUSE : null);
-      if (_FU && String(_FU) >= String(TODAY)) {
+      var _TD = (typeof TODAY !== 'undefined') ? TODAY : (typeof T !== 'undefined' ? T : null);   /* V276 2: 裸 TODAY 会抛 ReferenceError */
+      if (_FU && _TD && String(_FU) >= String(_TD)) {
         mEl.textContent = '匹配度 起步日'; mEl.style.color = '#6b7280';
         document.getElementById('PO-EBAR').style.width = ePct + '%';
         return;
