@@ -2523,7 +2523,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   function normTxt(s) {
     /* V163: 额外清掉零宽字符 U+200B-U+200D（此前可绕过空答判定） */
-    return String(s || '').replace(/[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\s，。、；：？！,.;:?!"'“”‘’（）()【】\[\]…—\-－·]/g, '');
+    return String(s || '').replace(/[\u00AD\u061C\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u206A-\u206F\uFEFF\s，。、；：？！,.;:?!"'“”‘’（）()【】\[\]…—\-－·／\/\\|｜　]/g, '');
   }
   /* V168: 答案 2-gram 覆盖率 —— 判分主判据（替代「字符数门槛」）
      · 照抄/真正回忆：覆盖率高 => pass
@@ -2616,7 +2616,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return best / n;
   }
   function clauseCover(q, txt) {
-    var ans = normTxt(sanitizeAns(q && q.ans || ''));
+    var ans = normTxt(q && q.ans || '');   /* V180: 覆盖率基线也用原始答案 */
     if (!ans) return { total: 0, hit: 0, ratio: 0, items: [], short: false };
     if (ans.length <= 4) {
       /* V177: 多空短答案（如「无关；控制」）逐空精确包含 —— 修「写更完整的『无关变量；控制变量』反而不判过」 */
@@ -2635,7 +2635,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       return { total: 1, hit: okShort ? 1 : 0, ratio: okShort ? 1 : 0,
                items: [{ t: ans, r: okShort ? 1 : 0, ok: okShort }], short: true };
     }
-    var cs = answerClauses(sanitizeAns(q.ans)), items = [], hit = 0;
+    var cs = answerClauses(q.ans), items = [], hit = 0;   /* V180: 拆句用原始答案（sanitize 会把尾部指令改短导致照抄也失败） */
     for (var k = 0; k < cs.length; k++) {
       var r = clauseRatio(cs[k], txt);
       var ok = r >= 0.75;
@@ -2869,7 +2869,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var cc = { total: 0, hit: 0, ratio: 0, items: [] };
     try { cc = clauseCover(q, p.text || ''); } catch(e){}
     var cov = cc.ratio;
-    var _pass = cc.ratio >= 0.80;
+    var _pass = cc.ratio >= 1.0;   /* V180 P0: 必须命中**全部**答案分句（0.80 允许漏 1/5 句=假掌握） */
     var _partial = (!_pass && cc.ratio >= 0.30);
     return { auto: true, pass: _pass, partial: _partial, cov: cov,
              hit: h.hit, total: (ek && ek.length) || h.total || 0 };
@@ -3429,9 +3429,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var _ccDisp = null;
     try { _ccDisp = (!isChoice(q)) ? clauseCover(q, p.text || '') : null; } catch(e){ _ccDisp = null; }
     if (_ccDisp && _ccDisp.total > 0 && !p.selfEvalDone) {
-      var _passLine = _ccDisp.ratio >= 0.80;
+      var _passLine = _ccDisp.ratio >= 1.0;
       hitsHTML = '<div class="pts"><div class="pts-h">答案分句 ' + _ccDisp.total + ' 句 · 命中 ' + _ccDisp.hit +
-        '（每句按字序比对 ≥75% 记命中；命中 ≥80% 算会' + (_passLine ? ' ✅ 已达线' : '') + '）</div>' +
+        '（每句按字序比对 ≥75% 记命中；全部命中才算会' + (_passLine ? ' ✅ 已达线' : '') + '）</div>' +
         _ccDisp.items.map(function (it, i) {
           return '<div class="pt' + (it.ok ? ' is-on' : '') + '">' +
             '<span class="pt-i">' + (i + 1) + '</span>' +
@@ -4001,9 +4001,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     p.graded = true;
     if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
     if (S.session && !p.practice && outcome !== 'ok') {
-      var at = queueReinsert(q);
-      toast(at ? ('已排回今天第 ' + at + ' 题（隔 3 道再练）。') : '今天这题已排满 3 次，明天按排期回来。');
-      nextQuestion();                       /* 模糊/不记得：判完直接进下一题 */
+      /* V181: 取消「已排回今天第N题」假承诺（插回的是锁定卡，点进去不能重做，只增空步数） */
+      try{ toast('已记「' + (outcome === 'fuzzy' ? '模糊' : '不记得') + '」，明天按排期回来。'); }catch(e){}
+      nextQuestion();
       return;
     }
     render(); afterGradeScroll();
@@ -4026,8 +4026,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function relearnCurrent() {
     var q = currentQ();
     if (!q || !S.session) return;
-    var at = queueReinsert(q);
-    toast(at ? ('已排回今天第 ' + at + ' 题：隔 3 道再做，不用连着重来。') : '今天这题已经排满 3 次，明天按排期回来。');
+    /* V181: 不再插回（插回=锁定卡）。直接进下一题，明天按排期回来。 */
+    try{ toast('明天按排期回来。'); }catch(e){}
     nextQuestion();
   }
   function nextQuestion() { document.body.classList.add('in-session');
