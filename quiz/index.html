@@ -3400,7 +3400,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var items = chapterItems(l.s, l.c);
           var kps = chapterKps(l.s, l.c);
           var done = kps.filter(isSeen).length;
-          var ok = kps.filter(function (q) { var r = rec(q); return r && r.ok; }).length;
+          /* V322 ②: 分子改读 days.c（机器判对），与分母(总次数-sj)口径一致，修 267% 正确率 */
+    var ok = (function(){
+      try {
+        var _dc2 = (progress.days && progress.days[TODAY] && typeof progress.days[TODAY].c === 'number') ? progress.days[TODAY].c : null;
+        if (_dc2 !== null) return _dc2;
+      } catch(e){}
+      return kps.filter(function (q) { var r = rec(q); return r && r.ok; }).length;
+    })();
           var mc = items.filter(isChoice).length;
           var bar = pct(done, kps.length);
           return '<button class="chapter-row chapter-row--learned" data-act="chapter" data-arg="' + l.s + '|' + l.c + '">' +

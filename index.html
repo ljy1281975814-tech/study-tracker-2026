@@ -2496,7 +2496,16 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
        pass: rq.list.length>0 && quizOK && inkOK,
        next:next, extra:extra,
        pct: realPct,
-       selfPct: 0 , wrongN: (function(){ try { return wrongStats().rolling.length; } catch(e){ return 0; } })()};
+       selfPct: 0 , wrongN: (function(){
+      /* V322 ⑤: index 侧没有 wrongStats()（那是 quiz 的函数）-> 改读 progress.q 里 wrong>0 的记录数 */
+      try {
+        var _wk = (typeof KEY_QUIZ !== 'undefined') ? KEY_QUIZ : 'dsh.347.quiz.v3';
+        var _pq2 = JSON.parse(localStorage.getItem(_wk) || '{}');
+        var _n = 0;
+        if (_pq2 && _pq2.q) { for (var _k in _pq2.q) { var _r = _pq2.q[_k]; if (_r && (+_r.wrong || 0) > 0 && (!_r.mastered)) _n++; } }
+        return _n;
+      } catch(e) { return 0; }
+    })()};
  }
 
  // 缺口 = ramp 欠账（B 的处方）
