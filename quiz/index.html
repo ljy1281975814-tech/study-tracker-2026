@@ -3872,7 +3872,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="done-stats"><div class="done-stat"><b>' + (_isPract ? '—' : s.right) + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0) - (s.partial||0) + (s.sjForgot||0)) + '</b><span>答错/没把握</span></div>' +
       ((s.learned||0) > 0 ? '<div class="done-stat"><b>' + (s.learned||0) + '</b><span>学习（首遍不计分）</span></div>' : '') +
-      (((s.sjKnown||0) > 0) ? '<div class="done-stat"><b>' + (s.sjKnown||0) + '</b><span>自评·熟知或模糊（不计正确率）</span></div>' : '') +
+      ((((s.sjKnown||0) + Math.max(0, (s.selfJudged||0) - (s.sjKnown||0) - (s.sjForgot||0))) > 0) ? '<div class="done-stat"><b>' + ((s.sjKnown||0) + Math.max(0, (s.selfJudged||0) - (s.sjKnown||0) - (s.sjForgot||0))) + '</b><span>自评·熟知或模糊（不计正确率）</span></div>' : '') +   /* V312: 兜底 selfJudged，防自评题再丢卡 */
       (_partN > 0 ? '<div class="done-stat"><b>' + _partN + '</b><span>部分命中（不计正确率）</span></div>' : '') +
       (_isPract ? '' : '<div class="done-stat"><b>' + (_gradedN > 0 ? acc + '%' : '—') + '</b><span>正确率</span></div>') + '</div>' +
       '<div class="done-actions"><button class="hero-cta" data-act="go" data-arg="home">回首页</button>' +
@@ -4720,6 +4720,7 @@ case 'rate': {
               if (progress.q[_rkR]) { progress.q[_rkR].selfJudged = TODAY; progress.q[_rkR].selfJudgedOk = 1; }
             } catch(e){}
             _pr.outcome = 'ok'; _pr.graded = true;
+            try { if (S.session) S.session.sjKnown = (S.session.sjKnown || 0) + 1; } catch(e){}   /* V312: rate ok 也写 sjKnown */
             /* V287 X2: 自评 ok 只在**非已掌握**卡上做净回退；已掌握卡保持 mastered/streak（修「自评把已掌握取消」） */
             try {
               var _rkS = KP(_qr); var _rS = progress.q[_rkS];
@@ -4752,12 +4753,12 @@ case 'rate': {
           } else if (_argR === 'fuzzy') {
             applyGrade(_qr, 'fuzzy', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             _pr.outcome = 'fuzzy'; _pr.graded = true;
-            try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; } } catch(e){}   /* V282 F6: 自评模糊也计 selfJudged */
+            try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; S.session.sjKnown = (S.session.sjKnown || 0) + 1; } } catch(e){}   /* V312: rate fuzzy 也写 sjKnown */
           } else {
             applyGrade(_qr, 'bad', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             _pr.outcome = 'bad'; _pr.graded = true;
-            /* V304: rate 通道 forgot 也计 selfJudged（与 grade 通道统一，修同一动作两面板归不同卡） */
-            try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; } } catch(e){}
+            /* V304: rate 通道 forgot 也计 selfJudged */
+            try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; S.session.sjForgot = (S.session.sjForgot || 0) + 1; } } catch(e){}   /* V312: rate forgot 写 sjForgot */
           }
           try { delete _pr.needSelfJudge; } catch(e){}
           saveProgress();
