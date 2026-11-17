@@ -3857,6 +3857,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分），明天做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、今天可重练，并进错题本。</p>') +
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0) - (s.partial||0)) + '</b><span>答错/没把握</span></div>' +
+      ((s.learned||0) > 0 ? '<div class="done-stat"><b>' + (s.learned||0) + '</b><span>学习（首遍不计分）</span></div>' : '') +
       ((s.selfJudged||0) > 0 ? '<div class="done-stat"><b>' + (s.selfJudged||0) + '</b><span>自评（不计正确率）</span></div>' : '') +
       (_partN > 0 ? '<div class="done-stat"><b>' + _partN + '</b><span>部分命中（不计正确率）</span></div>' : '') +
       '<div class="done-stat"><b>' + (_gradedN > 0 ? acc + '%' : '—') + '</b><span>正确率</span></div></div>' +
@@ -4199,7 +4200,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     var g = applyGrade(q, outcome, { text: p.text, sel: p.sel, selfJudged: true });   /* V301: 三态是**用户自评** -> 传 selfJudged（完成页正确率分母排除；partial 不二次计入） */
     /* V301: 自评题次计数移到 applyGrade 之后，且首触转 learn 时不计（修首触模糊多减一次） */
-    if (!(g && g.learnt)) {
+    /* V303: 不变量 answered = right + wrong + selfJudged + partial + learned
+       selfJudged 只记 fuzzy/bad/forgot；ok 由 session.right 计，不得双计（修「熟知」完成页 8→16） */
+    if (!(g && g.learnt) && outcome !== 'ok') {
       try { if (S.session) S.session.selfJudged = (S.session.selfJudged || 0) + 1; } catch(e){}
     }
     /* V219: 首接触 learn —— UI 与记录一致 */
