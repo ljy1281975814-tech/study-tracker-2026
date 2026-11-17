@@ -2522,7 +2522,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return '<svg class="icon ' + (cls || '') + '" aria-hidden="true"><use href="#' + id + '"/></svg>';
   }
   function normTxt(s) {
-    return String(s || '').replace(/[\s，。、；：？！,.;:?!"'“”‘’（）()【】\[\]…—\-－·]/g, '');
+    /* V163: 额外清掉零宽字符 U+200B-U+200D（此前可绕过空答判定） */
+    return String(s || '').replace(/[\u200B-\u200D\s，。、；：？！,.;:?!"'“”‘’（）()【】\[\]…—\-－·]/g, '');
   }
   function isChoice(q) { return q.t === '单选' || q.t === '多选'; }
   function isMulti(q) { return q.t === '多选'; }
@@ -2622,7 +2623,22 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (hit < kw.length && kw.length > 0) {
       try {
         var ph = pointHits(q, txt);
-        if (ph && ph.total > 0 && (ph.hit >= 1 || ph.hit / ph.total >= 0.6)) { hit = kw.length; }   /* V152: 有命中即算对（保留照抄全过） */   /* V148: 0.6->0.5 修照抄答案6.8%假阴性 */
+        if (ph && ph.total > 0) {
+          /* V164: 得分点比例 + 文本长度门槛，封死「1 个关键词/1 个字即满分」
+             · 得分点：需命中 >=ceil(60%) 个（单点题也要求命中该点）
+             · 长度：user 文本须 >= 答案长度的 40%（且 >=6 字）——照抄/认真写必过，只打关键词不过 */
+          var _need = Math.ceil(ph.total * 0.6);
+          if (_need < 1) _need = 1;
+          var _ansLen = normTxt(q.ans || '').length;
+          var _txtLen = normTxt(txt || '').length;
+          var _lenOk = _ansLen > 0 ? (_txtLen >= Math.max(6, Math.ceil(_ansLen * 0.4))) : (_txtLen >= 6);
+          if (ph.hit >= _need && _lenOk) {
+            hit = kw.length;
+          } else {
+            var _part = Math.floor(kw.length * (ph.hit / ph.total) * (_lenOk ? 1 : 0.5));
+            if (_part > hit) hit = _part;
+          }
+        }
       } catch(e){}
     }
     return { hit: hit, total: kw.length };
@@ -3330,7 +3346,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     if (!p.outcome) {
       // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已排回今天第 0 题」
-      if (p.skipGrade || (!isChoice(q) && !String(p.text || '').trim())) {
+      if (p.skipGrade || (!isChoice(q) && !normTxt(p.text || ''))) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
           (last ? '完成本次' : '下一题') + '<span>本次不记分（仅揭晓答案）</span></button></div>';
@@ -3596,8 +3612,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         row('二次回忆', META.alt + ' 条（同卡简答/论述再回忆一次）') +
         row('唯一答案', '167 段手册原文') +
         row('已学章内选择题', META.learnedMc + ' 道自动判分') +
-        row('已学章内默写题', (META.learned - META.learnedMc) + ' 道关键词自评') +
-        row('解析覆盖', META.learned + ' 题（四层）') +
+        row('已学章内默写题', (reps(available()).length - META.learnedMc) + ' 道关键词自评') +
+        row('解析覆盖', reps(available()).length + ' 题（四层）') +
         '<div class="row-h">背诵手册</div>' +
         row('普心手册卡', '1–' + META.cardsPx + '（第4章 63–94）') +
         row('社心手册卡', '1–' + META.cardsSx + '（第3章 91–111）') +
@@ -3716,7 +3732,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var _qS = currentQ();
       if (_qS && !isChoice(_qS)) {
         var _pS = ensurePending();
-        if (_pS && !String(_pS.text || '').trim()) {
+        if (_pS && !normTxt(_pS.text || '')) {
           _pS.skipGrade = true; _pS.revealed = true;
           try{ toast('空作答：只揭晓看答案，本次不记分'); }catch(e){}
           render();
@@ -3761,7 +3777,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         var _cqA = currentQ();
         if (_cqA && !isChoice(_cqA)) {
           var _pA = S.pend[_cqA.id] || ensurePending();
-          if (_pA && !String(_pA.text || '').trim()) {
+          if (_pA && !normTxt(_pA.text || '')) {
             _pA.skipGrade = true;
             try{ toast('空作答：本次不记分（未写任何内容）'); }catch(e){}
             try{ render(); }catch(e){}
@@ -3948,17 +3964,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         var pp = ensurePending(); if (!pp) break;
         if (pp.restored) { toast('这张卡今天已经判过了。'); break; }
         // V155: 空作答不记账——只揭晓看答案，不判负、不进错题本、不排回
-        if (!pp.text || !String(pp.text).trim()) {
+        if (!pp.text || !normTxt(pp.text)) {
           try{ toast('空作答：只揭晓看答案，本次不记分（不计入正确率）'); }catch(e){}
           pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
           pp.skipGrade = true;
           render();
           break;
         }
-        if (!pp.text || !String(pp.text).trim()) {
-          try{ toast('空作答：先写或点「想出来了✓」再揭晓（本次不记分）'); }catch(e){}
-          pp.revealed = true; pp.hits = { hit: 0, total: 0 }; pp.selfOk = true;   /* V152: 空答不记 bad */
-        }
+
         var _q = currentQ();
         pp.revealed = true; pp.hits = kwHits(_q, pp.text);
         recordTiming(_q, timerSec()); timerPause();

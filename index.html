@@ -2654,7 +2654,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var done = 0, total = selfKeys.length;
     for(var i=0;i<selfKeys.length;i++){
       var k = selfKeys[i];
-      var tgt = (k==='课')?1:(k==='英')?2:8;
+      var tgt = (k==='课')?6:(k==='英')?2:14;   /* V163: 与门目标一致（课6节/英2篇/政14讲） */
       if(+(rec[k]||0) >= tgt) done++;
     }
     if(done === 0){ el.innerHTML = ''; return; }
