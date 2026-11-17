@@ -3224,7 +3224,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var d = progress.days[TODAY] || { a: 0, c: 0, w: 0 };
       if (!r._countedToday) {
         d.a = (+d.a || 0) + 1;
-        if (outcome === 'ok') { d.c = (+d.c || 0) + 1; r._okCountedToday = true; }
+        /* V274 1: 自评「熟知」不计 days.c（自评不算机器判对，正确率不虚高），但计 days.a（题次）*/
+        if (outcome === 'ok' && !(detail && detail.selfJudged)) { d.c = (+d.c || 0) + 1; r._okCountedToday = true; }
         if (outcome === 'bad') d.w = (+d.w || 0) + 1;
         progress.days[TODAY] = d;
         r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
@@ -3351,7 +3352,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<p>运行时真源 <b>zyk.json 874 条</b>（普心 613 / 社心 261）；<b>题库_v1.json 811 条</b>在社心第 1–3 章只收到 10 条简答，比真源少 61 条，另在社心第 5 章少 2 条，合计 <b>63 条</b>。若按 811 出题，社心已学三章只剩 10 题——所以运行时用 874。</p>' +
       '<p>已学 ' + BANK.learned.length + ' 章 = <b>' + META.learned + ' 题 / ' + Math.max(1, reps(available()).length) + ' 个考点</b>（' + META.alt +
       ' 条是同卡二次回忆）。选择题 <b>' + META.learnedMc + '</b> 道自动判分，其余 <b>' + (META.learned - META.learnedMc) + '</b> 道按关键词自评。</p>' +
-      '<button class="scope-link" data-act="sheet" data-arg="scope">查看数据口径与差异清单 →</button></div>';
+      '<button class="scope-link" data-act="sheet" data-arg="scope">查看数据口径与题库样例清单 →</button></div>';
   }
   function lastStudyLabel() {
     var bestK = null, best = null;
@@ -3639,7 +3640,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-grade bar-grade--bad" data-act="rate" data-arg="forgot">不记得<span>明天再练</span></button>' +
           '<button class="bar-grade bar-grade--mid" data-act="rate" data-arg="fuzzy">模糊<span>明天再练</span></button>' +
-          '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' + (last ? '完成本次' : '下一题') + '<span>本题判分未达线（只能记模糊/不记得）</span></button></div>';   /* V270 3: rate-ok 死分支移除（全句命中时 scoreOf 本身 pass，永不进此分支） */
+          '<button class="bar-grade bar-grade--ok" data-act="rate" data-arg="ok">熟知<span>自评 · 不计正确率</span></button></div>';   /* V274: 恢复自评熟知（计入题次与间隔，但不计正确率） */
       }
       // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已明天再练第 0 题」
       if (p._revealedBefore) {
@@ -3943,7 +3944,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         row('未学章', '默认锁定，不按日历自动放题') +
         row('解锁方式', '进度 → 未学章锁定') +
         '</div>' +
-        '<div class="sheet-actions"><button class="data-btn" data-act="sheet" data-arg="diff">看差异清单</button></div>';
+        '<div class="sheet-actions"><button class="data-btn" data-act="sheet" data-arg="diff">看题库样例清单</button></div>';
     } else if (s.type === 'diff') {
       eb = '题库'; var _dk = BANK.diff.filter(function(d){ return d && d.s==='社心' && ([1,2,3,5].indexOf(+d.c)>=0); }); title = '题库样例 ' + _dk.length + ' 条';   /* V234 R7: 诚实重标注（此前 4 次都取错集合/数字互斥） */
       var _ddesc = _dk.length ? ('社心 ' + _dk.map(function(d){return d.c;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort().join('/') + ' 章') : '—';

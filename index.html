@@ -2077,6 +2077,13 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     .hero-main{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))!important}
     .tabbar{position:sticky!important}
   }
+
+  /* V274 2: 390/320 下门内容不被裁（此前 .mv-gate 固定 52px，scrollH 52 > clientH 50） */
+  @media (max-width:900px){
+    body:not(.minimal-mode) #mv-gates .mv-gate{ height:54px!important; min-height:54px!important; max-height:54px!important; padding:3px 2px!important; overflow:visible!important; }
+    body:not(.minimal-mode) #mv-gates .mv-gate .mv-g-num{ font-size:12px!important; }
+    body:not(.minimal-mode) #mv-gates .mv-gate .mv-g-name{ font-size:10px!important; }
+  }
 </style>
 
 
