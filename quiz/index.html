@@ -2852,6 +2852,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
 
   /* SCORE_GATE_20261116：评分与手动反馈联动——有缺漏即未达标，不允许「自己说答对了」 */
   function scoreOf(q, p) {
+    /* V183 P0-A: 揭晓时冻结判分快照 —— 之后无论怎么改文本/重渲染，判分不变（封死「看答案回填判对」） */
+    if (p && p._scSnap) return p._scSnap;
     if (isChoice(q)) {
       var pick = (p.sel || []).slice().sort().join('');
       var key = String(q.key || '').split('').sort().join('');
@@ -2932,7 +2934,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   function dueItems() {
     return reps(available().filter(function (q) {
-      return !q.se && (ROUND_MODE !== 'A' || q.tier === 'A') && isDue(q);  /* MEMORY_LOGIC_20261116: 去掉answeredToday, 未掌握(interval=0)当天可再现 */
+      return (ROUND_MODE !== 'A' || q.tier === 'A') && isDue(q);   /* V183 P0-C: SE 主观题不再排除在复习队列外 */  /* MEMORY_LOGIC_20261116: 去掉answeredToday, 未掌握(interval=0)当天可再现 */
     })).sort(dueSort);
   }
 /* DERIVED_20261113: 采纳 D0046 最小改法——只加派生函数，不动 isDue/队列构成 */
@@ -3427,7 +3429,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var hitsHTML = '';
     /* V174: 与判分完全同源 —— 用 clauseCover 渲染「答案分句命中」，不再用 pointHits（它少算、与判分两张皮） */
     var _ccDisp = null;
-    try { _ccDisp = (!isChoice(q)) ? clauseCover(q, p.text || '') : null; } catch(e){ _ccDisp = null; }
+    try { _ccDisp = p._ccSnap || ((!isChoice(q)) ? clauseCover(q, p.text || '') : null); } catch(e){ _ccDisp = null; }   /* V183: 用揭晓快照 */
     if (_ccDisp && _ccDisp.total > 0 && !p.selfEvalDone) {
       var _passLine = _ccDisp.ratio >= 1.0;
       hitsHTML = '<div class="pts"><div class="pts-h">答案分句 ' + _ccDisp.total + ' 句 · 命中 ' + _ccDisp.hit +
@@ -3455,13 +3457,14 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       layer('破题思路', q.jx.po) + layer('正确项 / 踩分点', _kxOk(q)) + layer('易错与陷阱', q.jx.bad) +
       '</div>' : '';
     function _kxOk(q) {
-      var raw = (q.kw || []), pts = pointsOf(q);
       if (!q.jx) return '';
-      var _ccN = 0; try { _ccN = answerClauses(sanitizeAns(q.ans)).length; } catch(e){ _ccN = 0; }
-      var head = '本题按答案分句拆成 ' + (_ccN || pts.length) + ' 个得分点' +
-        (pts.length > raw.length ? '（关键词表只有 ' + raw.length + ' 个，已按内容补足）' : '') + '：';
-      return head + pts.map(function (pt, i) {
-        return '第' + (i + 1) + '点「' + clamp(pt.t, 18) + '」' + (pt.kw.length ? '关键词 ' + pt.kw.join('/') : '');
+      /* V184: 头尾同一套 —— 都用答案分句，与判分/命中框完全同源 */
+      var _cls = [];
+      try { _cls = answerClauses(q.ans); } catch(e){ _cls = []; }
+      if (!_cls.length) return '';
+      var head = '本题答案分 ' + _cls.length + ' 句，逐句对照（与判分同一口径）：';
+      return head + _cls.map(function (ct, i) {
+        return '第' + (i + 1) + '句「' + clamp(normTxt(ct) || ct, 20) + '」';
       }).join('；') + '。';
     }
     var ch = CH[q.s + q.c] || {};
@@ -4053,7 +4056,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
 
   /* ---------------- 渲染 ---------------- */
-  function render() {var _rc = document.getElementById('resultCard'); if (_rc) { _rc.setAttribute('tabindex','-1'); try{ _rc.focus(); }catch(e){} }
+  function render() {
+    /* V183 P0-A: 揭晓后禁止再编辑（防看答案回填） */
+    try{ setTimeout(function(){ var _ta=document.getElementById('recallText'); if(_ta){ var _q0=currentQ(); var _p0=_q0?S.pend[_q0.id]:null; if(_p0 && _p0.revealed) _ta.readOnly = true; } },0); }catch(e){}var _rc = document.getElementById('resultCard'); if (_rc) { _rc.setAttribute('tabindex','-1'); try{ _rc.focus(); }catch(e){} }
     
     var app = $('#app');
     var html = '';
@@ -4161,6 +4166,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         pp.revealed = true; pp.hits = kwHits(_q, pp.text);
         recordTiming(_q, timerSec()); timerPause();
         var _sc = scoreOf(_q, pp);
+        try { pp._scSnap = _sc; pp._ccSnap = clauseCover(_q, pp.text || ''); } catch(e){}   /* V183 P0-A: 冻结 */
         if (_sc.auto && !_sc.pass && !pp.restored) {
           /* V169: 三档 —— 部分命中(30%~55%)记「模糊」不惩罚；<30% 才记「不记得」
              且不再排回（排回的是锁定卡，只会白增步数，属假承诺） */
@@ -4441,7 +4447,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (_qJ && typeof applyGrade === 'function') {
           var _pJ = (typeof ensurePending === 'function') ? ensurePending() : null;
           /* V178: 防重复 —— 同一题当次已自评则不再记第二次 */
-          if (_pJ && _pJ.selfEvalDone) {
+          var _recJ = (typeof rec === 'function') ? rec(_qJ) : null;
+          var _doneByRec = !!(_recJ && _recJ.last === TODAY && _recJ.lastOutcome);
+          if ((_pJ && _pJ.selfEvalDone) || _doneByRec) {
             if (box) box.innerHTML = '<b>本题已自评过</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天这题只记一次，明天按排期回来。</div>';
             return;
           }
