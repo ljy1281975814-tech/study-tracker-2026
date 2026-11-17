@@ -4198,11 +4198,18 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       render(); afterGradeScroll();
       return;
     }
-    var g = applyGrade(q, outcome, { text: p.text, sel: p.sel, selfJudged: true });   /* V301: 三态是**用户自评** -> 传 selfJudged（完成页正确率分母排除；partial 不二次计入） */
+    /* V304 P1: 三态 ok 时按「机器是否已判 pass」决定口径
+       - 机器已 pass（照抄全文）：计 days.c（正确率单一事实源，修文本日永远 0%）
+       - 机器未 pass（自评补会）：传 selfJudged，不计正确率 */
+    var _scG = null;
+    try { _scG = scoreOf(q, p); } catch(e){}
+    var _passG = !!(_scG && _scG.pass === true);
+    var _sjFlag = (outcome === 'ok') ? !_passG : true;
+    var g = applyGrade(q, outcome, { text: p.text, sel: p.sel, selfJudged: _sjFlag });
     /* V301: 自评题次计数移到 applyGrade 之后，且首触转 learn 时不计（修首触模糊多减一次） */
     /* V303: 不变量 answered = right + wrong + selfJudged + partial + learned
        selfJudged 只记 fuzzy/bad/forgot；ok 由 session.right 计，不得双计（修「熟知」完成页 8→16） */
-    if (!(g && g.learnt) && outcome !== 'ok') {
+    if (!(g && g.learnt) && _sjFlag) {
       try { if (S.session) S.session.selfJudged = (S.session.selfJudged || 0) + 1; } catch(e){}
     }
     /* V219: 首接触 learn —— UI 与记录一致 */
@@ -4728,7 +4735,8 @@ case 'rate': {
           } else {
             applyGrade(_qr, 'bad', { text: _pr.text, sel: _pr.sel, selfJudged: true });
             _pr.outcome = 'bad'; _pr.graded = true;
-            try { if (S.session) S.session.answered++; } catch(e){}
+            /* V304: rate 通道 forgot 也计 selfJudged（与 grade 通道统一，修同一动作两面板归不同卡） */
+            try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; } } catch(e){}
           }
           try { delete _pr.needSelfJudge; } catch(e){}
           saveProgress();

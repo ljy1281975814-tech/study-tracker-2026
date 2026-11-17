@@ -3398,7 +3398,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var ePct = TARGET_Q>0 ? Math.min(100, doneQ/TARGET_Q*100) : 0;
     // 时间进度
     var totalDays = PM.total_days;
-    var dleft = Math.max(0, Math.ceil((new Date(2026,11,19) - new Date())/86400000));
+    var _nowS = new Date(Date.now() - 4 * 3600e3);   /* V304: 学习日口径，修 00:00-04:00 PO 距考试 31 vs MOTIV D-32 */
+    var dleft = Math.max(0, Math.ceil((new Date(2026,11,19) - _nowS)/86400000));
     var tPct = Math.min(100, (totalDays - dleft)/totalDays*100);
     document.getElementById('PO-DAYS').textContent = '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
     document.getElementById('PO-TPCT').textContent = tPct.toFixed(1)+'%';
