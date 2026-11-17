@@ -3089,6 +3089,10 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       hits: (done && !isChoice(q)) ? kwHits(q, (r && r.draft) || '') : null,
       auto: null
     };
+    /* V193 P0-A2: 今天已看过答案的题 —— 当天不给 ok（看过答案后的回忆=再认不是回忆） */
+    try {
+      if (r && r.revealedToday === TODAY) { p.skipGrade = true; p._revealedBefore = true; }
+    } catch(e){}
     S.pend[q.id] = p;
     return p;
   }
@@ -3541,6 +3545,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     if (!p.outcome) {
       // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已排回今天第 0 题」
+      if (p._revealedBefore) {
+        return '<div class="quiz-bar">' + prev +
+          '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
+          (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（明天按排期再来）</span></button></div>';
+      }
       if (p.skipGrade || (!isChoice(q) && !normTxt(p.text || ''))) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
@@ -3921,6 +3930,24 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function afterGradeScroll() { setTimeout(scrollToResult, 40); }
 
   function submitAnswer() {
+    /* V193 P0-A1: submitAnswer 揭晓瞬间冻结判分快照（此前只在 grade 入口冻结 -> 回填后再冻结就晚了） */
+    try {
+      var _qSA = currentQ();
+      if (_qSA && typeof S !== 'undefined' && S.pend && S.pend[_qSA.id]) {
+        var _pSA = S.pend[_qSA.id];
+        if (_pSA && !_pSA._scSnap) {
+          _pSA._scSnap = scoreOf(_qSA, _pSA);
+          _pSA._ccSnap = clauseCover(_qSA, _pSA.text || '');
+          _pSA.revealed = true;
+          try {
+            var _rkSA = KP(_qSA);
+            if (!progress.q[_rkSA]) progress.q[_rkSA] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
+            progress.q[_rkSA].revealedToday = TODAY;   /* V194: 记录不存在也要建（首次接触也揭示过） */
+            saveProgress();
+          } catch(e){}
+        }
+      }
+    } catch(e){}
     /* V161: 非选择题空作答 —— 不提交、不排回，走「只揭晓」 */
     try{
       var _qS = currentQ();
@@ -4208,7 +4235,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         recordTiming(_q, timerSec()); timerPause();
         var _sc = scoreOf(_q, pp);
         try { pp._scSnap = _sc; pp._ccSnap = clauseCover(_q, pp.text || ''); } catch(e){}   /* V183 P0-A: 冻结 */
-        try { var _rk = KP(_q); if (progress.q[_rk]) { delete progress.q[_rk].draft; saveProgress(); } } catch(e){}   /* V187 P0-A: 揭晓即清草稿 */
+        try {
+          var _rk = KP(_q);
+          if (!progress.q[_rk]) progress.q[_rk] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
+          delete progress.q[_rk].draft;
+          progress.q[_rk].revealedToday = TODAY;   /* V194: 记录不存在也要建 */
+          saveProgress();
+        } catch(e){}
         /* V191 P0-5: 首次接触（无任何历史记录）视为「学习模式」——揭晓不记 bad，不进错题本 */
         var _firstTouch = false;
         try { var _rc5 = rec(_q); _firstTouch = !(_rc5 && (_rc5.seen || _rc5.ok || _rc5.bad || _rc5.fuzzy || _rc5.wrong)); } catch(e){}
