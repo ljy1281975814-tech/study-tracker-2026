@@ -2386,8 +2386,80 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   for(var i=0;i<RAMP.length;i++){ if(s>=RAMP[i].from && s<=RAMP[i].to) return RAMP[i]; }
   return s < RAMP[0].from ? RAMP[0] : RAMP[RAMP.length-1];
 }
- function reqOf(s){
+ /* V357: recovery 检测+写 key（**先于 reqOf 执行**，修「初始门仍是常规 5 个」） */
+function _ensureRecovery(s){
+  try {
+    var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    if (r && r.day === s) return r;
+    if (r && r.day !== s) return null;   /* 非今日的旧 key 不复用 */
+    var _src = {};
+    /* a) quiz 答题日 */
+    try {
+      var _q = JSON.parse(localStorage.getItem('dsh.347.quiz.v3') || '{}');
+      var _dd = _q.days || {};
+      for (var _k in _dd) { if (((_dd[_k] || {}).a || 0) > 0) _src[_k] = 1; }
+    } catch(e){}
+    /* b) MOTIV 嵌套 days（真实墨墨） */
+    try {
+      var _mv = JSON.parse(localStorage.getItem('dsh.347.motiv.v3') || '{}');
+      var _mvd = (_mv && _mv.days) || {};
+      for (var _mk in _mvd) {
+        var _mrow = _mvd[_mk] || {};
+        for (var _mf in _mrow) { if ((+_mrow[_mf] || 0) > 0) { _src[_mk] = 1; break; } }
+      }
+    } catch(e){}
+    /* c) 其他 dsh.347.* 顶层日期形状 */
+    try {
+      for (var _si = 0; _si < localStorage.length; _si++) {
+        var _sk = localStorage.key(_si);
+        if (!_sk || _sk.indexOf('dsh.347.') !== 0) continue;
+        if (_sk.indexOf('quiz.v3') >= 0 || _sk.indexOf('report.v1') >= 0 || _sk.indexOf('recovery') >= 0) continue;
+        var _sv = null; try { _sv = JSON.parse(localStorage.getItem(_sk) || 'null'); } catch(e){ continue; }
+        if (!_sv || typeof _sv !== 'object') continue;
+        for (var _dk in _sv) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(_dk)) continue;
+          var _row = _sv[_dk];
+          if (!_row || typeof _row !== 'object') continue;
+          for (var _fk in _row) { if ((+_row[_fk] || 0) > 0) { _src[_dk] = 1; break; } }
+        }
+      }
+    } catch(e){}
+    /* d) 报数 */
+    try {
+      var _R = JSON.parse(localStorage.getItem('dsh.347.report.v1') || '{}') || {};
+      for (var _k4 in _R) { var _rr = _R[_k4] || {}; if ((+_rr.mo || 0) > 0 || (+_rr.do || 0) > 0) _src[_k4] = 1; }
+    } catch(e){}
+    var _ds = Object.keys(_src).sort();
+    if (!_ds.length) return null;
+    var _last = _ds[_ds.length - 1];
+    if (!(_last < s)) return null;
+    var _t0 = new Date(s + 'T00:00:00'), _t1 = new Date(_last + 'T00:00:00');
+    var _gap = Math.round((_t0 - _t1) / 86400000);
+    if (_gap < 2) return null;
+    var _nr = { day: s, gapDays: _gap, tgtQ: 3, tgtInk: 30 };
+    try { localStorage.setItem('dsh.347.recovery.v1', JSON.stringify(_nr)); } catch(e){}
+    return _nr;
+  } catch(e) { return null; }
+}
+function _isRecoveryDay(s){
+  try {
+    var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    return !!(r && r.day === s);
+  } catch(e) { return false; }
+}
+function reqOf(s){
   var st = stageOf(s), out = [];
+  try { _ensureRecovery(s); } catch(e){}   /* V357: 先确保 recovery key 已写 */
+  /* V356: **recovery 日整体切换口径** —— 只要求 3 题 + 30 词
+     这样环/门/欠账/pass 全部自动按最小重启算，不再出现「文字说赢、界面说输」 */
+  if (_isRecoveryDay(s)) {
+    var _r2 = null;
+    try { _r2 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null'); } catch(e){}
+    var _tq = (_r2 && _r2.tgtQ) || 3, _ti = (_r2 && _r2.tgtInk) || 30;
+    out.push({ k:'题', nm:'答题', t:_tq, ico:'✍️', ro:true });
+    out.push({ k:'背', nm:'墨墨', t:_ti, ico:'🔤', ro:false });
+    return { st:st, list:out };
+  }
   for(var i=0;i<GATES.length;i++){
    var g = GATES[i], t = g.t;
    if(g.k === '题') t = st.q;
@@ -2506,7 +2578,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
-    if(_mp < 0 && realPct > 66) realPct = 66;   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
+    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s)) realPct = 66;   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
@@ -2724,7 +2796,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   else msg = ((cur.inkRowDone||0)>0 || (cur.quizRowDone||0)>0)
    ? '接下来：' + nx + '（墨墨 '+(cur.inkRowDone||0)+'/'+(cur.inkRowTgt||120)+' 还差 '+Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词'+ '；答题 '+(cur.quizRowDone||0)+'/'+(cur.quizRowTgt||8)+' 还差 '+Math.max(0,(cur.quizRowTgt||8)-(cur.quizRowDone||0))+' 题）'
    : '下一步：'+nx;  // V34: 兜底也量化
-  if(cur.pass && !cur.reportOK){ msg += '<br><b style="color:#b45309">⚠️ 但今日报数未达标</b>（需默≥80/做≥60），报数区补上才算完整。'; }
+  if(cur.pass && !cur.reportOK && !_isRecoveryDay(T)){ msg += '<br><b style="color:#b45309">⚠️ 但今日报数未达标</b>（需默≥80/做≥60），报数区补上才算完整。'; }   /* V357: 恢复日不追加 */
   if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
   /* V340: 静态 hero 阶段接真实 RAMP（修「11-28 后 PO-DAYS 说加速18 但 hero 仍 P2铺开」） */
