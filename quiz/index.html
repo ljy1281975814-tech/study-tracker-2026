@@ -2572,6 +2572,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return prev[m] / n;
   }
 
+  /* V177: 答案卫生 —— 剥离混在答案里的学习指令，避免「记关键词」被当答案内容判分 */
+  var ANS_NOISE_RE = /(记关键词|背框架|原句背下来|原句背|按原文背|整章提纲|背名称|记名称|了解即可|背下来|记一下|理解即可|背熟|背背|熟读)/g;
+  function sanitizeAns(a) {
+    var s = String(a || '');
+    var segs = s.split(/[；;。！!，,]/);
+    var kept = [];
+    for (var i = 0; i < segs.length; i++) {
+      var t = String(segs[i] || '').replace(ANS_NOISE_RE, '').trim();
+      if (normTxt(t).length >= 2) kept.push(t);
+    }
+    return kept.length ? kept.join('；') : s.replace(ANS_NOISE_RE, '');
+  }
+
   /* V173: 分句覆盖（顺序无关）—— 判分与结果页共用同一函数，杜绝「两张皮」 */
   var CLAUSE_SPLIT_RE = /[；;。！!]/;
   function answerClauses(ans) {
@@ -2581,31 +2594,48 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return out;
   }
   function clauseRatio(clause, txt) {
+    /* V177: 改「最长公共子串」连续匹配（子序列会把「只写 1/3」误判成全中） */
     var a = normTxt(clause || ''), t = normTxt(txt || '');
     if (!a || !t) return 0;
-    var n = a.length, m = t.length;
-    if (n * m > 4000000) return 0;
-    var prev = new Array(m + 1), cur = new Array(m + 1), j0;
-    for (j0 = 0; j0 <= m; j0++) { prev[j0] = 0; cur[j0] = 0; }
+    var n = a.length, m2 = t.length;
+    if (n * m2 > 4000000) return (t.indexOf(a.substr(0, Math.min(8, n))) >= 0) ? 1 : 0;
+    var prev = new Array(m2 + 1), best = 0, j0;
+    for (j0 = 0; j0 <= m2; j0++) prev[j0] = 0;
     for (var i = 1; i <= n; i++) {
-      var ai = a.charAt(i - 1); cur[0] = 0;
-      for (var j = 1; j <= m; j++) {
-        cur[j] = (ai === t.charAt(j - 1)) ? (prev[j - 1] + 1)
-               : (prev[j] > cur[j - 1] ? prev[j] : cur[j - 1]);
+      var cur = new Array(m2 + 1), ai = a.charAt(i - 1);
+      cur[0] = 0;
+      for (var j = 1; j <= m2; j++) {
+        if (ai === t.charAt(j - 1)) {
+          var v = prev[j - 1] + 1;
+          cur[j] = v;
+          if (v > best) best = v;
+        } else { cur[j] = 0; }
       }
-      var tmp = prev; prev = cur; cur = tmp;
+      prev = cur;
     }
-    return prev[m] / n;
+    return best / n;
   }
   function clauseCover(q, txt) {
-    var ans = normTxt(q && q.ans || '');
+    var ans = normTxt(sanitizeAns(q && q.ans || ''));
     if (!ans) return { total: 0, hit: 0, ratio: 0, items: [], short: false };
     if (ans.length <= 4) {
+      /* V177: 多空短答案（如「无关；控制」）逐空精确包含 —— 修「写更完整的『无关变量；控制变量』反而不判过」 */
+      var blanks = String(q.ans || '').split(/[；;。！!，,、\/]/).filter(function (x) { return normTxt(x); });
+      if (blanks.length > 1) {
+        var tNorm = normTxt(txt || ''), bHit = 0, bItems = [];
+        for (var bi = 0; bi < blanks.length; bi++) {
+          var bn = normTxt(blanks[bi]);
+          var bok = bn ? (tNorm.indexOf(bn) >= 0) : false;
+          if (bok) bHit++;
+          bItems.push({ t: blanks[bi], r: bok ? 1 : 0, ok: bok });
+        }
+        return { total: blanks.length, hit: bHit, ratio: bHit / blanks.length, items: bItems, short: true };
+      }
       var okShort = normTxt(txt || '').indexOf(ans) >= 0;
       return { total: 1, hit: okShort ? 1 : 0, ratio: okShort ? 1 : 0,
                items: [{ t: ans, r: okShort ? 1 : 0, ok: okShort }], short: true };
     }
-    var cs = answerClauses(q.ans), items = [], hit = 0;
+    var cs = answerClauses(sanitizeAns(q.ans)), items = [], hit = 0;
     for (var k = 0; k < cs.length; k++) {
       var r = clauseRatio(cs[k], txt);
       var ok = r >= 0.75;
@@ -3376,11 +3406,16 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         (p.sel.length ? '' : ' · 未作答');
     } else {
       var h = p.hits || kwHits(q, p.text);
-      sub = (p.text ? '你写了 ' + p.text.length + ' 字' : '未写') + ' · ' +
-        (function () {
-          var ph = pointHits(q, p.text);
-          return ph.total ? ('得分点命中 ' + ph.hit + '/' + ph.total) : '无可判分得分点（按原文自评）';
-        })();
+      /* V178: 只用分句口径（与判分同源），彻底移除旧 pointHits 展示 */
+      sub = (p.text ? '你写了 ' + normTxt(p.text).length + ' 字' : '未写');
+      try {
+        if (p.selfEvalDone) {
+          sub += ' · 自评：' + (p.selfEvalOk ? '记「模糊」（想出来了）' : '记「不记得」') + ' · 不计入正确率';
+        } else if (!isChoice(q)) {
+          var _ccSub = clauseCover(q, p.text || '');
+          if (_ccSub.total > 0) sub += ' · 答案分句命中 ' + _ccSub.hit + '/' + _ccSub.total;
+        }
+      } catch(e){}
     }
     var score = '';
     if (p.outcome) {
@@ -3393,7 +3428,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     /* V174: 与判分完全同源 —— 用 clauseCover 渲染「答案分句命中」，不再用 pointHits（它少算、与判分两张皮） */
     var _ccDisp = null;
     try { _ccDisp = (!isChoice(q)) ? clauseCover(q, p.text || '') : null; } catch(e){ _ccDisp = null; }
-    if (_ccDisp && _ccDisp.total > 0) {
+    if (_ccDisp && _ccDisp.total > 0 && !p.selfEvalDone) {
       var _passLine = _ccDisp.ratio >= 0.80;
       hitsHTML = '<div class="pts"><div class="pts-h">答案分句 ' + _ccDisp.total + ' 句 · 命中 ' + _ccDisp.hit +
         '（每句按字序比对 ≥75% 记命中；命中 ≥80% 算会' + (_passLine ? ' ✅ 已达线' : '') + '）</div>' +
@@ -3422,7 +3457,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     function _kxOk(q) {
       var raw = (q.kw || []), pts = pointsOf(q);
       if (!q.jx) return '';
-      var head = '本题按答案分句拆成 ' + pts.length + ' 个得分点' +
+      var _ccN = 0; try { _ccN = answerClauses(sanitizeAns(q.ans)).length; } catch(e){ _ccN = 0; }
+      var head = '本题按答案分句拆成 ' + (_ccN || pts.length) + ' 个得分点' +
         (pts.length > raw.length ? '（关键词表只有 ' + raw.length + ' 个，已按内容补足）' : '') + '：';
       return head + pts.map(function (pt, i) {
         return '第' + (i + 1) + '点「' + clamp(pt.t, 18) + '」' + (pt.kw.length ? '关键词 ' + pt.kw.join('/') : '');
@@ -4403,7 +4439,18 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       try{
         var _qJ = (typeof currentQ === 'function') ? currentQ() : null;
         if (_qJ && typeof applyGrade === 'function') {
-          applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });   /* V175: 自评不计入日正确率 */
+          var _pJ = (typeof ensurePending === 'function') ? ensurePending() : null;
+          /* V178: 防重复 —— 同一题当次已自评则不再记第二次 */
+          if (_pJ && _pJ.selfEvalDone) {
+            if (box) box.innerHTML = '<b>本题已自评过</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天这题只记一次，明天按排期回来。</div>';
+            return;
+          }
+          var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
+          if (_pJ) {
+            _pJ.selfEvalDone = true; _pJ.selfEvalOk = !!ok;
+            _pJ.outcome = ok ? 'fuzzy' : 'bad'; _pJ.graded = true; _pJ.revealed = true;
+          }
+          try{ if (S.session) S.session.answered++; }catch(e){}
         }
       }catch(e){}
       if (box) box.innerHTML = '<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>';
