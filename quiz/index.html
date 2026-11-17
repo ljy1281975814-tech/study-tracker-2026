@@ -2854,7 +2854,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     return capInterval(INTERVALS[Math.min(r.streak || 0, INTERVALS.length - 1)]);
   }
 
-  function dayLabel(n) { return n === 0 ? '排回今天' : n === 1 ? '明天' : n + ' 天后'; }
+  function dayLabel(n) { return n === 0 ? '明天再练' : n === 1 ? '明天' : n + ' 天后'; }
 
   /* SCORE_GATE_20261116：评分与手动反馈联动——有缺漏即未达标，不允许「自己说答对了」 */
   function scoreOf(q, p) {
@@ -2896,7 +2896,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     var _lenOk = _normTxtP.length >= Math.max(4, Math.ceil(_normAns.length * 0.25));
     /* V198 P0-A: B 路径加严 —— 光列关键词+填充不够，还须至少一半答案分句命中（封死「术语堆砌」90% 假过） */
-    var _passB = (_kws.length > 0) && (_kHit >= _kws.length) && _lenOk && (cc.ratio >= 0.50);
+    /* V228: B 路径（术语全覆盖）在多分句题上要求分句也全覆盖 —— 修「漏一整句仍判过 29.86%」 */
+    var _passB = (_kws.length > 0) && (_kHit >= _kws.length) && _lenOk &&
+                 (cc.total >= 3 ? (cc.ratio >= 1.0) : (cc.ratio >= 0.50));
     var _pass = _passA || _passB;
     var _kwRatio = _kws.length ? (_kHit / _kws.length) : 0;
     var _partial = (!_pass && (cc.ratio >= 0.30 || _kwRatio >= 0.50));
@@ -3089,7 +3091,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var _lockByOk = !!(_r0 && (_r0.lastOutcome === 'ok' || _r0.mastered));
     var r = _r0, done = answeredToday(q) && _lockByOk && !(S.session && S.session.practice);
     var p = {
-      sel: (r && r.lastSel) || [],
+      sel: [],   /* V227 D: 不预填上次选项（含正确答案 -> 一次点击即答对） */
       text: (r && r.draft && !r.lastOutcome && !(r.revealedToday)) ? r.draft : '',   /* V222 R6-b: 看过答案的记录也不预填（修「revealedToday-only + 草稿 → 次日全文预填零回忆过关」） */   /* V187 P0-A: 今日已判过不预填（防「看答案→重进→直接熟知」） */
       revealed: !!done,
       restored: !!done,
@@ -3142,7 +3144,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           /* F7: learn 也计题次 a（正确率仍 c/a=0%，但「今天做了几题」可见） */
           try {
             var _d0 = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
-            if (_r0._countedToday !== true) { _d0.a = (+_d0.a || 0) + 1; _r0._countedToday = true; _r0._countedDay = TODAY; }
+            if (_r0._countedToday !== true) {
+              _d0.a = (+_d0.a || 0) + 1;
+              _d0.la = (+_d0.la || 0) + 1;   /* V226 A: learn 单独记「学习题次」，不进正确率分母 */
+              _r0._countedToday = true; _r0._countedDay = TODAY;
+            }
           } catch(e){}
           saveProgress();
           return { locked: false, r: _r0, wasMastered: false, learnt: true };
@@ -3324,7 +3330,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<p>运行时真源 <b>zyk.json 874 条</b>（普心 613 / 社心 261）；<b>题库_v1.json 811 条</b>在社心第 1–3 章只收到 10 条简答，比真源少 61 条，另在社心第 5 章少 2 条，合计 <b>63 条</b>。若按 811 出题，社心已学三章只剩 10 题——所以运行时用 874。</p>' +
       '<p>已学 ' + BANK.learned.length + ' 章 = <b>' + META.learned + ' 题 / ' + Math.max(1, reps(available()).length) + ' 个考点</b>（' + META.alt +
       ' 条是同卡二次回忆）。选择题 <b>' + META.learnedMc + '</b> 道自动判分，其余 <b>' + (META.learned - META.learnedMc) + '</b> 道按关键词自评。</p>' +
-      '<button class="scope-link" data-act="sheet" data-arg="scope">查看数据口径与 63 条差异清单 →</button></div>';
+      '<button class="scope-link" data-act="sheet" data-arg="scope">查看数据口径与差异清单 →</button></div>';
   }
   function lastStudyLabel() {
     var bestK = null, best = null;
@@ -3475,13 +3481,15 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var mark = ok ? '✓' : bad ? '×' : fuzzy ? '!' : '·';
     var wasMastered = !!(r && r.mastered && r.last === TODAY && p.outcome);
     /* V201 P2-1: 按真实状态给标题 —— learn/练习/已看过答案不再写「已揭晓，等你判分」 */
+    var _isLearn2 = (p.outcome === 'learn') || (r && r.last === TODAY && r.lastOutcome === 'learn' && !p.outcome);
     var _tOut = p.outcome || ((r && r.last === TODAY) ? r.lastOutcome : '');
     var title = ok ? (wasMastered ? '抽查通过' : '答对了')
               : bad ? '答错了'
+              : _isLearn2 ? '首遍学习过（不计分）'
               : fuzzy ? (p.selfEvalDone ? '算你对（自评「想出来了」）' : '部分命中，按模糊记')
               : (_tOut === 'learn') ? '首遍学习过（不计分）'
               : p._revealedBefore ? '今天已看过答案（本遍不记分）'   /* V207 F5: 不读本帧刚写的 revealedToday，避免首揭示就误报 */
-              : '待判分';
+              : (p.skipGrade || p.selfOk) ? '只看答案（本遍不记分）' : '待判分';   /* V226 E */
     var sub = '';
     if (p.restored && r && r.lastId && r.lastId !== q.id) {
       sub = '同卡今天已判过（' + (TYPE_LABEL[r.lastT] || '另一题') + '）· 这次不计分';
@@ -3596,11 +3604,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         (isChoice(q) && !p.sel.length ? ' disabled' : '') + '>' + label + '</button></div>';
     }
     if (!p.outcome) {
-      // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已排回今天第 0 题」
+      // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已明天再练第 0 题」
       if (p._revealedBefore) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
           (last ? '完成本次' : '下一题') + '<span>今天已看过答案 · 本遍不记分（明天按排期再来）</span></button></div>';
+      }
+      if (p.skipGrade && !p._revealedBefore) {
+        /* V226 C: skipGrade 卡（首触 learn / 已判过）—— 直接给前进按钮，不再死路 */
+        return '<div class="quiz-bar">' + prev +
+          '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
+          (last ? '完成本次' : '下一题') + '<span>本题本遍不记分（明天按排期再来）</span></button></div>';
       }
       if (p.skipGrade || (!isChoice(q) && !normTxt(p.text || ''))) {
         return '<div class="quiz-bar">' + prev +
@@ -3885,13 +3899,15 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         row('未学章', '默认锁定，不按日历自动放题') +
         row('解锁方式', '进度 → 未学章锁定') +
         '</div>' +
-        '<div class="sheet-actions"><button class="data-btn" data-act="sheet" data-arg="diff">看 63 条差异清单</button></div>';
+        '<div class="sheet-actions"><button class="data-btn" data-act="sheet" data-arg="diff">看差异清单</button></div>';
     } else if (s.type === 'diff') {
-      eb = '题库'; title = '63 条差异';
-      body = '<p class="sheet-lead">这 63 条只存在于运行时真源 zyk.json，题库_v1.json 没有：社心第 1 章 8 条、第 2 章 15 条、第 3 章 38 条、第 5 章 2 条。前 61 条正是已学三章的选择题与填空题。</p>' +
+      eb = '题库'; var _dk = BANK.diff.filter(function(d){ return d && d.s==='社心' && ([1,2,3,5].indexOf(+d.c)>=0); }); title = _dk.length + ' 条差异';   /* V228: 动态 */
+      var _dcnt = {}; _dk.forEach(function(d){ _dcnt[d.c] = (_dcnt[d.c]||0)+1; });
+      var _ddesc = Object.keys(_dcnt).sort().map(function(c){ return '第' + c + ' 章 ' + _dcnt[c] + ' 条'; }).join('、');
+      body = '<p class="sheet-lead">这 ' + _dk.length + ' 条只存在于运行时真源 zyk.json，题库_v1.json 没有：' + _ddesc + '（逐章数量为运行时统计）。</p>' +
         '<div class="rows">' + BANK.diff.filter(function (d) {
-          /* V222 R7-b: 真实 63 条差异 = 存在于 zyk 但题库_v1 没有的条目（社心1-3/5 章），不是前 63 条 */
-          return d && (d.s === '社心');
+          /* V228 R7: 真实差异 = 社心 1/2/3/5 章的 zyk-only 条目（此前 3 次都取错集合） */
+          return d && d.s === '社心' && ([1, 2, 3, 5].indexOf(+d.c) >= 0);
         }).slice(0, Math.max(1, META.diff || 63)).map(function (d) {   /* V214 R7: 标题说 63 条就只渲染 63 条（原渲染全量 859） */
           return '<div class="row"><span>' + d.s + ' 第' + d.c + '章 · ' + esc(d.t) + ' · ' + esc(clamp(d.stem, 26)) + '</span><b class="is-red">' + d.id + '</b></div>';
         }).join('') + '</div>';
@@ -4149,7 +4165,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     } catch(e){}
     if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
     if (S.session && !p.practice && outcome !== 'ok') {
-      /* V181: 取消「已排回今天第N题」假承诺（插回的是锁定卡，点进去不能重做，只增空步数） */
+      /* V181: 取消「已明天再练第N题」假承诺（插回的是锁定卡，点进去不能重做，只增空步数） */
       try{ toast('已记「' + (outcome === 'fuzzy' ? '模糊' : '不记得') + '」，明天按排期回来。'); }catch(e){}
       nextQuestion();
       return;
@@ -4264,7 +4280,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (_pR && _pR.revealed && !_pR.restored) {
           var _rkR = KP(_qR);
           if (!progress.q[_rkR]) progress.q[_rkR] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
-          if (progress.q[_rkR].revealedToday !== TODAY) {
+          if (!_pR.practice && progress.q[_rkR].revealedToday !== TODAY) {   /* V226 B: 练习模式不写 revealedToday */
             progress.q[_rkR].revealedToday = TODAY;
             try{ saveProgress(); }catch(e){}
           }
@@ -4378,7 +4394,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               var _never6b = !(_r6b && (_r6b.seen || _r6b.ok || _r6b.bad || _r6b.fuzzy || _r6b.wrong));
               if (_never6b) {
                 if (!_r6b) _r6b = progress.q[_rk6b] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
-                _r6b.seen = 1; _r6b.due = addDays(TODAY, 1); _r6b.lastOutcome = 'seen';
+                if (!pp.practice) { _r6b.seen = 1; _r6b.due = addDays(TODAY, 1); _r6b.lastOutcome = 'seen'; }   /* V226 B2: 练习不写 */
                 saveProgress();
               }
               /* V222 F6-b: 空答也计题次（看了答案=接触，但正确率 0%） */
@@ -4422,7 +4438,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             /* V222 F7-b: reveal 的 learn 也计题次 a */
             try {
               var _d7 = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
-              if (_rFT._countedToday !== true) { _d7.a = (+_d7.a || 0) + 1; _rFT._countedToday = true; _rFT._countedDay = TODAY; }
+              if (_rFT._countedToday !== true) { _d7.a = (+_d7.a || 0) + 1; _d7.la = (+_d7.la || 0) + 1; _rFT._countedToday = true; _rFT._countedDay = TODAY; }
             } catch(e){}
             pp.outcome = 'learn'; pp.graded = true; pp.skipGrade = true;
             saveProgress();
