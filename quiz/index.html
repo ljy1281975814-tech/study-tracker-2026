@@ -2599,11 +2599,23 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var raw = String(ans || '').split(CLAUSE_SPLIT_RE), out = [];
     for (var i = 0; i < raw.length; i++) {
       if (!normTxt(raw[i])) continue;
-      /* V191 P0-3: 过滤「纯学习指令句」（如「…背下来」「记关键词」），避免学生写对内容反而不过 */
-      var _stripped = String(raw[i]).replace(ANS_NOISE_RE, '').trim();
-      if (!normTxt(_stripped)) continue;                 /* 整句都是指令 -> 跳过 */
+      var _st = String(raw[i]).replace(ANS_NOISE_RE, '').trim();
+      if (!normTxt(_st)) continue;
       out.push(raw[i]);
     }
+    /* V240 C: 分句去重 —— 若某句是另一句的子串，合并（修 sx-3-12「加权平均」重复/sx-3-17「环境」两次/px-6-31 首句重复导致删句仍过） */
+    var _dd = [];
+    for (var a = 0; a < out.length; a++) {
+      var na = normTxt(out[a]), skip = false;
+      for (var b2 = 0; b2 < out.length; b2++) {
+        if (a === b2) continue;
+        var nb = normTxt(out[b2]);
+        if (!nb) continue;
+        if (na.length < nb.length && nb.indexOf(na) >= 0) { skip = true; break; }
+      }
+      if (!skip) _dd.push(out[a]);
+    }
+    if (_dd.length) out = _dd;
     if (!out.length) out.push(String(ans || ''));
     return out;
   }
@@ -3158,6 +3170,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               _r0._countedToday = true; _r0._countedDay = TODAY;
             }
           } catch(e){}
+          try { if (S.session) { S.session.answered++; S.session.learned = (+S.session.learned || 0) + 1; } } catch(e){}   /* V240 A: 学习题次也进会话统计 */
           saveProgress();
           return { locked: false, r: _r0, wasMastered: false, learnt: true };
         }
@@ -3801,12 +3814,16 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function doneHTML() {
     var s = S.session || { answered: 0, right: 0, start: Date.now() };
     var mins = Math.max(1, Math.round((Date.now() - s.start) / 60000));
-    var acc = s.answered ? Math.round(s.right / s.answered * 100) : 0;
+    var _learnedN = s.learned || 0;
+    var _gradedN = Math.max(0, (s.answered || 0) - _learnedN);   /* V240 A2: 正式判分题次（排除学习）*/
+    var acc = _gradedN ? Math.round(s.right / _gradedN * 100) : 0;
     return masthead() + '<section class="done shell">' +
       '<span class="done-stamp">本次完成</span>' +
       '<div class="done-num">' + s.answered + '</div><span class="done-unit">题</span>' +
       '<h1>这一轮做完了</h1>' +
-      '<p>答对 ' + s.right + ' 题 · 正确率 ' + acc + '% · 用时 ' + mins + ' 分钟。答对按记忆间隔回队列，答错或没把握的题按排期回来、明天再来，并进错题本。</p>' +
+      (_learnedN > 0 && _gradedN === 0
+        ? '<p>本次<b>学习 ' + _learnedN + '</b> 题（首遍学习不计正确率、不进错题本）· 用时 ' + mins + ' 分钟。'
+        : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + acc + '% · 用时 ' + mins + ' 分钟。') + '答对按记忆间隔回队列，答错或没把握的题按排期回来、明天再来，并进错题本。</p>' +
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, s.answered - s.right) + '</b><span>答错/没把握</span></div>' +
       '<div class="done-stat"><b>' + acc + '%</b><span>正确率</span></div></div>' +
@@ -4052,7 +4069,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       return;
     }
     if (isChoice(q) && !p.sel.length) { toast('先选一个选项。'); return; }
-    recordTiming(q, timerSec()); timerPause();
+    if (!p.practice) { recordTiming(q, timerSec()); }   /* V240 G: 练习不写计时元数据 */
+    timerPause();
     p.revealed = true;
     if (isChoice(q)) {
       // 选择题当场判：正确/错误立即落库，仍可改判「蒙对的」
@@ -4244,6 +4262,12 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
                 /* V236 E: 补 revealedToday/draft/lastSel —— 此前未合并导致 X6（B 揭示后 A 仍可判 ok） */
                 if (_r4.revealedToday && _r4.revealedToday !== TODAY && !_m4.revealedToday) _m4.revealedToday = _r4.revealedToday;
                 if (_r4.revealedToday === TODAY) _m4.revealedToday = TODAY;
+                /* V240 D: 合并保真 —— 此前不补 streak/interval/mastered，导致被 A 写盘降级为 streak=0 */
+                if (typeof _r4.streak === 'number' && _r4.streak > (_m4.streak || 0)) _m4.streak = _r4.streak;
+                if (typeof _r4.interval === 'number' && _r4.interval > (_m4.interval || 0)) _m4.interval = _r4.interval;
+                if (_r4.mastered && !_m4.mastered) _m4.mastered = true;
+                if (_r4.ccTotal && !_m4.ccTotal) { _m4.ccHit = _r4.ccHit; _m4.ccTotal = _r4.ccTotal; }
+                if (_r4.tsec) { _m4.tsec = Math.max(+_m4.tsec || 0, +_r4.tsec || 0); _m4.tn = Math.max(+_m4.tn || 0, +_r4.tn || 0); _m4.tavg = Math.round((_m4.tsec||0)/Math.max(1,_m4.tn||1)); }
                 if (_r4.draft && !_m4.draft) _m4.draft = _r4.draft;
                 if (_r4.lastSel && !_m4.lastSel) _m4.lastSel = _r4.lastSel;
                 if (_r4.last && (!_m4.last || String(_r4.last) > String(_m4.last))) {
@@ -4254,7 +4278,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               if (_fresh.days && progress.days) {
                 for (var _dk4 in _fresh.days) {
                   var _dd4 = _fresh.days[_dk4] || {}, _md4 = progress.days[_dk4] || (progress.days[_dk4] = {});
-                  ['a','c','w','la'].forEach(function (f) { var a = +(_md4[f]||0), b = +(_dd4[f]||0); if (b > a) _md4[f] = b; });
+                  ['a','c','w','la','sec'].forEach(function (f) { var a = +(_md4[f]||0), b = +(_dd4[f]||0); if (b > a) _md4[f] = b; });
+                  if (_dd4.mod && !_md4.mod) _md4.mod = _dd4.mod;
                 }
               }
             }
