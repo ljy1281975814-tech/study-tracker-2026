@@ -233,7 +233,7 @@ async function main() {
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
     const p = { v: 3, q: {}, days: {} };
-    p.days[T] = { a: 24, c: 18, w: 0, la: 0, sj: 6 };   /* V330: c+w=18 覆盖 8/12/18 档, acc=18/(24-6)=100%(未排除sj则75%) */
+    p.days[T] = { a: 30, c: 24, w: 0, la: 0, sj: 6 };   /* V335: c+w=24 覆盖 8/12/18/24 四档, acc=24/(30-6)=100%(未排除sj则80%) */
     localStorage.setItem(KEY, JSON.stringify(p));
     return T;
   })()`);
@@ -247,7 +247,7 @@ async function main() {
   const _pctJ1 = await evalJs(`(() => { const e = document.getElementById('mv-pct'); return e ? (e.textContent||'').trim() : ''; })()`);
   const has100 = /\b100\s*%/.test(accJ.txt) || accJ.txt.indexOf('100%') >= 0;
   const has38 = accJ.txt.indexOf('38%') >= 0;
-  check('自评题次 sj 从正确率分母排除（a=24,c=18,sj=6 -> 100% 而非 75%）',
+  check('自评题次 sj 从正确率分母排除（a=30,c=24,sj=6 -> 100% 而非 80%）',
         has100 && !has38, 'has100=' + has100 + ' has38=' + has38);
   // J2（自校验对·相对断言）：sj=0 时的 ring 百分比必须与 J1(sj=5) 不同
   // 若 sj 未从正确率分母排除，两次 ring 相同 -> 本断言 FAIL
@@ -281,14 +281,19 @@ async function main() {
     return { T: T, hasState: true, availCount: st.availCount, repCount: st.repCount, realKps: st.realKps };
   })()`);
   await navigate(QUIZ);
+  // V335: 真打开进度页再断言（此前只在 quiz 首页扫 innerText，首页无 % 文本 -> 空断言）
+  await evalJs(`(() => { try { const c=[...document.querySelectorAll('[data-act="go"]')].filter(b=>/progress/i.test(b.getAttribute('data-arg')||'')); if(c.length){c[0].click();return 1;} } catch(e){} return 0; })()`);
+  await sleep(1200);
   const invM1b = await evalJs(`(() => {
     const t = document.body.innerText || '';
     const over = (t.match(/(\d{1,3})\s*%/g) || []).map(x => parseInt(x,10)).filter(n => n > 100);
-    return { over: over, overCount: over.length };
+    const accEl = document.querySelector('.acc-num');
+    const accTxt = accEl ? (accEl.textContent || '').replace(/[^0-9]/g, '') : null;
+    return { over: over, overCount: over.length, acc: accTxt ? parseInt(accTxt, 10) : null, isProg: /已答次数/.test(t) };
   })()`);
-  check('M1 违规 days 不渲染 >100%（状态级）',
-        invM1.hasState === true && invM1b.overCount === 0,
-        'stateApi=' + invM1.hasState + ' avail=' + invM1.availCount + ' over=' + invM1b.overCount);
+  check('M1 违规 days（c=9>cap=3）在**进度页**不渲染 >100%',
+        invM1.hasState === true && invM1b.isProg === true && invM1b.overCount === 0 && (invM1b.acc === null || invM1b.acc <= 100),
+        'stateApi=' + invM1.hasState + ' isProg=' + invM1b.isProg + ' over=' + invM1b.overCount + ' acc=' + invM1b.acc);
 
   // M2. 【真实 kp 种子】用 __DSH_STATE().realKps 的**真键**种记录 + days -> 进度页 acc===100%
   const realKps = (invM1 && invM1.realKps) || [];
@@ -312,6 +317,39 @@ async function main() {
   check('M2 真实 kp 种子下进度页正确率 ===100% 且无 >100%（钉死 267%）',
         seedM2.seeded >= 8 && parseInt(m2acc, 10) === 100 && m2over === 0,
         'seeded=' + seedM2.seeded + ' acc=' + m2acc + ' over=' + m2over);
+
+  // M3. 【第二期望值】a=10,c=5,sj=0 -> 期望 50%（防「恒真 100」漏检）
+  await evalJs(`(() => {
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:{}, days: { [T]: { a:10, c:5, w:0, la:0, sj:0 } } }));
+    return T;
+  })()`);
+  await navigate(QUIZ);
+  await evalJs(`(() => { try { const c=[...document.querySelectorAll('[data-act="go"]')].filter(b=>/progress/i.test(b.getAttribute('data-arg')||'')); if(c.length){c[0].click();return 1;} } catch(e){} return 0; })()`);
+  await sleep(1200);
+  const m3acc = await evalJs(`(() => { const e = document.querySelector('.acc-num'); return e ? parseInt((e.textContent||'').replace(/[^0-9]/g,''),10) : null; })()`);
+  check('M3 第二期望值：a=10,c=5,sj=0 -> 进度页正确率 ===50%（防恒真 100）',
+        m3acc === 50, 'acc=' + m3acc);
+
+  // M4. 【c+w 回归断言】种 la=12（空揭晓）-> 首页答题门必须 0/12 不亮（钉死 V328）
+  await navigate(INDEX);
+  await evalJs(`(() => {
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:{}, days: { [T]: { a:12, c:0, w:0, la:12, sj:0 } } }));
+    return T;
+  })()`);
+  await navigate(INDEX);
+  const m4 = await evalJs(`(() => {
+    const t = document.body.innerText || '';
+    const gate = (t.match(/答题\\s*(\\d+)\\/(\\d+)/) || []);
+    const achieved = /答题已达标/.test(t);
+    return { done: gate[1] ? +gate[1] : null, tgt: gate[2] ? +gate[2] : null, achieved: achieved };
+  })()`);
+  check('M4 空揭晓 12 次（la=12）-> 答题门不达标（钉死 V328 的 c+w）',
+        m4.done === 0 && m4.achieved === false,
+        'gate=' + m4.done + '/' + m4.tgt + ' achieved=' + m4.achieved);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
