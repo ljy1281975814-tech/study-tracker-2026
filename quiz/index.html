@@ -3865,7 +3865,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     } else if (s.type === 'diff') {
       eb = '题库'; title = '63 条差异';
       body = '<p class="sheet-lead">这 63 条只存在于运行时真源 zyk.json，题库_v1.json 没有：社心第 1 章 8 条、第 2 章 15 条、第 3 章 38 条、第 5 章 2 条。前 61 条正是已学三章的选择题与填空题。</p>' +
-        '<div class="rows">' + BANK.diff.map(function (d) {
+        '<div class="rows">' + BANK.diff.slice(0, Math.max(1, META.diff || 63)).map(function (d) {   /* V214 R7: 标题说 63 条就只渲染 63 条（原渲染全量 859） */
           return '<div class="row"><span>' + d.s + ' 第' + d.c + '章 · ' + esc(d.t) + ' · ' + esc(clamp(d.stem, 26)) + '</span><b class="is-red">' + d.id + '</b></div>';
         }).join('') + '</div>';
     } else if (s.type.indexOf('answer:') === 0) {
@@ -3976,6 +3976,12 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         var _pS = ensurePending();
         if (_pS && !normTxt(_pS.text || '')) {
           _pS.skipGrade = true; _pS.revealed = true;
+          /* V213 F6: 空答揭晓也落 seen（不记 ok/bad/fuzzy）—— 让「只看答案」的卡能推进队列，不变成死卡 */
+          try {
+            var _rk6 = KP(_qS);
+            if (!progress.q[_rk6]) progress.q[_rk6] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
+            if (!progress.q[_rk6].seen) { progress.q[_rk6].seen = 1; progress.q[_rk6].due = addDays(TODAY, 1); saveProgress(); }
+          } catch(e){}
           try{ toast('空作答：只揭晓看答案，本次不记分'); }catch(e){}
           render();
           return;
@@ -4076,7 +4082,29 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     if (p.practice) {
       p.outcome = outcome; p.graded = true;
-      if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
+      /* V213 F4: 选择/SE 首接触失败也记 learn（不记 bad/wrong）—— 统一「首遍不惩罚」 */
+    try {
+      if (outcome !== 'ok') {
+        var _rc4 = rec(q);
+        var _ft4 = !(_rc4 && (_rc4.seen || _rc4.ok || _rc4.bad || _rc4.fuzzy || _rc4.wrong));
+        if (_ft4 && !(detail && (detail.selfEval || detail.regrade)) && !(detail && detail.practiceNoWrite)) {
+          var _rk4 = KP(q);
+          var _r4 = progress.q[_rk4];
+          if (!_r4) _r4 = progress.q[_rk4] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
+          _r4.seen = (+_r4.seen || 0) + 1;
+          _r4.last = TODAY; _r4.lastOutcome = 'learn'; _r4.lastId = q.id;
+          _r4.due = addDays(TODAY, 1);
+          /* V213 F7: learn 也计题次 a（正确率仍按 c/a=0%，但「今天做了几题」可见） */
+          try {
+            var _d4 = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
+            if (!_r4._countedToday) { _d4.a = (+_d4.a || 0) + 1; _r4._countedToday = true; _r4._countedDay = TODAY; }
+          } catch(e){}
+          saveProgress();
+          return { locked: false, r: _r4, wasMastered: !!_r4.mastered, learnt: true };
+        }
+      }
+    } catch(e){}
+    if (S.session) { S.session.answered++; if (outcome === 'ok') S.session.right++; }
       render(); afterGradeScroll();
       return;
     }
@@ -4443,7 +4471,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     if (!p.revealed && isChoice(q) && 'ABCD'.indexOf(k) >= 0) {
       if (q.opts[k]) { p.sel = [k]; render(); ev.preventDefault(); }
     } else if (k === 'ENTER') {
-      if (!p.revealed) submitAnswer(); else if (p.skipGrade) nextQuestion(); else if (!p.outcome) grade(p.auto === false ? 'bad' : 'ok'); else nextQuestion();
+      /* V215 F8: Enter 不默认记 ok/bad —— 必须用户显式点三态自评（此前 Enter 直接 grade -> 三态形同虚设） */
+      if (!p.revealed) submitAnswer();
+      else if (p.skipGrade) nextQuestion();
+      else if (!p.outcome) { try { toast('请点选「不记得 / 模糊 / 熟知」—— Enter 不代替自评。'); } catch(e){} }
+      else nextQuestion();
       ev.preventDefault();
     } else if (ev.key === 'ArrowLeft') { prevQuestion(); }
     else if (ev.key === 'ArrowRight') { nextQuestion(); }
