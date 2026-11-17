@@ -2414,7 +2414,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? (qa.c / _den2) : null;   /* V227: learn 不计入正确率分母（修「新学日被判 0%」） */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
-  var qualityOK = (acc !== null && acc >= 0.6);
+  var qualityOK = !!(_isLearnDay ? quizAttend : (acc !== null && acc >= 0.6));   /* V236 A: 学习日按出席算质量（不再恒 false -> 永远到不了 100%） */
   // 答题「达标」= 出席 + 正确率≥60%
   var quizOK = quizAttend && qualityOK;
   // 墨墨「达标」= 真实填的数量 ≥ 目标（默认 120）
@@ -2470,7 +2470,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
        inkRowDone: inkRow ? inkRow.done : 0, inkRowTgt: inkRow ? inkRow.tgt : 0,  // V32: 供 coach 量化
-       acc:acc, qualityOK:qualityOK, _learnDay: !!_isLearnDay,   /* V232: 供教练区分学习日 */
+       acc:acc, qualityOK:qualityOK, _learnDay: !!_isLearnDay, _learnN: qa ? (qa.la || 0) : 0,   /* V236 B: _learnN 真定义（此前未定义 -> 教练假分母） */
        // X3: pass = 真实部分全达标（答题质量 + 墨墨）
        pass: rq.list.length>0 && quizOK && inkOK,
        next:next, extra:extra,

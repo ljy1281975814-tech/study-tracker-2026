@@ -2906,7 +2906,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     /* V198 P0-A: B 路径加严 —— 光列关键词+填充不够，还须至少一半答案分句命中（封死「术语堆砌」90% 假过） */
     /* V228: B 路径（术语全覆盖）在多分句题上要求分句也全覆盖 —— 修「漏一整句仍判过 29.86%」 */
     var _passB = (_kws.length > 0) && (_kHit >= _kws.length) && _lenOk &&
-                 (cc.total >= 3 ? (cc.ratio >= 1.0) : (cc.ratio >= 0.50));
+                 (cc.total >= 2 ? (cc.ratio >= 1.0) : (cc.ratio >= 0.50));   /* V236 F: 2 分句也要求全覆盖（修 6/90 漏一半） */
     var _pass = _passA || _passB;
     var _kwRatio = _kws.length ? (_kHit / _kws.length) : 0;
     var _partial = (!_pass && (cc.ratio >= 0.30 || _kwRatio >= 0.50));
@@ -4241,6 +4241,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
                 if (!_m4) { progress.q[_k4] = _r4; continue; }
                 if (_curKP4 && _k4 === _curKP4) continue;   /* 当前正在作答的卡以本页为准 */
                 ['ok','bad','fuzzy','wrong','seen'].forEach(function (f) { var a = +(_m4[f]||0), b = +(_r4[f]||0); if (b > a) _m4[f] = b; });
+                /* V236 E: 补 revealedToday/draft/lastSel —— 此前未合并导致 X6（B 揭示后 A 仍可判 ok） */
+                if (_r4.revealedToday && _r4.revealedToday !== TODAY && !_m4.revealedToday) _m4.revealedToday = _r4.revealedToday;
+                if (_r4.revealedToday === TODAY) _m4.revealedToday = TODAY;
+                if (_r4.draft && !_m4.draft) _m4.draft = _r4.draft;
+                if (_r4.lastSel && !_m4.lastSel) _m4.lastSel = _r4.lastSel;
                 if (_r4.last && (!_m4.last || String(_r4.last) > String(_m4.last))) {
                   _m4.last = _r4.last; _m4.lastOutcome = _r4.lastOutcome; _m4.lastId = _r4.lastId;
                   if (_r4.due) _m4.due = _r4.due;
@@ -4767,6 +4772,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             return;
           }
           var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
+          if (_gr && _gr.learnt && _pJ) { _pJ.outcome = 'learn'; _pJ.graded = true; _pJ.skipGrade = true; }   /* V236 C: 首触 learn UI 一致 */
           if (_pJ) {
             _pJ.selfEvalDone = true; _pJ.selfEvalOk = !!ok;
             _pJ.outcome = ok ? 'fuzzy' : 'bad'; _pJ.graded = true; _pJ.revealed = true;
