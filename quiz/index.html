@@ -3325,7 +3325,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="advice-title">' + nc.l.s + ' · 第' + nc.l.c + '章 ' + esc(nc.l.name) + '</div>' +
       '<p>新题 <b>' + n + ' 道</b> · 本章已答 <b>' + seenIn + '/' + kps.length + '</b> 考点（' +
       chapterItems(nc.l.s, nc.l.c).length + ' 题）· 手册卡 ' + nc.l.a + '–' + nc.l.b + '</p>' +
-      '<p class="advice-order">先清到期 ' + dueN + ' 题（全库口径；今日队列仅 ' + MAXQ + '）' + '，再进本章；答对按间隔回队列（次日起 1/3/7/14/26 天），不记得或模糊的题按排期明天再来。</p></div>';
+      '<p class="advice-order">先清到期 ' + dueN + ' 题（全库口径；今日队列仅 ' + MAXQ + '）' + '，再进本章；答对按间隔回队列（次日起 1/3/7/14/26 天），不记得或模糊的题按排期今天可重练。</p></div>';
   }
   function entriesHTML(due, ws, last) {
     var _rd = realDueItems().length; var sched = _rd ? '今天有 ' + _rd + ' 道待复习题' : '今天待复习 0 道';
@@ -3333,8 +3333,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<div class="entry-wrap"><button class="entry" data-act="start" data-arg="due">' +
       '<span class="entry-num">01</span><span class="entry-main"><span class="entry-title">滚动复习</span>' +
       '<span class="entry-desc">' + sched + '</span></span>' +
-      '<span class="entry-side">' + (due.length ? '开始' : '看排期') + icon('i-chev') + '</span></button>' +
-      (due.length ? '' : '<button class="entry-sub" data-act="sheet" data-arg="sched">查看到期列表（未来 7 天）</button>') +
+      '<span class="entry-side">' + (_rd ? '开始' : '看排期') + icon('i-chev') + '</span></button>' +
+      (_rd ? '' : '<button class="entry-sub" data-act="sheet" data-arg="sched">查看到期列表（未来 7 天）</button>') +
       '</div>' +
       '<div class="entry-wrap"><button class="entry" data-act="go" data-arg="chapters">' +
       '<span class="entry-num">02</span><span class="entry-main"><span class="entry-title">按章节刷题</span>' +
@@ -3846,7 +3846,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       '<h1>这一轮做完了</h1>' +
       (_learnedN > 0 && _gradedN === 0
         ? '<p>本次<b>学习 ' + _learnedN + '</b> 题（首遍学习不计正确率、不进错题本）· 用时 ' + mins + ' 分钟。'
-        : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分）做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、明天再来，并进错题本。</p>') +
+        : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；今天可重练（本遍不记分）做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、今天可重练，并进错题本。</p>') +
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0)) + '</b><span>答错/没把握</span></div>' +
       ((s.selfJudged||0) > 0 ? '<div class="done-stat"><b>' + (s.selfJudged||0) + '</b><span>自评（不计正确率）</span></div>' : '') +
@@ -3884,7 +3884,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       }
       var total = Object.keys(groups).reduce(function (a, k) { return a + groups[k].length; }, 0);
       var masterN = available().filter(function (q) { var r = rec(q); return r && r.mastered; }).length;
-      body = '<p class="sheet-lead">未来 7 天共 ' + total + ' 个考点到期；答对按间隔回到队列；答错或不记得的题按排期回来、明天再来；考前 2 天起不再拉开间隔。</p>' +
+      body = '<p class="sheet-lead">未来 7 天共 ' + total + ' 个考点到期；答对按间隔回到队列；答错或不记得的题按排期回来、今天可重练；考前 2 天起不再拉开间隔。</p>' +
         Object.keys(groups).map(function (k) {
           if (!groups[k].length) return '';
           return '<div class="schedule-group"><div class="schedule-day"><b>' + (k === TODAY ? '今天' : mdLabel(k) + ' 周' + wdLabel(k)) +
@@ -4531,7 +4531,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               /* V222 F6-b: 空答也计题次（看了答案=接触，但正确率 0%） */
               try {
                 var _d6b = progress.days[TODAY] || (progress.days[TODAY] = { a: 0, c: 0, w: 0 });
-                if (!_r6b || _r6b._countedToday !== true) { _d6b.a = (+_d6b.a || 0) + 1; _d6b.la = (+_d6b.la || 0) + 1;   /* V230 A1: 空答看答案也是学习，记 la */ if (_r6b) { _r6b._countedToday = true; _r6b._countedDay = TODAY; } }
+                if (!pp.practice && (!_r6b || _r6b._countedToday !== true)) { _d6b.a = (+_d6b.a || 0) + 1; _d6b.la = (+_d6b.la || 0) + 1;   /* V289 X3r: 练习不计题次 */ if (_r6b) { _r6b._countedToday = true; _r6b._countedDay = TODAY; } }
               } catch(e){}
             }
           } catch(e){}
@@ -4618,7 +4618,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             if (S.session) S.session.answered++;
             if (_outc === 'fuzzy') { if (S.session) S.session.fuzzy++; }
             try{ toast(_sc.partial
-              ? '部分命中：按「模糊」记，明天再来（不进错题本、不进「不记得」）。'
+              ? '部分命中：按「模糊」记，今天可重练（不进错题本、不进「不记得」）。'
               : '未达线：按「不记得」记，今天可重练（本遍不记分）。'); }catch(e){}
           }
         }
@@ -4651,7 +4651,7 @@ case 'rate': {
               _covR = _tR ? (_hR / _tR) : 0;
             }
           } catch(e){ _covR = 0; }
-          var _fullR = (_covR >= 0.70);   /* V282 F4: 0.85 太高导致真同义改写(0.78)被拒而漏整句(0.92)能过；降到 0.70，配合间隔封顶 2 天控制放水 */
+          var _fullR = (_covR >= 0.72);   /* V289 X6: 与三态面板门槛 0.72 统一（此前 0.70/0.72 不一致）。V282 F4: 0.85 太高导致真同义改写(0.78)被拒而漏整句(0.92)能过；降到 0.70，配合间隔封顶 2 天控制放水 */
           if (_argR === 'ok' && !_fullR) {
             /* 未全命中：只能按模糊记，不能自评「会」 */
             applyGrade(_qr, 'fuzzy', { text: _pr.text, sel: _pr.sel, selfJudged: true });
@@ -4677,19 +4677,23 @@ case 'rate': {
                 if (!_wasM) {
                   _rS.streak = Math.max(0, (+(_rS.streak || 0) - 1));
                   _rS.mastered = false;
+                  _rS._skipIntervalCap = false;
+                } else {
+                  /* V289 X2r: 已掌握卡自评**完全不改** interval/due/streak/mastered（保持 30 天抽查承诺） */
+                  _rS._skipIntervalCap = true;
                 }
-                /* 已掌握：mastered/streak 原样保留，仅按 V281 压间隔上限 */
               }
             } catch(e){}
             /* V281 F1b: 自评 ok 的间隔上限压到 2 天（防「漏整句也能推满间隔」），并标记需校准 */
             try {
               var _rkI = KP(_qr);
               var _rI = progress.q[_rkI];
-              if (_rI) {
+              if (_rI && !_rI._skipIntervalCap) {
                 _rI.interval = Math.min(+(_rI.interval || 1), 2);
                 _rI.due = addDays(TODAY, _rI.interval);
                 _rI.needCalib = TODAY;
               }
+              try { if (_rI) delete _rI._skipIntervalCap; } catch(e){}
             } catch(e){}
             try { if (S.session) { S.session.answered++; S.session.selfJudged = (S.session.selfJudged || 0) + 1; } } catch(e){}   /* V281: 自评题次单独计，不进正确率分母 */
             try { toast('已自评为「熟知」（本题判分未达线，按自评记为会；不计入正确率）'); } catch(e){}
@@ -4977,7 +4981,7 @@ case 'rate': {
           var _pJ = (typeof ensurePending === 'function') ? ensurePending() : null;
           /* V178: 防重复 —— 同一题当次已自评则不再记第二次 */
           var _recJ = (typeof rec === 'function') ? rec(_qJ) : null;
-          var _doneByRec = !!(_recJ && _recJ.last === TODAY && _recJ.lastOutcome);
+          var _doneByRec = !!(_recJ && _recJ.last === TODAY && _recJ.lastOutcome && _recJ.lastOutcome !== 'learn' && _recJ.lastOutcome !== 'seen');   /* V289 X5: reveal-only 的 learn/seen 不算「已自评过」 */
           if ((_pJ && _pJ.selfEvalDone) || _doneByRec) {
             if (box) box.innerHTML = '<b>本题已自评过</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天这题只记一次，今天可重练（本遍不记分）。</div>';
             return;
@@ -5009,7 +5013,7 @@ case 'rate': {
       }catch(e){}
       if (box) box.innerHTML = (_grLast && _grLast.learnt)
         ? '<b>📖 首遍学习过（不计分、不进错题本）</b><div style="font-size:13px;color:#6b7280;margin-top:6px">今天可重练（本遍不记分）做首次回忆。自评题不计入「真实答题」的正确率。</div>'
-        : ('<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>');
+        : ('<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，今天可重练') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>');
       /* V262: 不再合成点击 reveal（会走 submitAnswer 空答分支 -> session 双记）；直接标已揭示 */
       try {
         var _pr2 = (typeof ensurePending === 'function') ? ensurePending() : null;
