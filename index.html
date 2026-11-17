@@ -2026,12 +2026,23 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   body.minimal-mode .mv-top .mv-report,
   body.minimal-mode .mv-top .mv-selfline,
   body.minimal-mode .mv-top .mv-ringbox,
-  body.minimal-mode .mv-top .mv-chip,
+  body.minimal-mode .mv-h .mv-chip,
   body.minimal-mode .mv-h .mv-sub{ display:none!important; }
   body.minimal-mode .mv-minimal{ display:block!important; }
 
   /* V135(P1-2): 隐藏旧「今日基础包」Tailwind 块（旧块与灯带口径冲突 447/859/12题/天 vs 614/8题/天） */
   #TASK-SHELL{display:none!important}
+
+  /* V148: minimal 折叠历史与统计区，只留两件清单 */
+  body.minimal-mode #TASK-SHELL,
+  body.minimal-mode #TASK-SHELL-dup,
+  body.minimal-mode .carry,
+  body.minimal-mode .thesis,
+  body.minimal-mode .timeline,
+  body.minimal-mode .timeline-foot,
+  body.minimal-mode #PROGRESS-OVERVIEW,
+  body.minimal-mode #progress,
+  body.minimal-mode #rhythm{ display:none!important; }
 </style>
 
 
@@ -2401,7 +2412,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
   var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
-    if(_onlyReport){ realPct = 0; }   /* V138(G6): 只填报数时状态归零，防琥珀+连击 */
+    if(_onlyReport){ realPct = 0; _qp = 0; _ip = 0; _mpEff = -1; }   /* V148(G6): 只填报数完全归零（环色/连击/徽章/跑道都不计） */
     if(_mp < 0 && realPct > 66) realPct = 66;   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK:reportOK, reportPartial:reportPartial, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
