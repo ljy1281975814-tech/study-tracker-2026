@@ -3774,7 +3774,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var _sjT = 0;
     try { var _dSJ2 = progress.days[TODAY] || {}; _sjT = (+_dSJ2.sj || 0); } catch(e){}
     var _denT = Math.max(0, total - _sjT);
-    var acc = _denT > 0 ? Math.round(ok / _denT * 100) : null;
+    /* V324 ②: 分子/分母统一用 **days 全史** 口径（修 267% —— 此前分子是全史 r.ok、分母只减了今日 sj） */
+    var _okD = 0, _denD = 0;
+    try {
+      for (var _dkA in progress.days) {
+        var _dA = progress.days[_dkA] || {};
+        _okD += (+_dA.c || 0);
+        _denD += Math.max(0, (+_dA.a || 0) - (+_dA.la || 0) - (+_dA.sj || 0));
+      }
+    } catch(e){}
+    if (_denD > 0) { ok = _okD; }   /* 「答对」格也改用 days.c，与正确率同源 */
+    var acc = _denD > 0 ? Math.round(_okD / _denD * 100) : null;
     var ws = wrongStats();
     var wrongN = ws.rolling.length, masteredN = ws.mastered.length;
     var dueN = realDueItems().length;
@@ -4054,7 +4064,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       var a = progress.days[k], b = srcD[k];
       if (!a) { progress.days[k] = b; return; }
       progress.days[k] = {
-        a: Math.max(a.a || 0, b.a || 0), c: Math.max(a.c || 0, b.c || 0), w: Math.max(a.w || 0, b.w || 0)
+        a: Math.max(a.a || 0, b.a || 0), c: Math.max(a.c || 0, b.c || 0), w: Math.max(a.w || 0, b.w || 0),
+        /* V324: 补 la/sj/sec（此前只并 a/c/w -> 导入丢学习与自评题次，正确率分母塌陷） */
+        la: Math.max(a.la || 0, b.la || 0), sj: Math.max(a.sj || 0, b.sj || 0), sec: Math.max(a.sec || 0, b.sec || 0)
       };
     });
     saveProgress();
@@ -4390,7 +4402,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
               if (_fresh.days && progress.days) {
                 for (var _dk4 in _fresh.days) {
                   var _dd4 = _fresh.days[_dk4] || {}, _md4 = progress.days[_dk4] || (progress.days[_dk4] = {});
-                  ['a','c','w','la','sec'].forEach(function (f) { var a = +(_md4[f]||0), b = +(_dd4[f]||0); if (b > a) _md4[f] = b; });
+                  ['a','c','w','la','sec','sj'].forEach(function (f) { var a = +(_md4[f]||0), b = +(_dd4[f]||0); if (b > a) _md4[f] = b; });   /* V324 X3: 加 sj（修跨标签/换设备丢自评计数） */
                   if (_dd4.mod && !_md4.mod) _md4.mod = _dd4.mod;
                 }
               }
