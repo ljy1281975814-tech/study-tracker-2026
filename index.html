@@ -2274,6 +2274,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
      return _s;
    } catch(e) { return null; }
  })();
+ try { if (typeof window !== 'undefined') window.FIRSTUSE = FIRSTUSE; } catch(e){}   /* V272 1: 挂 window 供跨作用域读取（V268 PO-MATCH 曾是死代码） */
  var TOTAL_Q = 614, CUTOFF = 4;
  var RAMP = [
   { step:'起步', from:'2026-11-11', to:'2026-11-17', q:8 },
@@ -3380,7 +3381,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var mEl = document.getElementById('PO-MATCH');
     /* V268: 首次使用当日起算 —— 首日不再显示「落后 -15.8%」 */
     try {
-      if (typeof FIRSTUSE !== 'undefined' && FIRSTUSE && String(FIRSTUSE) >= String(TODAY)) {
+      var _FU = (typeof window !== 'undefined' && window.FIRSTUSE) ? window.FIRSTUSE : (typeof FIRSTUSE !== 'undefined' ? FIRSTUSE : null);
+      if (_FU && String(_FU) >= String(TODAY)) {
         mEl.textContent = '匹配度 起步日'; mEl.style.color = '#6b7280';
         document.getElementById('PO-EBAR').style.width = ePct + '%';
         return;
