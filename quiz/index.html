@@ -4062,10 +4062,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var srcQ = migrateQ(data.progress.q || {});
     var added = 0, updated = 0, skipped = 0, merged = 0;
     if (mode === 'replace') { progress.q = {}; progress.days = {}; progress.unlocked = data.progress.unlocked || []; try { progress._replaceAt = Date.now(); } catch(e){} }   /* V280: 覆盖导入标记（跨标签整包替换） */
-    /* V330 P1a: replace 分支也要 clamp（此前 !a 直接赋值绕过 -> 导入 a12c12sj5 首页 171%） */
+    /* V346 B4: replace 分支 clamp 改为对 **导入源** 收口（此前遍历已清空的 progress.days = no-op 死循环） */
     try {
-      for (var _rpk in progress.days) {
-        var _rpd = progress.days[_rpk] || {};
+      var _srcAll = (data && data.progress && data.progress.days) || {};
+      for (var _rpk in _srcAll) {
+        var _rpd = _srcAll[_rpk] || {};
         var _rpc = Math.max(0, (+_rpd.a||0) - (+_rpd.la||0) - (+_rpd.sj||0));
         if ((+_rpd.c||0) > _rpc) _rpd.c = _rpc;
       }

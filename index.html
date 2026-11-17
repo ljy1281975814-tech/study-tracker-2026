@@ -2615,7 +2615,23 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var nx = cur.next ? (cur.next.ico+' '+cur.next.nm+' '+cur.next.t) : '';
   var msg;
   var _isPast = (T >= EXAM);  // V52: 考试日当天也终态
+  /* V346: 断档检测 —— 距上次真实学习 >=2 天，首屏给「欢迎回来 + 最小重启」而不是审判 */
+  var _gapDays = 0, _gapOk = false;
+  try {
+    var _qraw = localStorage.getItem('dsh.347.quiz.v3') || '{}';
+    var _qobj = JSON.parse(_qraw);
+    var _dkeys = Object.keys((_qobj && _qobj.days) || {}).filter(function(k){ return (( _qobj.days[k]||{}).a||0) > 0; }).sort();
+    if (_dkeys.length) {
+      var _lastD = _dkeys[_dkeys.length - 1];
+      var _t0 = new Date(T + 'T00:00:00'), _t1 = new Date(_lastD + 'T00:00:00');
+      _gapDays = Math.round((_t0 - _t1) / 86400000);
+      _gapOk = _gapDays >= 2 && _lastD < T;
+    }
+  } catch(e) { _gapOk = false; }
+
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
+  else if(_gapOk) msg = '👋 <b>欢迎回来</b>（距上次学习 <b>' + _gapDays + '</b> 天）。<br>不用补欠账 —— <b>今天只做最小重启</b>：<b>3 道</b>题（机判）+ <b>30 个</b>墨墨词，做完今天就算赢。之前欠的都不追，从明天正常节奏接上。';   /* V346: 失败者再入场 */
+
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
   else if((cur._learnDay || cur.acc === null) && (cur._learnN||0) > 0) msg = (function(){
