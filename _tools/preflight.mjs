@@ -267,6 +267,32 @@ async function main() {
         pctJ2 !== '' && pctJ2 !== _pctJ1,
         'sj=5 pct="' + _pctJ1 + '" sj=0 pct="' + pctJ2 + '"');
 
+  // M. 【进度页守卫】种 3 机判对 + 5 自评 -> quiz 进度页正确率必须 ≤100%（钉死 267% 回归）
+  await navigate(QUIZ);
+  await evalJs(`(() => {
+    const d = new Date(); d.setHours(d.getHours() - 4);
+    const T = d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    const q = {};
+    for (let i = 0; i < 8; i++) q['pfm'+i] = { ok: 1, last: T, lastOutcome: 'ok', seen: 1 };
+    localStorage.setItem('dsh.347.quiz.v3', JSON.stringify({ v:3, q:q, days: { [T]: { a:8, c:3, w:0, la:0, sj:5 } } }));
+    return T;
+  })()`);
+  await navigate(QUIZ);
+  const progAcc = await evalJs(`(() => {
+    try {
+      location.hash = '#progress';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    } catch(e){}
+    return 1;
+  })()`);
+  await sleep(1200);
+  const progTxt = await evalJs(`document.body.innerText`);
+  const _pcts = (progTxt || '').match(/(\d{1,3})\s*%/g) || [];
+  const _over = _pcts.filter(function (x) { var n = parseInt(x, 10); return n > 100; });
+  check('进度页正确率 ≤100%（M：种 3 机判对 + 5 自评，钉死 267%）',
+        _over.length === 0,
+        'pcts=' + _pcts.slice(0, 8).join(',') + ' over100=' + _over.length);
+
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
 
