@@ -2370,7 +2370,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var cn = (v && typeof v.c === 'number') ? v.c : 0;
     var ln2 = (v && typeof v.la === 'number') ? v.la : 0;   /* V227: learn 题次 */
      var sj2 = (v && typeof v.sj === 'number') ? v.sj : 0;   /* V306: 自评题次 */
-    if(n !== null && isFinite(n) && n >= 0){ out[d] = n; QD_ACC[d] = {a:n, c:cn, la:ln2, sj:sj2}; }
+     var w2 = (v && typeof v.w === 'number') ? v.w : 0;   /* V328: 答错题次（机器判分） */
+    if(n !== null && isFinite(n) && n >= 0){ out[d] = n; QD_ACC[d] = {a:n, c:cn, la:ln2, sj:sj2, w:(typeof w2 !== 'undefined' ? w2 : 0)}; }
    }
    // 最后兜底：只有当「顶层/包装层都没有 days」时，才用 q[*].last 估算（且不覆盖已有）
    if(!Object.keys(out).length && q.q){
@@ -2404,7 +2405,16 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   try { _cday = (loadCourse() || {})[s] || null; } catch(e) { _cday = null; }
   for(var i=0;i<rq.list.length;i++){
    var g = rq.list[i], v = +(rec[g.k] || 0);
-   if(g.k === '题'){ v = QD[s] || 0; }
+   if(g.k === '题'){
+     /* V328 ①: 达标只认 **机器判分题次**（c+w），不认学习(la)/自评(sj)
+        —— 修「空揭晓 12 次 = 学习日 + 答题 12/12 达标 + 不欠账✓」的套利 */
+     var _qa0 = QD_ACC[s];
+     if (_qa0 && (typeof _qa0.c === 'number' || typeof _qa0.w === 'number')) {
+       v = (+_qa0.c || 0) + (+_qa0.w || 0);
+     } else {
+       v = QD[s] || 0;
+     }
+   }
    /* LESSON_20261117：课改节数后，旧分钟值不得被当成节数，也不静默算达标 */
    var legacyCourse = 0;
    if(g.k === '课' && v > 0){
