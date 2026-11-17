@@ -2387,11 +2387,23 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   return s < RAMP[0].from ? RAMP[0] : RAMP[RAMP.length-1];
 }
  /* V357: recovery 检测+写 key（**先于 reqOf 执行**，修「初始门仍是常规 5 个」） */
+function _studyDaySafe(){
+  try { if (typeof studyDay === 'function') return studyDay(); } catch(e){}
+  try { var d = new Date(); d.setHours(d.getHours() - 4); return d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2); } catch(e){}
+  return '';
+}
 function _ensureRecovery(s){
   try {
+    /* V358 P1a: **只处理 <= 今天**（跑道渲染会传未来日，此前会给明天写 key -> 假「欢迎回来」） */
+    var _today = _studyDaySafe();
+    if (String(s) > String(_today)) return null;
     var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
     if (r && r.day === s) return r;
-    if (r && r.day !== s) return null;   /* 非今日的旧 key 不复用 */
+    /* V358 P1b: 旧 key 清掉并**继续检测**（此前 return null -> 首帧 reqOf 读不到 -> 常规 5 门） */
+    if (r && r.day !== s) {
+      try { localStorage.removeItem('dsh.347.recovery.v1'); } catch(e){}
+      r = null;
+    }
     var _src = {};
     /* a) quiz 答题日 */
     try {
@@ -2839,7 +2851,7 @@ function reqOf(s){
    ? ('🎓 初试已结束 ｜ 全程实做 <b>' + df.actual + '</b> 题次')  // W7c：考后不再报欠账
    : ('📐 全程 <b>'+TOTAL_Q+'</b> 题次目标 · 已完成 <b>'+_sumQ2+'</b>（'+Math.round(_sumQ2/Math.max(1,TOTAL_Q)*100)+'%）· 剩余 '+_left614+' ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
    + (df.deficit > 0
-     ? (cur.pass ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）'
+     ? (cur.pass ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + (_isRecoveryDay(T) ? '（⭐ 重启日：3 题 + 30 词 = 今天算赢；欠账不追）' : '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）')
      : '<span class="mv-good">不欠账 ✓</span>'));
 
   
