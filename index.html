@@ -3301,7 +3301,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     var debt = 0;
     for(var i=0;i<PM.ramp.length;i++){ totalMin += PM.ramp[i].days*PM.ramp[i].时; }
     // 今日
-    var tTgt = {背:120, 题:ST.题, 课:1, 英语:1, 政治:8, 模拟考:ROWS[5][1]};
+    var tTgt = {背:120, 题:ST.题, 课:6, 英语:1, 政治:14, 模拟考:(T==='2026-11-24'||T==='2026-12-01')?1:0};
     var tDone = 0, tNeed = 0;
     ROWS.forEach(function(r){ var k=r[0], tgt=r[1]; if(tgt<=0) return; tNeed++; if((D[T][k]||0)>=tgt) tDone++; });
     document.getElementById('PO-DPCT').textContent = '见 🔥 末路灯带';   // PO_MERGE_20261115: 今日完成度唯一口径在 MOTIV
