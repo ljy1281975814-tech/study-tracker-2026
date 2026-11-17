@@ -3329,8 +3329,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         (isChoice(q) && !p.sel.length ? ' disabled' : '') + '>' + label + '</button></div>';
     }
     if (!p.outcome) {
-      // V158: 空答仅揭晓 —— 独立底栏，不出现「命中不足已排回今天第 0 题」
-      if (p.skipGrade) {
+      // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已排回今天第 0 题」
+      if (p.skipGrade || (!isChoice(q) && !String(p.text || '').trim())) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
           (last ? '完成本次' : '下一题') + '<span>本次不记分（仅揭晓答案）</span></button></div>';
@@ -3711,6 +3711,19 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function afterGradeScroll() { setTimeout(scrollToResult, 40); }
 
   function submitAnswer() {
+    /* V161: 非选择题空作答 —— 不提交、不排回，走「只揭晓」 */
+    try{
+      var _qS = currentQ();
+      if (_qS && !isChoice(_qS)) {
+        var _pS = ensurePending();
+        if (_pS && !String(_pS.text || '').trim()) {
+          _pS.skipGrade = true; _pS.revealed = true;
+          try{ toast('空作答：只揭晓看答案，本次不记分'); }catch(e){}
+          render();
+          return;
+        }
+      }
+    }catch(e){}
     var q = currentQ(), p = ensurePending();
     if (!q || !p) return;
     if (p.restored) { toast('这张卡今天已经判过了，明天按排期回来。'); return; }
@@ -3742,6 +3755,21 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   function grade(outcome) {
     try{ var _cq0 = currentQ(); var _sp = _cq0 ? S.pend[_cq0.id] : null; if (_sp && _sp.skipGrade) { return; } }catch(e){}   /* V158 P0: 空答只揭晓，按题 id 查 skipGrade */
+    /* V161 P0 硬门：非选择题 + 文本为空 + 判 ok => 拒绝记账（封死空答伪造 8/8·100%） */
+    try{
+      if (outcome === 'ok') {
+        var _cqA = currentQ();
+        if (_cqA && !isChoice(_cqA)) {
+          var _pA = S.pend[_cqA.id] || ensurePending();
+          if (_pA && !String(_pA.text || '').trim()) {
+            _pA.skipGrade = true;
+            try{ toast('空作答：本次不记分（未写任何内容）'); }catch(e){}
+            try{ render(); }catch(e){}
+            return;
+          }
+        }
+      }
+    }catch(e){}
     var q = currentQ(), p = ensurePending();
     if (!q || !p || !p.revealed) return;
     if (outcome === 'forgot') outcome = 'bad';   /* 三态「不记得」＝原有 bad 语义（次日+当天重练） */
