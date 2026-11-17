@@ -3638,9 +3638,9 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       /* V250 1: 同义改写兜底 —— 高覆盖但未达线，给三态让用户自己确认（此前只设标记、0 按钮） */
       if (p.needSelfJudge) {
         return '<div class="quiz-bar">' + prev +
-          '<button class="bar-btn" data-act="rate" data-arg="forgot">不记得<span>明天再练</span></button>' +
-          '<button class="bar-btn" data-act="rate" data-arg="fuzzy">模糊<span>明天再练</span></button>' +
-          '<button class="bar-btn bar-ok" data-act="rate" data-arg="ok">熟知<span>明天</span></button></div>';
+          '<button class="bar-grade bar-grade--bad" data-act="grade" data-arg="forgot">不记得<span>明天再练</span></button>' +
+          '<button class="bar-grade bar-grade--mid" data-act="grade" data-arg="fuzzy">模糊<span>明天再练</span></button>' +
+          '<button class="bar-grade bar-grade--ok" data-act="grade" data-arg="ok">熟知<span>明天</span></button></div>';   /* V252 1: 复用 grade handler（此前 data-act=rate 无 case -> 死按钮） */
       }
       // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已明天再练第 0 题」
       if (p._revealedBefore) {
@@ -4486,14 +4486,15 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
 
         var _q = currentQ();
         pp.revealed = true; pp.hits = kwHits(_q, pp.text);
-        recordTiming(_q, timerSec()); timerPause();
+        if (!pp.practice) { recordTiming(_q, timerSec()); }   /* V253: 练习不写计时（N9 真修） */
+        timerPause();
         var _sc = scoreOf(_q, pp);
         try { pp._scSnap = _sc; pp._ccSnap = clauseCover(_q, pp.text || ''); } catch(e){}   /* V183 P0-A: 冻结 */
         try {
           var _rk = KP(_q);
           if (!progress.q[_rk]) progress.q[_rk] = { seen: 0, ok: 0, bad: 0, fuzzy: 0, wrong: 0, streak: 0, interval: 0, due: null };
           delete progress.q[_rk].draft;
-          progress.q[_rk].revealedToday = TODAY;   /* V194: 记录不存在也要建 */
+          if (!pp.practice) { progress.q[_rk].revealedToday = TODAY; }   /* V253: 练习模式不写 revealedToday（N9 真修） */
           saveProgress();
         } catch(e){}
         /* V191 P0-5: 首次接触（无任何历史记录）视为「学习模式」——揭晓不记 bad，不进错题本 */
@@ -4833,7 +4834,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _gr = applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [], selfEval: true });
           try { _grLast = _gr; } catch(e){}
           if (_pJ) {
-            try { if (S.session && !(_gr && _gr.learnt)) S.session.answered++; } catch(e){}   /* V250 2: SE 非首触复习计入完成页 */
+            /* V252 2: 删除 V250 2 的 session.answered++（applyGrade 已计 -> 双记 8→16） */
             _pJ.selfEvalDone = true; _pJ.selfEvalOk = !!ok;
             /* V238: 首触 learn 时 UI 也按 learn（此前赋值被这里覆盖 = 假修复） */
             _pJ.outcome = (_gr && _gr.learnt) ? 'learn' : (ok ? 'fuzzy' : 'bad');
