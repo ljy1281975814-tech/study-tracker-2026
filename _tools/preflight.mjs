@@ -342,12 +342,13 @@ async function main() {
   const m4 = await evalJs(`(() => {
     const t = document.body.innerText || '';
     const gate = (t.match(/答题\\s*(\\d+)\\/(\\d+)/) || []);
+    const learnGate = /学习\\s*(\\d+)\\/(\\d+)/.test(t);
     const achieved = /答题已达标/.test(t);
-    return { done: gate[1] ? +gate[1] : null, tgt: gate[2] ? +gate[2] : null, achieved: achieved };
+    return { done: gate[1] ? +gate[1] : null, tgt: gate[2] ? +gate[2] : null, achieved: achieved, learnGate: learnGate };
   })()`);
-  check('M4 空揭晓 12 次（la=12）-> 答题门不达标（钉死 V328 的 c+w）',
-        m4.done === 0 && m4.achieved === false,
-        'gate=' + m4.done + '/' + m4.tgt + ' achieved=' + m4.achieved);
+  check('M4 空揭晓 12 次（la=12）-> 门不是机判达标（学习日态，钉死 V328 的 c+w）',
+        m4.achieved === false && (m4.done === 0 || m4.learnGate === true),
+        'gate=' + m4.done + '/' + m4.tgt + ' achieved=' + m4.achieved + ' learnGate=' + m4.learnGate);
 
   // G. 零 JS 错误汇总
   check('全程 0 JS 运行时错误', errors.length === 0, errors.slice(0, 3).join(' | ') || 'none');
