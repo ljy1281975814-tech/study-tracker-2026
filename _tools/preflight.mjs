@@ -230,6 +230,7 @@ async function main() {
     const KEY = 'dsh.347.quiz.v3';
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    try { localStorage.removeItem('dsh.347.recovery.v1'); } catch(e){}
     const p = { v: 3, q: {}, days: {} };
     p.days[T] = { a: 30, c: 24, w: 0, la: 0, sj: 6 };   /* V335: c+w=24 覆盖 8/12/18/24 四档, acc=24/(30-6)=100%(未排除sj则80%) */
     localStorage.setItem(KEY, JSON.stringify(p));
@@ -253,6 +254,7 @@ async function main() {
     const KEY = 'dsh.347.quiz.v3';
     const d = new Date(); d.setHours(d.getHours() - 4);
     const T = d.getFullYear() + '-' + ('0'+(d.getMonth()+1)).slice(-2) + '-' + ('0'+d.getDate()).slice(-2);
+    try { localStorage.removeItem('dsh.347.recovery.v1'); } catch(e){}
     const p = { v: 3, q: {}, days: {} };
     p.days[T] = { a: 8, c: 3, w: 0, la: 0, sj: 0 };
     localStorage.setItem(KEY, JSON.stringify(p));

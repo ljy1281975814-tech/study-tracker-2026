@@ -2395,10 +2395,19 @@ function _ensureRecovery(s){
     /* V358 P1a: **只处理 <= 今天**（跑道渲染会传未来日，此前会给明天写 key -> 假「欢迎回来」） */
     var _today = _studyDaySafe();
     if (String(s) > String(_today)) return null;
+    /* V365: **首次使用日 = 今天 -> 新用户/清过数据，不触发断档**
+       （修「全新浏览器首开即假报欢迎回来 4 天」——内建 SEED 墨墨历史被当成上次学习） */
+    try {
+      var _fu = localStorage.getItem('dsh.347.firstuse');
+      if (_fu && String(_fu) === String(s)) return null;
+      var _fuAlt = (typeof window !== 'undefined' && window.FIRSTUSE) ? window.FIRSTUSE : null;
+      if (_fuAlt && String(_fuAlt) === String(s)) return null;
+    } catch(e){}
     var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
     if (r && r.day === s) return r;
-    /* V358 P1b: 旧 key 清掉并**继续检测**（此前 return null -> 首帧 reqOf 读不到 -> 常规 5 门） */
+    /* V364: 旧 key（day < 今天）才清理；day > 今天（未来污染）直接忽略不写 */
     if (r && r.day !== s) {
+      if (String(r.day) > String(s)) return null;   /* 未来 key：不采信也不覆盖 */
       try { localStorage.removeItem('dsh.347.recovery.v1'); } catch(e){}
       r = null;
     }
@@ -2439,10 +2448,11 @@ function _ensureRecovery(s){
       var _R = JSON.parse(localStorage.getItem('dsh.347.report.v1') || '{}') || {};
       for (var _k4 in _R) { var _rr = _R[_k4] || {}; if ((+_rr.mo || 0) > 0 || (+_rr.do || 0) > 0) _src[_k4] = 1; }
     } catch(e){}
-    var _ds = Object.keys(_src).sort();
+    /* V364: gap 从「**今天之前**的最后学习日」算 —— 否则今天一做事 _last=今天、gap=0，
+       恢复日立刻消失（V358 引入的回归） */
+    var _ds = Object.keys(_src).filter(function(d){ return String(d) < String(s); }).sort();
     if (!_ds.length) return null;
     var _last = _ds[_ds.length - 1];
-    if (!(_last < s)) return null;
     var _t0 = new Date(s + 'T00:00:00'), _t1 = new Date(_last + 'T00:00:00');
     var _gap = Math.round((_t0 - _t1) / 86400000);
     if (_gap < 2) return null;
@@ -2668,11 +2678,13 @@ function reqOf(s){
   var pct = cur.pct;
   var pEl = $id('mv-pct'), ring = $id('mv-ring'), svg = $id('mv-ringsvg');
   var _dispPct = Math.round(pct);
+  /* V362: 恢复日不要求报数 -> 视为已达标（修「重启完成却被 99% 琥珀+aria 报数未达标否定」） */
+  var _effReportOK = cur.reportOK || _isRecoveryDay(T);
   if(_dispPct >= 100 && !cur.pass) _dispPct = 99;  // V33
-  if(_dispPct >= 100 && cur.pass && !cur.reportOK) _dispPct = 99;  // V86: 100%还需报数达标
+  if(_dispPct >= 100 && cur.pass && !_effReportOK) _dispPct = 99;  // V86
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
-  var col = (cur.pass && cur.reportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportOK || cur.reportPartial) ? '#b45309' : '#b91c1c');  // V76: 报数达标也算琥珀
+  var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportOK || cur.reportPartial) ? '#b45309' : '#b91c1c');  // V76: 报数达标也算琥珀
   pEl.style.color = col;
   var C = 2*Math.PI*44;
   ring.style.stroke = col;
@@ -2680,7 +2692,7 @@ function reqOf(s){
   if(svg){
    svg.setAttribute('aria-valuenow', String(_dispPct));
    var _vt = '今日完成度 ' + _dispPct + '%';
-  if(cur.pass){ _vt += cur.reportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
+  if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }   /* V362 */
   else if(cur.quizPartial && !cur.quizOK){
    var _need = Math.max(0, (cur.quizRowTgt||8) - (cur.quizRowDone||0));
    _vt += '（答题还差 ' + _need + ' 题达标）';
@@ -2951,7 +2963,7 @@ function reqOf(s){
    c4 = sh(c4,-1);
   }
   var dl = Math.round((pd(EXAM)-pd(T))/864e5);
-  $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · '+cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天';  // W7b
+  $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · ' + (_isRecoveryDay(T) ? '重启日 · 3 题 + 30 词' : (cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天'));   /* V363: 恢复日头部不写 12 题/天 */  // W7b
   $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 天有进展';
   if(streak === 0 && $id('mv-chip')){ $id('mv-chip').classList.add('zero'); }  // V26: 0态中性色
   else if($id('mv-chip')){ $id('mv-chip').classList.remove('zero'); }
