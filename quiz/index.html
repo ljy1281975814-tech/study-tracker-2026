@@ -2766,8 +2766,17 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var h = p.hits || kwHits(q, p.text || '');
     var cov = 0;
     try { cov = ansCoverage(q, p.text || ''); } catch(e){ cov = 0; }
-    var _pass = cov >= 0.55;
-    var _partial = (!_pass && cov >= 0.30);
+    /* V171 P0: pass 需同时「覆盖率够」+「得分点覆盖够」
+       —— 修「题干+1个得分点 / 首分句」被判答对（UI 显示命中 1/3 却答错不了） */
+    var _phPts = null;
+    try { _phPts = pointHits(q, p.text || ''); } catch(e){ _phPts = null; }
+    var _ptsTotal = (_phPts && _phPts.total) || 0;
+    var _ptsHit = (_phPts && _phPts.hit) || 0;
+    var _ptsNeed = _ptsTotal > 0 ? Math.ceil(_ptsTotal * 0.6) : 0;
+    var _ptsOk = (_ptsTotal === 0) ? true : (_ptsHit >= _ptsNeed);
+    var _covPass = cov >= 0.65;
+    var _pass = _covPass && _ptsOk;
+    var _partial = (!_pass && (cov >= 0.30));
     return { auto: true, pass: _pass, partial: _partial, cov: cov,
              hit: h.hit, total: (ek && ek.length) || h.total || 0 };
   }
@@ -2939,7 +2948,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     var q = currentQ();
     if (!q) return null;
     if (S.pend[q.id]) return S.pend[q.id];
-    var r = rec(q), done = answeredToday(q) && !(S.session && S.session.practice);
+    /* V171 P1: 只有「已答对/已掌握」才锁；bad/fuzzy 当天允许真重做并计数
+       —— 修「首页说待复习 1 题，点进去却是锁定卡」 */
+    var _r0 = rec(q);
+    var _lockByOk = !!(_r0 && (_r0.lastOutcome === 'ok' || _r0.mastered));
+    var r = _r0, done = answeredToday(q) && _lockByOk && !(S.session && S.session.practice);
     var p = {
       sel: (r && r.lastSel) || [],
       text: (r && r.draft) || '',
@@ -3396,7 +3409,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       if (sc.auto && !sc.pass) {
         return '<div class="quiz-bar">' + prev +
           '<button class="bar-primary" data-act="' + (last ? 'finish' : 'next') + '">' +
-          (last ? '完成本次' : '下一题') + '<span>' + (sc.partial ? '部分命中 · 按「模糊」记，明天再来' : '未达线 · 按「不记得」记，明天再来') + '</span></button></div>';
+          (last ? '完成本次' : '下一题') + '<span>' + (sc.partial ? '部分命中（本次不计分·可重做）' : (p.graded ? '未达线 · 已按「不记得」记' : '未达线 · 本次不计分（可重做）')) + '</span></button></div>';
       }
       // ② 达标（或该题无可判分关键词）⇒ 三态反馈，仅此时出现
       var okDays = nextIntervalFor(q, 'ok');
@@ -3818,7 +3831,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _pA = S.pend[_cqA.id] || ensurePending();
           var _txtA = normTxt(_pA && _pA.text || '');
           var _ansA = normTxt(_cqA.ans || '');
-          var _needA = _ansA.length > 0 ? Math.max(6, Math.ceil(_ansA.length * 0.4)) : 6;
+          /* V170: 短答案（<=5字）不得被 6 字硬门误杀 —— 门槛改为 max(2, 40%答案) */
+          var _needA = _ansA.length > 0 ? Math.max(2, Math.ceil(_ansA.length * 0.4)) : 6;
           /* V167 P0: 记 ok 必须**真通过判分**（重跑 scoreOf），不能只查长度
              —— 封死「400 个 x / 题干重复 -> Ctrl+Enter -> Enter -> 答对了」键盘伪造 */
           var _scA = null;
@@ -4303,19 +4317,20 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     }
     function _judge(ok) {
       var box = document.getElementById('SE-BOX');
-      if (box) box.innerHTML = '<b>' + (ok ? '✅ 记为会' : '❌ 记为不会，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对（不计分，避免自评不诚实）</div>';
-      // V147(P1): 点「想出来了✓」= 用户已掌握 → 把答案填进 pending.text，reveal 判分必对（不再误判 bad）
-      try {
-        if (ok) {
-          var _p = ensurePending();
-          var _q2 = currentQ();
-          if (_p && _q2) { _p.text = String(_q2.ans || ''); _p.selfOk = true; }
+      /* V171 P0: 自评题不记「答对」—— 记 fuzzy（不进错题本、不推 ok 间隔、不计入正确率），
+         避免「8 题自评 + 手填三个数 = 100% 绿环」的伪造 */
+      try{
+        var _qJ = (typeof currentQ === 'function') ? currentQ() : null;
+        if (_qJ && typeof applyGrade === 'function') {
+          applyGrade(_qJ, ok ? 'fuzzy' : 'bad', { text: '', sel: [] });
         }
-      } catch (e) {}
+      }catch(e){}
+      if (box) box.innerHTML = '<b>' + (ok ? '✅ 记为「模糊」（自评，不计入正确率）' : '❌ 记为「不记得」，明天再来') + '</b><div style="font-size:13px;color:#6b7280;margin-top:6px">下面看答案核对。自评题不抓字，所以不计入「真实答题」的正确率。</div>';
       try {
         var b = document.querySelector('[data-act="reveal"]') || document.querySelector('.bar-primary') || document.querySelector('button[id*="reveal"]');
         if (b) b.click();
       } catch (e) {}
+      try{ if (typeof render === 'function') render(); }catch(e){}
     }
     function _tick() { setTimeout(_apply, 120); }
     window.addEventListener('hashchange', _tick);
