@@ -3349,7 +3349,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   }
   function scopeHTML() {
     return '<div class="scope"><div class="scope-h">题库口径（唯一权威）</div>' +
-      '<p>运行时真源 <b>zyk.json 874 条</b>（普心 613 / 社心 261）；<b>题库_v1.json 811 条</b>在社心第 1–3 章只收到 10 条简答，比真源少 61 条，另在社心第 5 章少 2 条，合计 <b>63 条</b>。若按 811 出题，社心已学三章只剩 10 题——所以运行时用 874。</p>' +
+      '<p>运行时真源 <b>zyk.json 874 条</b>（普心 613 / 社心 261）→ <b>运行时候选 ' + ITEMS.length + ' 条</b>；<b>题库_v1.json 811 条</b>在社心第 1–3 章只收到 10 条简答，比真源少 61 条，另在社心第 5 章少 2 条，合计 <b>63 条</b>。若按 811 出题，社心已学三章只剩 10 题——所以运行时用 874。</p>' +
       '<p>已学 ' + BANK.learned.length + ' 章 = <b>' + META.learned + ' 题 / ' + Math.max(1, reps(available()).length) + ' 个考点</b>（' + META.alt +
       ' 条是同卡二次回忆）。选择题 <b>' + META.learnedMc + '</b> 道自动判分，其余 <b>' + (META.learned - META.learnedMc) + '</b> 道按关键词自评。</p>' +
       '<button class="scope-link" data-act="sheet" data-arg="scope">查看数据口径与题库样例清单 →</button></div>';
@@ -3638,8 +3638,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       /* V250 1: 同义改写兜底 —— 高覆盖但未达线，给三态让用户自己确认（此前只设标记、0 按钮） */
       if (p.needSelfJudge) {
         return '<div class="quiz-bar">' + prev +
-          '<button class="bar-grade bar-grade--bad" data-act="rate" data-arg="forgot">不记得<span>明天再练</span></button>' +
-          '<button class="bar-grade bar-grade--mid" data-act="rate" data-arg="fuzzy">模糊<span>明天再练</span></button>' +
+          '<button class="bar-grade bar-grade--bad" data-act="rate" data-arg="forgot">不记得<span>今天可重练</span></button>' +
+          '<button class="bar-grade bar-grade--mid" data-act="rate" data-arg="fuzzy">模糊<span>今天可重练</span></button>' +
           '<button class="bar-grade bar-grade--ok" data-act="rate" data-arg="ok">熟知<span>自评 · 不计正确率</span></button></div>';   /* V274: 恢复自评熟知（计入题次与间隔，但不计正确率） */
       }
       // V158/V161: 空答（含未写就提交）中立底栏，绝不出现「命中不足已明天再练第 0 题」
@@ -3849,6 +3849,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         : '<p>答对 ' + s.right + ' 题' + (_learnedN > 0 ? ' · 学习 ' + _learnedN + ' 题' : '') + ' · 正确率 ' + (_gradedN > 0 ? acc + '%' : '—') + ' · 用时 ' + mins + ' 分钟。') + (_learnedN > 0 && _gradedN === 0 ? '首遍学习不进错题本；明天按排期回来做首次回忆。</p>' : '答对按记忆间隔回队列，答错或没把握的题按排期回来、明天再来，并进错题本。</p>') +
       '<div class="done-stats"><div class="done-stat"><b>' + s.right + '</b><span>答对</span></div>' +
       '<div class="done-stat"><b>' + Math.max(0, (s.answered||0) - (s.right||0) - (s.learned||0) - (s.selfJudged||0)) + '</b><span>答错/没把握</span></div>' +
+      ((s.selfJudged||0) > 0 ? '<div class="done-stat"><b>' + (s.selfJudged||0) + '</b><span>自评（不计正确率）</span></div>' : '') +
       '<div class="done-stat"><b>' + (_gradedN > 0 ? acc + '%' : '—') + '</b><span>正确率</span></div></div>' +
       '<div class="done-actions"><button class="hero-cta" data-act="go" data-arg="home">回首页</button>' +
       '<button class="done-ghost" data-act="go" data-arg="wrong">看错题本</button>' +
@@ -4537,8 +4538,11 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           try{ toast('本次只看答案：不记对错、不计正确率（明天按排期再来）'); }catch(e){}
           pp.revealed = true; pp.selfOk = true; pp.hits = { hit: 0, total: 0 };
           pp.skipGrade = true;
-          try { if (S.session) { S.session.answered++; S.session.learned = (+S.session.learned || 0) + 1; } } catch(e){}   /* V248 B: 空答看答案也计入学习题次（完成页不再 0 题） */
-          try { pp._emptyRevealCounted = TODAY; } catch(e){}   /* V283 2: 标记已计次，SE 判分跳过第二次 */
+          /* V285 2: 练习模式不计学习题次（修「练习看答案也写 days」） */
+          if (!pp.practice) {
+            try { if (S.session) { S.session.answered++; S.session.learned = (+S.session.learned || 0) + 1; } } catch(e){}
+            try { pp._emptyRevealCounted = TODAY; } catch(e){}
+          }
           /* V282 F5: 空答 reveal 也写 last（否则 PO-QUIZ「今日暂无记录」与 index 答题门 8/8 矛盾） */
           try {
             var _qE = (typeof currentQ === 'function') ? currentQ() : null;
