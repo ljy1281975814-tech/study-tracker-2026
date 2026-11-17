@@ -2260,7 +2260,7 @@
 .chip--imp-support{background:#eef3f9;color:#0b74c4}
 .chip--imp-later{background:#e5e7eb;color:#4b5563}
 
-  body.in-session #ROUND-BAND{display:none!important}
+  body.in-session #ROUND-BAND{display:none!important}  /* V133: 答题时收起，只在首页显示 */
 </style>
 </head>
 <body>
@@ -2861,6 +2861,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       answered: 0, right: 0, practice: mode === 'practice'
     };
     S.pend = {};
+    document.body.classList.add('in-session');
     go('quiz');
   }
   function currentQ() {
@@ -4073,12 +4074,49 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
     function _syncBand() {
       var h = (location.hash || '').replace('#', '');
       var isHome = (h === '' || h === 'home');
-      el.style.display = isHome ? 'flex' : 'none';
+      var inSession = document.body.classList.contains('in-session');
+      // V131: 首页完整band；答题时收成小提醒（可点换档）；其它页隐藏
+      if (inSession) {
+        el.style.setProperty('display','flex','important');
+        el.style.padding = '2px 10px';
+        el.style.fontSize = '11px';
+        el.style.opacity = '.72';
+        el.style.cursor = 'pointer';
+        el.title = '点这里换 A/B 档';
+        var full = document.getElementById('ROUND-FULL');
+        if (full) full.style.setProperty('display','none','important');
+        var compact = document.getElementById('ROUND-COMPACT');
+        if (compact) compact.style.setProperty('display','inline','important');
+      } else {
+        el.style.display = isHome ? 'flex' : 'none';
+        el.style.padding = '';
+        el.style.fontSize = '';
+        el.style.opacity = '';
+        el.style.cursor = '';
+        el.title = '';
+        var full2 = document.getElementById('ROUND-FULL');
+        if (full2) full2.style.display = 'flex';
+        var compact2 = document.getElementById('ROUND-COMPACT');
+        if (compact2) compact2.style.display = 'none';
+      }
       var lb = document.getElementById('ROUND-LABEL');
       if (lb) lb.textContent = roundLabel(ROUND_MODE);
     }
     _syncBand();
     window.addEventListener('hashchange', _syncBand);
+    // V130: 点小条展开完整 band 3 秒（可换档）
+    el.addEventListener('click', function(e){
+      if (!document.body.classList.contains('in-session')) return;
+      var full = document.getElementById('ROUND-FULL');
+      var compact = document.getElementById('ROUND-COMPACT');
+      if (full) full.style.display = 'flex';
+      if (compact) compact.style.display = 'none';
+      el.style.padding = '8px 14px';
+      el.style.fontSize = '14px';
+      el.style.opacity = '1';
+      clearTimeout(window.__bandT);
+      window.__bandT = setTimeout(function(){ _syncBand(); }, 5000);
+    });
   })();
 
   /* SELF_EVAL_20261111: 简答/论述/案例 不打字，看答案自评（用户：现在重点是记核心考点，作答后续开发） */
