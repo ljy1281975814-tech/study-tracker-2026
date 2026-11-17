@@ -1981,7 +1981,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   .mv-selfline{margin:4px 0 0;font-size:13px;color:#57534e}
 
   /* V104(G2): next+ro 组合态门标签可见 */
-  .mv-gate.next.ro{background:#a8200b!important;border-color:#a8200b!important;color:#f2efe7!important}
+  .mv-gate.next.ro{background:#8b1a0a!important;border-color:#8b1a0a!important;color:#f2efe7!important}
   .mv-gate.next.ro .gn{color:#f2efe7!important}
   .mv-gate.next.ro .gx{color:#f2efe7!important}
   .mv-gate.next.ro .mv-self{color:#f2efe7!important;background:rgba(242,239,231,.18)!important;border-color:rgba(242,239,231,.45)!important}
@@ -2186,7 +2186,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     <span class="sec-index" aria-hidden="true">01</span>
     <div class="sec-title">
      <h2 id="today-title">计划参考（历史）</h2>
-     <p>11.02 快照 · 首项优先，其余按剩余精力排</p>
+     <p>11.05 快照 · 首项优先，其余按剩余精力排</p>
     </div>
     <div class="sec-side">
      <b>计划核心 4.3h</b>
@@ -2389,6 +2389,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   var _hasReal = (quizRow && quizRow.done > 0) || (inkRow && inkRow.done > 0); var _mpEff = (_mp >= 0 && _hasReal) ? (((_rr && parseInt(_rr.mo,10)>=80 && parseInt(_rr.do,10)>=60)) ? 1 : _mp) : -1;   /* V116(G14): 报数达标即满贡献 */   /* V116(G14): 报数达标即满贡献 */ var _denom = (_mpEff >= 0) ? 3 : 2;
   var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
   var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;
+    var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_mp < 0 && realPct > 66) realPct = 66;   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK:reportOK, reportPartial:reportPartial, inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
@@ -2549,7 +2550,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    else s3 = 'miss';
    var isMock = MOCK.indexOf(c2) >= 0;
    var lb = c2 === T ? '今' : String(pd(c2).getDate());
-   cells += '<div class="mv-cell '+s3+(isMock?' mock':'')+'" role="listitem" aria-label="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日，答题'+st2.quizRowDone+'/'+st2.quizRowTgt+'，自报'+st2.selfHit+'项，'+(s3==='perfect'?'全项达标':s3==='pass'?'达标':s3==='part'?'有进展':s3==='now'?'今天':s3==='fut'?'未到':'未完成')+'" title="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日 '+st2.hit+'/'+st2.rows.length+' 项'
+   cells += '<div class="mv-cell '+s3+(isMock?' mock':'')+'" role="listitem" aria-label="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日，答题'+st2.quizRowDone+'/'+st2.quizRowTgt+'，手动填'+st2.selfHit+'项，'+(s3==='perfect'?'全项达标':s3==='pass'?'达标':s3==='part'?'有进展':s3==='now'?'今天':s3==='fut'?'未到':'未完成')+'" title="'+(pd(c2).getMonth()+1)+'月'+pd(c2).getDate()+'日 '+st2.hit+'/'+st2.rows.length+' 项'
       + (isMock?'（模考日）':'')+'">'+lb+'</div>';
    c2 = sh(c2, 1);
   }
@@ -2562,7 +2563,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    for(dd3=rr.from; dd3<=rr.to; dd3=sh(dd3,1)){ passed++;   /* V122(G13): 分母=阶段总天数，不随今天漂移 */ var _d3=dayOf(o,QD,dd3); if(_d3.pass || _d3.inkOK || _d3.quizOK || _d3.inkPartial || _d3.quizPartial || _d3.reportOK || _d3.reportPartial) ln++; }  // V16: 有进展(pass||墨墨达标)也算，不只pass
    var started = (rr.from <= T);
    var on = started && ln >= 1;  // 有过达标记录即亮（不要求整期全过）
-   bh += '<span class="'+(on?'on':'')+'">'+(on?'🎖 ':'○ ')+rr.step+' '+(passed>0?(ln+'/'+passed):'未开启')+'</span>';
+   if(on){ bh += '<span class="on">🎖 '+rr.step+' '+ln+'/'+passed+'</span>'; }
+      else if(bh === ''){ bh = '<span style="color:#8a8578">下一枚：'+rr.step+' · 还差 '+(passed-ln)+' 天</span>'; }   /* G13: 零状态只显示1行 */
   }
   $id('mv-badges').innerHTML = bh;
 
@@ -2937,7 +2939,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    '.mv-gate{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:60px;border:1px solid var(--ink,#131210);border-radius:0;background:transparent;color:var(--ink,#131210);font-size:13px;line-height:1.25;cursor:pointer;padding:6px 4px;font-family:inherit}',  // V20_P01
    '.mv-gate .gi{font-size:15px}.mv-gate .gn{font-weight:700}.mv-gate .gx{font-size:13px;font-weight:700;color:#131210}',
    '.mv-gate.ok{background:#f2efe7;border-color:#131210;color:#131210}.mv-gate.ok .gx{color:#131210}',
-   '.mv-gate.next{background:#c92a12;border-color:#c92a12;color:#f2efe7;box-shadow:0 0 0 3px rgba(201,42,18,.18)}.mv-gate.next .gx{color:#f2efe7}.mv-gate.next .gn{color:#f2efe7}.mv-gate.next .mv-self{color:#f2efe7;background:rgba(242,239,231,.18);border-color:rgba(242,239,231,.45)}',
+   '.mv-gate.next{background:#8b1a0a;border-color:#8b1a0a;color:#f2efe7;box-shadow:0 0 0 3px rgba(139,26,10,.22)}.mv-gate.next .gx{color:#f2efe7}.mv-gate.next .gn{color:#f2efe7}.mv-gate.next .mv-self{color:#f2efe7;background:rgba(242,239,231,.18);border-color:rgba(242,239,231,.45)}',
    '.mv-gate.ro{background:#fbf8f0;border-color:#8a8578;color:#131210}.mv-gate.ro .gx{color:#131210}',
    '.mv-gate.off{opacity:.6;cursor:default;color:#78716c;border-color:#c9c3b6;background:#f2efe7}',
    '.mv-gate:hover{border-color:#57534e}',
@@ -3005,7 +3007,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
    <div class="carry" aria-label="上一条记录与墨墨数据">
     <span class="carry-label">11.01 收口（历史）</span>
     <span class="carry-item"><b>答题营 01 期</b> ✓ 已完成</span>
-    <span class="carry-item"><b>墨墨 46 词（11.02 快照）</b><small>11.02 06:30 API：finished 12（App 目标 150 ≠ 本页过关线 120）</small></span>
+    <span class="carry-item"><b>墨墨 46 词（11.05 快照）</b><small>11.05 06:30 API：finished 12（App 目标 150 ≠ 本页过关线 120）</small></span>
     <span class="carry-item"><b>墨墨累计在学 809 词</b><small>只认平台数字，不凭印象</small></span>
    </div>
 
@@ -3050,7 +3052,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
        <h3 class="t-title">墨墨 <span>120 词</span></h3>
        <span class="tag">每日</span>
       </div>
-      <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.02 快照），累计 809。</span></p>
+      <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.05 快照），累计 809。</span></p>
      </div>
      <span class="check-ro" aria-hidden="true">历史</span>
     </article>
@@ -3269,10 +3271,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     <span class="sec-index" aria-hidden="true">02</span>
     <div class="sec-title">
      <h2 id="progress-title">四条战线</h2>
-     <p>历史进度（11.02 快照）· 不作今日承诺</p>
+     <p>历史进度（11.05 快照）· 不作今日承诺</p>
     </div>
     <div class="sec-side">
-     <b>历史数据 11.02 06:30</b>
+     <b>历史数据 11.05 06:30</b>
      <span>平台 / API / 自述</span>
     </div>
    </header>
@@ -3325,7 +3327,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
       <span class="chip">1–3 章</span>
       <span>自述：学到第 2 章</span>
      </div>
-     <p class="pfoot">82% 只代表 1–3 章；自述口径，按“学到第 2 章”继续核。</p>
+     <p class="pfoot">第2章82%（1–3章自述）；自述口径，按“学到第 2 章”继续核。</p>
     </article>
 
     <article class="pcard pcard--5" aria-labelledby="p3-title">
@@ -3375,7 +3377,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
      </div>
      <div class="dark-pair">
       <b>第 1 期已完成</b>
-      <span>第 2 期（11.02 时点）</span>
+      <span>第 2 期（11.05 时点）</span>
      </div>
      <p class="pfoot">这是四条线里最慢的一条（历史快照，见现役今日灯带）。</p>
     </article>
