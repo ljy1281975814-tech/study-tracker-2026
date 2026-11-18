@@ -3278,7 +3278,8 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (outcome === 'bad' && !(detail && (detail.selfJudged || detail.regrade)) && !(detail && detail.selfEval)) {
           try { if (S.session) S.session.machineBad = (S.session.machineBad || 0) + 1; } catch(e){}
         }
-        if (outcome === 'bad') d.w = (+d.w || 0) + 1;
+        /* V423 ⑥: **自评/自评遗忘不得进 days.w**（此前无条件写 -> 自评「不记得」被当机判错，诚实报告反被罚） */
+        if (outcome === 'bad' && !(detail && (detail.selfJudged || detail.regrade)) && !(detail && detail.selfEval)) d.w = (+d.w || 0) + 1;
         progress.days[TODAY] = d;
         r._countedToday = true;   // MEMORY_LOGIC_20261116: 当天首次作答才计题次
       } else if (outcome === 'ok' && !r._okCountedToday) {

@@ -2767,9 +2767,14 @@ function reqOf(s){
   var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
   var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;
     /* V421: 非 pass 时不得四舍五入成 100%（119/120 墨墨 -> 99.58 -> 100 是假赢） */
-    if (realPct >= 100 && !(quizOK && inkOK)) realPct = 99;
+    /* V425: 学习配额已满 + 墨墨达标时**不降 99**（与 H4 一致；A 边界只管非学习日） */
+    var _lqOK425 = !!(_isLearnDay || (quizRow && inkOK && ((qa&&qa.la)||0) >= (quizRow.tgt||99)));
+    if (realPct >= 100 && !(quizOK && inkOK) && !_lqOK425) realPct = 99;
     /* V416 H4: 学习日完成度取 max(学习日出席, 普通口径) —— 修 +4 机判断崖（学满12题后再练第4题不该从100%掉到66%）*/
-    if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) >= (quizRow.tgt||99) && inkOK) { var _lp = Math.min(100, Math.round((((qa&&qa.la)||0) / Math.max(1, quizRow.tgt)) * 100));   /* V419: 去掉 c+w<=6（改由 coach 文字桥接，恢复单调） */ if (_lp > realPct) realPct = _lp; }   /* V418: 必须 inkOK + c+w<=6（与 _learnFull 对齐）—— 修「墨墨未满也100%」和「+7~+11 机判 100% 但说还差」 */
+    /* V424 6: 有额外机判时**正确率必须 ≥60%**（否则 12 题 50% 也 100% = 假赢） */
+    var _hasMachine = !!((qa && ((qa.c||0) + (qa.w||0)) > 0));
+    var _accOKforLP = (!_hasMachine) || (acc !== null && acc >= 0.6);
+    if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) >= (quizRow.tgt||99) && inkOK && _accOKforLP) { var _lp = Math.min(100, Math.round((((qa&&qa.la)||0) / Math.max(1, quizRow.tgt)) * 100));   /* V419: 去掉 c+w<=6（改由 coach 文字桥接，恢复单调） */ if (_lp > realPct) realPct = _lp; }   /* V418: 必须 inkOK + c+w<=6（与 _learnFull 对齐）—— 修「墨墨未满也100%」和「+7~+11 机判 100% 但说还差」 */
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
@@ -2855,6 +2860,10 @@ function reqOf(s){
   var pct = cur.pct;
   var pEl = $id('mv-pct'), ring = $id('mv-ring'), svg = $id('mv-ringsvg');
   var _dispPct = Math.round(pct);
+  /* V424 ④: 渐进日已完成（按日持久化）-> 完成度强制 100%，不再被后续答错撤销 */
+  var _gradDone = false;
+  try { _gradDone = (localStorage.getItem('dsh.347.graddone.v1') === String(T)); } catch(e){}
+  if (_gradDone) _dispPct = 100;
   /* V399: 恢复日已完成 -> **在文字/颜色之前**判定，否则出现「文字67% / 环100% / aria100%」三裂 */
   var _isDoneR = false;
   try {
@@ -2863,16 +2872,17 @@ function reqOf(s){
   } catch(e){}
   /* V362: 恢复日不要求报数 -> 视为已达标（修「重启完成却被 99% 琥珀+aria 报数未达标否定」） */
   var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T) || _isDoneR || !!cur._learnDay;   /* V390/V399/V406: 学习日也不要求报数 -> 不封顶 66% */
-  if(_dispPct >= 100 && !cur.pass && !_isDoneR && !cur._learnDay && !(cur.quizRowTgt && cur._learnN >= cur.quizRowTgt && cur.inkOK)) _dispPct = 99;  // V33/V399/V406/V416: 学习配额已满也不降 99（修 +4 机判断崖）
+  if(_dispPct >= 100 && !cur.pass && !_isDoneR && !_gradDone && !cur._learnDay && !(cur.quizRowTgt && cur._learnN >= cur.quizRowTgt && cur.inkOK)) _dispPct = 99;  // V33/V399/V406/V416: 学习配额已满也不降 99（修 +4 机判断崖）
   if(_dispPct >= 100 && cur.pass && !_effReportOK && !(cur.quizOK && cur.inkOK)) _dispPct = 99;  // V86 + V416 H5: pass 不降 99
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
   var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
   /* V396: 学习日专属环色 + 渐进半程中性色（**算完后覆盖**，不动嵌套三元式） */
-  if (_isDoneR) col = '#059669';   /* V399: 已完成 -> 环绿（修琥珀三裂） */
+  if (_isDoneR || _gradDone) col = '#059669';   /* V399/V424: 恢复日或渐进日已完成 -> 环绿 */
   /* V400 C: 恢复日「重启中」(未完成且非已完成) -> 中性色，与渐进半程同标准（此前纯红 = 把首因体验渲染成失败） */
   if (!_isDoneR && _isRecoveryDay(T) && !cur.pass) col = '#0891b2';
-  if (cur._learnOnly && !cur.pass) col = '#0891b2';
+  /* V423 ⑤: 任何有首遍学习的日子（含**部分配额**）都用中性学习色（此前部分时是失败红） */
+  if ((cur._learnOnly || (cur._learnN||0) > 0) && !cur.pass) col = '#0891b2';
   if (cur.rq && cur.rq.gradual && _dispPct < 100) col = '#0891b2';
   pEl.style.color = col;
   var C = 2*Math.PI*44;
@@ -2940,8 +2950,10 @@ function reqOf(s){
        不再翻成「还差 N 题」（修 +7~+11 的文字假赢/假输，同时保持环 100% 单调） */
     var _ln = +(cur._learnN || 0), _ex = Math.max(0, +(cur.quizRowDone||0) - _ln);
     var _base = '📖 <b>今天是学习日</b>：学习 <b>' + _ln + '</b> 题 = <b>今日答题完成</b>（首遍不计正确率、不进错题本）。';
-    if (_ex > 0) return _base + '<br>另外做了 <b>' + _ex + '</b> 题机判 —— 算<b>课外练习，不计入完成度</b>，但都是赚的。今天到此为止也可以。';
-    return _base + '<br>今天可重练，明天做首次回忆。';
+    var _inkN = +(cur.inkRowDone || 0), _inkT = +(cur.inkRowTgt || 120);
+    var _inkNote = (cur.inkOK ? '<br>墨墨 <b>' + _inkN + '/' + _inkT + '</b> 也达标了。' : '<br><b style="color:#b45309">⚠️ 墨墨还差 ' + Math.max(0, _inkT - _inkN) + ' 词（' + _inkN + '/' + _inkT + '）才算完整</b>。');
+    if (_ex > 0) return _base + '<br>另外做了 <b>' + _ex + '</b> 题机判 —— 算<b>课外练习，不计入完成度</b>，但都是赚的。' + _inkNote;
+    return _base + '<br>今天可重练，明天做首次回忆。' + _inkNote;
   })();
   else if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
   else if(cur.rq && cur.rq.gradual) msg = (function(){
@@ -2954,7 +2966,13 @@ function reqOf(s){
     var _dq2 = +(cur.quizRowDone || 0), _di2 = +(cur.inkRowDone || 0);
     var _okQ = _dq2 >= _dim && (cur.qualityOK === true) && (cur.acc === null || cur.acc >= 0.6);
     var _okI = _di2 >= _din;
-    if (_okQ && _okI) return '🎉 <b>渐进成功</b> —— 今天 <b>' + _dq2 + '</b> 题（正确率 ' + Math.round((cur.acc||0)*100) + '%）+ <b>' + _di2 + '</b> 词，全部完成。<br>明天回到正常节奏，<b>不用补欠账</b>。今天到此为止。';
+    if (_okQ && _okI) {
+      /* V424 ④: **渐进日完成按日持久化**（此前只重算 -> 完成后继续做错就撤销） */
+      try { localStorage.setItem('dsh.347.graddone.v1', String(T)); } catch(e){}
+      return '🎉 <b>渐进成功</b> —— 今天 <b>' + _dq2 + '</b> 题（正确率 ' + Math.round((cur.acc||0)*100) + '%）+ <b>' + _di2 + '</b> 词，全部完成。<br>明天回到正常节奏，<b>不用补欠账</b>。今天到此为止。';
+    }
+    /* V424 ④: 已完成（持久化）但数据又变差 -> 仍走完成终态 */
+    if (_gradDone) return '🎉 <b>渐进成功</b> —— 今天已达标（' + _dq2 + ' 题 + ' + _di2 + ' 词）。<br>之后做的题只是额外练习，<b>不影响「渐进成功」这个结论</b>。今天到此为止。';
     var _qNote = '';
     if (_dq2 >= _dim && (cur.acc !== null) && cur.acc < 0.6) _qNote = '<br><b style="color:#b45309">⚠️ 正确率 ' + Math.round((cur.acc||0)*100) + '% 低于 60%（已做 ' + _dq2 + ' 题，需答对 ' + Math.ceil(Math.max(_dim,_dq2) * 0.6) + ' 题）</b>，看一眼错的解析再收工。';
     return '🌤 <b>渐进第二天</b> —— 昨天重启成功，今天只要 <b>' + _dim + ' 题</b>（已 ' + _dq2 + '/' + _dim + '，正确率 ' + (cur.acc===null?'—':Math.round((cur.acc||0)*100)+'%') + '）+ <b>' + _din + ' 词</b>（已 ' + _di2 + '/' + _din + '）。<br>做完就收工，明天回到正常节奏。不用补任何欠账。' + _qNote;
