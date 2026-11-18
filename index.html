@@ -2883,7 +2883,7 @@ function reqOf(s){
   else if(cur._learnOnly){ _vt += '（学习日出席，首遍不计正确率）'; }   /* V393 */   /* V362 */
   else if(_lqFullA){
    /* V419: 学习配额已满 -> aria 说「课外练习」，不说还差 */
-   _vt += '（学习配额已满，课外练习 ' + Math.max(0, (cur.quizRowDone||0) - (cur._learnN||0)) + ' 题不计入）';
+   _vt += '（学习配额已满，课外练习 ' + (+(cur.quizRowDone||0)) + ' 题不计入）';
   } else if(cur.quizPartial && !cur.quizOK){
    var _need = Math.max(0, (cur.quizRowTgt||8) - Math.min(cur.quizRowTgt||8, cur.quizRowDone||0));
    /* V413 H1/H2: 题已做满(_need=0)但质量不达标 -> **不能说「还差0题」**，改成质量差距 */
@@ -2903,8 +2903,9 @@ function reqOf(s){
   var msg;
   var _isPast = (T >= EXAM);
   /* V419: 学习配额已满（la>=tgt，且非恢复/渐进日）—— 供 coach 做「完成+课外练习」桥接 */
+  /* V420: **必须用 cur（render 内可见）**，qa/quizRow 是 dayOf 局部变量 -> 此前抛 ReferenceError 被吞 = 死代码 */
   var _lqFull = false;
-  try { _lqFull = !!(qa && quizRow && !_isRecoveryDay(T) && !_isGradualDay(T) && (+((qa.la)||0)) >= (quizRow.tgt||99)); } catch(e){}
+  try { _lqFull = !!(cur && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && cur.inkOK && !_isRecoveryDay(T) && !_isGradualDay(T)); } catch(e){}
   /* V394 P2: 恢复日已 completed -> 后续再做题（可能答错）**不得回退**到「欢迎回来」 */
   var _isDoneRec = false;
   try {
