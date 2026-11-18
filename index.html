@@ -2733,6 +2733,11 @@ function reqOf(s){
   if(_dispPct >= 100 && cur.pass && !_effReportOK) _dispPct = 99;  // V86
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
+  /* V397: 恢复日已完成 -> 完成度强制 100%（修「完成后继续做题 -> 环99%琥珀 + aria 还差0题」） */
+  try {
+    var _rk8 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    if (_rk8 && _rk8.completed && _rk8.day === T) { _dispPct = 100; }
+  } catch(e){}
   var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
   /* V396: 学习日专属环色 + 渐进半程中性色（**算完后覆盖**，不动嵌套三元式） */
   if (cur._learnOnly && !cur.pass) col = '#0891b2';
@@ -3738,6 +3743,20 @@ function reqOf(s){
     : (quizN>0
       ? '🎯 做题系统今日已答 <b>'+quizN+'</b> 题，其中答对 <b>'+quizOk+'</b> 题（自动同步）'
       : '🎯 做题系统今日暂无记录（在 /quiz/ 作答后这里会自动显示）'));
+  /* V397: PO-QUIZ 恢复日**质量不合格**时覆盖文案（事后覆盖，不动嵌套三元式） */
+  try {
+    if (_isRecI) {
+      var _q7 = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+      var _d7 = (_q7.days && _q7.days[T]) || {};
+      var _n7 = (+_d7.c||0) + (+_d7.w||0), _c7 = (+_d7.c||0);
+      var _a7 = _n7 > 0 ? (_c7 / _n7) : 0;
+      var _t7 = (_recI.tgtQ) || 3;
+      if (_n7 >= _t7 && _a7 < 0.6) {
+        document.getElementById('PO-QUIZ').innerHTML =
+          '⭐ 重启日：已做满 <b>' + _n7 + '</b> 题，但<b>答对率 ' + Math.round(_a7*100) + '% 不足 60%</b>（需答对 ' + Math.ceil(_t7*0.6) + ' 题）—— 看一眼错题解析，明天按 1–2 天回来再做机判';
+      }
+    }
+  } catch(e){}
   // 统计
   function render(){
     var totalQ = 0, doneQ = 0, totalMin = 0, doneMin = 0;

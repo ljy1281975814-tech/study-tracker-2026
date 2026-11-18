@@ -79,15 +79,22 @@ def enter(arg):
     return r
 
 
+def _xmn(t):
+    """V397: 归一化 —— 去空白/全角括号/半角括号（**两侧都用**，此前只做 DOM 侧 -> ③ 恒失败）"""
+    if not t:
+        return ""
+    return re.sub(r"[\s\u3000（）\(\)]", "", str(t))
+
+
 def cur_ans():
     return ev("""(function(){
       try{
-        var stem=(document.querySelector('.q-stem')||{}).innerText||''; stem=stem.replace(/\\s|　|（|）|\\(|\\)/g,'').trim();   /* V393: 归一化全角括号+空白 */
+        var stem=(document.querySelector('.q-stem')||{}).innerText||'';   /* V393: 归一化全角括号+空白 */
         var el=document.getElementById('bank'); var B=JSON.parse(el.textContent);
         var arr=[].concat(B.diff||[], B.items||[]);
         for(var i=0;i<arr.length;i++){ var q=arr[i]; if(!q) continue;
           var s=String(q.stem||q.q||'').trim();
-          if(s && (s===stem||s.indexOf(stem)>=0||stem.indexOf(s)>=0)) return JSON.stringify({ans:String(q.ans||''), key:String(q.key||''), id:q.id}); }
+          var _xmn=function(t){ return String(t||'').replace(/[\\s\u3000\uff08\uff09\\(\\)]/g,''); }; var _sn=_xmn(s), _st=_xmn(stem); if(_sn && (_sn===_st || _sn.indexOf(_st)>=0 || _st.indexOf(_sn)>=0)) return JSON.stringify({ans:String(q.ans||''), key:String(q.key||q.ans||''), id:q.id}); }
         return null;
       }catch(e){ return null; }
     })()""")
