@@ -2689,7 +2689,7 @@ function reqOf(s){
   }
   var qa = QD_ACC[s] || null;
   var _den2 = qa ? (qa.a - (qa.la || 0) - (qa.sj || 0)) : 0;   /* V306: 排除 学习(la)+自评(sj) */
- var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
+ var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= (qa.a - (qa.sj || 0)) && (qa.a - (qa.sj || 0)) > 0);   /* V230 A2 + V412: 排除自评 sj（此前 la>=a 把 sj 算进 a -> 自评即撤销学习日身份） */
  /* V406 P1-3: **学习配额已满**后追加机判，仍是学习日（此前一机判就撤销豁免 -> 学完 12 题再答 1 题就翻红 = 惩罚继续学习）
     v405-b 给的公式：_learnFull = qa && quizRow && la>=tgt && (c+w)<tgt */
  var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 3));   /* V406: 只在小量额外练习(1-3题)时保留身份，避免混合日被误判 */
@@ -2708,7 +2708,8 @@ function reqOf(s){
   var _learnOnly = !!(_isLearnDay && _learnAttend && !quizAttend);
   /* V342 P0: 给 题 门打学习日标记，供 gate 渲染显示「学习 N/tgt」而非「✅ 0/12」 */
   try {
-    if (quizRow && _isLearnDay) {
+    /* V412: 恢复日/渐进日**不亮学习标记**（否则门 ✅「学习 N/N」而 coach 说「机判已 0/N」= 反向矛盾） */
+    if (quizRow && _isLearnDay && !_isRecoveryDay(s) && !_isGradualDay(s)) {
       quizRow.learn = 1;
       quizRow.learnN = (qa ? (qa.la || 0) : 0);
       quizRow.learnAttend = !!_learnAttend;
@@ -2746,8 +2747,8 @@ function reqOf(s){
   var _qp = quizOK ? 1
     : ((_isLearnDay && !_isRecoveryDay(s) && !_isGradualDay(s))
        ? Math.min(1, ((qa ? (qa.la || 0) : 0) / Math.max(1, (quizRow ? quizRow.tgt : 1))))
-       : ((quizRow ? (quizRow.done / Math.max(1, quizRow.tgt)) : 0)
-          * ((acc === null) ? 1 : Math.max(0, Math.min(1, acc)))));
+       : ((quizRow ? Math.min(1, quizRow.done / Math.max(1, quizRow.tgt)) : 0)
+          * ((acc === null) ? 1 : Math.max(0, Math.min(1, acc)))));   /* V412: done/tgt 必须 clamp 1（此前 12/6×0.5=1 -> 环 99% 虚高） */
    /* V231: 学习日/无正式作答时，答题贡献按「出席」给满 —— 不再因 acc=null 乘 0 导致 0% 红环 */  // V37: 出席比例×正确率，7/8全对=0.875不再0%
   var _ip = inkOK ? 1 : (inkRow && inkRow.tgt > 0 ? Math.min(1, inkRow.done / inkRow.tgt) : 0);
   // V67: 默写纳入完成度（读今日报数）
@@ -2899,7 +2900,7 @@ function reqOf(s){
   var _doneRecMsg = null;
   if (_isDoneRec) {
     var _r9q = (_rk9.tgtQ) || 3, _r9i = (_rk9.tgtInk) || 30;
-    _doneRecMsg = '🎉 <b>重启完成</b> —— 今天做了 <b>' + Math.max(+(cur.quizRowDone||0), _r9q) + '</b> 题（机判）+ <b>' + Math.max(+(cur.inkRowDone||0), _r9i) + '</b> 词。<br>'
+    _doneRecMsg = '🎉 <b>重启完成</b> —— 今天做了 <b>' + +(cur.quizRowDone||0) + '</b> 题（机判）+ <b>' + +(cur.inkRowDone||0) + '</b> 词。<br>'
       + '<b>这就是赢了 —— 不需要补欠账。</b>今天到此为止，可以收工。<br>'
       + '<span style="color:#6b7280;font-size:12px">今天之后做的题只是额外练习，不影响「重启成功」这个结论。</span>';
   }  // V52: 考试日当天也终态
