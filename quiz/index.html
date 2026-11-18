@@ -3336,12 +3336,31 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           _dq = (+_dj.c || 0) + (+_dj.w || 0);
         } catch(e){}
         var _tqj = _recJ.tgtQ || 3;
-        if (_dq >= _tqj) {
+        /* V380: 终态必须**与 index 质量门同源** —— 机判 3 题且正确率≥60%
+           （此前只看 c+w>=3 -> 0/3 也庆祝，与 index 67% 琥珀互斥） */
+        var _accJ = _dq > 0 ? ((+((_dj.c)||0)) / _dq) : 0;
+        if (_dq >= _tqj && _accJ >= 0.6) {
           return masthead() +
             '<section class="hero shell"><h1>🎉 今天已完成 · 收工</h1>' +
             '<p class="hero-lead">重启日只要 <b>' + _tqj + ' 题</b>，你已经做了 <b>' + _dq + '</b> 题。<br>' +
             '这就是赢了 —— <b>不用补欠账</b>，明天回到正常节奏。</p>' +
             '<p class="hero-foot">今天不必再刷题，把 30 个墨墨词做完更划算。</p></section>';
+        }
+        /* V380: 做了但不达标 -> 明确说差距，不庆祝 */
+        if (_dq >= _tqj && _accJ < 0.6) {
+          return masthead() +
+            '<section class="hero shell"><h1>今天做了 ' + _dq + ' 题，答对 ' + (+((_dj.c)||0)) + ' 题</h1>' +
+            '<p class="hero-lead">重启日要求 <b>' + _tqj + ' 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(_tqj * 0.6) + ' 题）。<br>' +
+            '还差一点 —— 把错的题看一眼解析，明天再来。</p>' +
+            '<p class="hero-foot">重启日不追欠账，但今天的题值得复盘。</p></section>';
+        }
+        /* V380: 做了但不达标 -> 明确说差距，不庆祝 */
+        if (_dq >= _tqj && _accJ < 0.6) {
+          return masthead() +
+            '<section class="hero shell"><h1>今天做了 ' + _dq + ' 题，答对 ' + (+((_dj.c)||0)) + ' 题</h1>' +
+            '<p class="hero-lead">重启日要求 <b>' + _tqj + ' 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(_tqj * 0.6) + ' 题）。<br>' +
+            '还差一点 —— 把错的题看一眼解析，明天再来。</p>' +
+            '<p class="hero-foot">重启日不追欠账，但今天的题值得复盘。</p></section>';
         }
         title = '⭐ 重启日 · 今天只需 ' + _tqj + ' 题';
         lead = '最小重启：<b>3 题</b>（机判）+ <b>30 个</b>墨墨词。做完就算赢，<b>不用补欠账</b>。';

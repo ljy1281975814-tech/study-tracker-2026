@@ -2765,7 +2765,8 @@ function reqOf(s){
     var _doneInk = +(cur.inkRowDone || 0);
     /* V371: 完成判据与门同源 —— cur.quizOK（出席+质量≥60%+n≥3）&& inkOK
        此前只比数量 -> 3 题答对 1 也「重启完成」，而同屏门非✅、环 67% 琥珀 = 判据分裂 */
-    var _hitQ = (cur.quizOK === true) || (_doneQ >= _rq2 && cur.qualityOK === true && (cur.acc === null || cur.acc >= 0.6));
+    /* V381: **必须有机判题次**（学习日 la 不算）—— 修「学习日 3 题+30 词也报重启完成（0 题机判）」 */
+    var _hitQ = (_doneQ >= _rq2) && (cur.qualityOK === true) && (cur.acc === null || cur.acc >= 0.6);
     var _hitInk = _doneInk >= _rink2;
     if (_hitQ && _hitInk) {
       /* V374: 持久化 completed，供**次日渐进档**用（避免 3+30 -> 12+120 断崖） */
@@ -3641,7 +3642,7 @@ function reqOf(s){
   var _recI = null; try { _recI = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
   var _isRecI = !!(_recI && _recI.day === T);
   document.getElementById('PO-QUIZ').innerHTML = _isRecI
-    ? ('⭐ 重启日进度：答题 <b>' + quizN + '/' + ((_recI.tgtQ)||3) + '</b> 题（机判）· 墨墨 <b>' + ((D[T]&&D[T]['背'])||0) + '/' + ((_recI.tgtInk)||30) + '</b> 词 —— 做完就算赢，不追欠账')
+    ? ('⭐ 重启日进度：答题 <b>' + quizN + '/' + ((_recI.tgtQ)||3) + '</b> 题（机判）· 墨墨 <b>' + (function(){ try { var _mv2 = JSON.parse(localStorage.getItem('dsh.347.motiv.v3')||'{}'); var _d2 = (_mv2.days&&_mv2.days[T])||{}; return (+_d2['背']||0); } catch(e){ return 0; } })() + '/' + ((_recI.tgtInk)||30) + '</b> 词 —— 做完就算赢，不追欠账')
     : (quizN>0
       ? '🎯 做题系统今日已答 <b>'+quizN+'</b> 题，其中答对 <b>'+quizOk+'</b> 题（自动同步）'
       : '🎯 做题系统今日暂无记录（在 /quiz/ 作答后这里会自动显示）');
