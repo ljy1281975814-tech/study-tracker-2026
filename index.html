@@ -2582,7 +2582,7 @@ function reqOf(s){
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
  /* V406 P1-3: **学习配额已满**后追加机判，仍是学习日（此前一机判就撤销豁免 -> 学完 12 题再答 1 题就翻红 = 惩罚继续学习）
     v405-b 给的公式：_learnFull = qa && quizRow && la>=tgt && (c+w)<tgt */
- var _learnFull = !!(qa && quizRow && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 3));   /* V406: 只在小量额外练习(1-3题)时保留身份，避免混合日被误判 */
+ var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 3));   /* V406: 只在小量额外练习(1-3题)时保留身份，避免混合日被误判 */
  if (_learnFull) _isLearnDay = true;
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
@@ -2634,7 +2634,7 @@ function reqOf(s){
   // V30: 环改【连续进度】——98/120 显示 41% 琥珀（near-win），不再全或无
   /* V406 P1-2: 学习日**按出席比例**计答题贡献（此前用机判 done(c+w)=0 -> 环永远 0%/50%）*/
   var _qp = quizOK ? 1
-    : (_isLearnDay
+    : ((_isLearnDay && !_isRecoveryDay(s) && !_isGradualDay(s))
        ? Math.min(1, ((qa ? (qa.la || 0) : 0) / Math.max(1, (quizRow ? quizRow.tgt : 1))))
        : ((quizRow ? (quizRow.done / Math.max(1, quizRow.tgt)) : 0)
           * ((acc === null) ? 1 : Math.max(0, Math.min(1, acc)))));
@@ -2960,21 +2960,33 @@ function reqOf(s){
     var _isDoneG = false;
     try {
       var _rkg = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
-      if (_rkg && _rkg.completed && _rkg.day) {
-        if (_rkg.day === T) _isDoneG = true;
-        else {
-          var _ng = new Date(_rkg.day + 'T00:00:00'); _ng.setDate(_ng.getDate() + 1);
-          var _ngs = _ng.getFullYear() + '-' + ('0'+(_ng.getMonth()+1)).slice(-2) + '-' + ('0'+_ng.getDate()).slice(-2);
-          if (_ngs === String(T)) _isDoneG = true;
-        }
-      }
+      /* V409 P2-D: **只认今日 completed**（去掉 day+1 分支 —— 渐进日到达不是完成，否则 0/6 也显示 ✅） */
+      if (_rkg && _rkg.completed && _rkg.day === T) { _isDoneG = true; }
     } catch(e){}
     if (_isDoneG) {
+      /* V407 R-c2: 跑道今日格强制 pass —— **延后到所有渲染完成后**（跑道在门之后渲染，同步改会被覆盖） */
+      try {
+        setTimeout(function(){
+          try {
+            var _cs = document.querySelectorAll('.mv-cell');
+            for (var _ci = 0; _ci < _cs.length; _ci++) {
+              var _tx = (_cs[_ci].textContent || '').trim();
+              if (_tx === '今' || _tx.indexOf('今') === 0) {
+                _cs[_ci].classList.remove('part'); _cs[_ci].classList.remove('now'); _cs[_ci].classList.remove('miss');
+                _cs[_ci].classList.add('pass');
+              }
+            }
+          } catch(e){}
+        }, 0);
+      } catch(e){}
       var _glist = document.querySelectorAll('#mv-gates .mv-gate');
       for (var _gk = 0; _gk < _glist.length; _gk++) {
         if (/答题/.test(_glist[_gk].textContent || '')) {
           _glist[_gk].classList.remove('ro'); _glist[_gk].classList.remove('next');
           _glist[_gk].classList.add('ok');
+          /* V407 R-c: **图标也要改成 ✅**（此前只改 class -> 仍显示 ✍️） */
+          var _ic = _glist[_gk].querySelector('i, .mv-ico, span');
+          if (_ic && /✍|📖/.test(_ic.textContent || '')) _ic.textContent = '✅';
         }
       }
     }
@@ -3885,6 +3897,18 @@ function reqOf(s){
       var _nMS = _nM.getFullYear()+'-'+('0'+(_nM.getMonth()+1)).slice(-2)+'-'+('0'+_nM.getDate()).slice(-2);
       if (_nMS === T) _isRM = true;
     }
+    /* V407 R-d: 环已达 100% 时也隐藏匹配度（PO IIFE 取不到 cur，直接读数据算） */
+    try {
+      var _qD = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+      var _dD = (_qD.days && _qD.days[T]) || {};
+      var _cwD = (+_dD.c||0) + (+_dD.w||0);
+      var _mD = JSON.parse(localStorage.getItem('dsh.347.motiv.v3')||'{}');
+      var _mdD = (_mD.days && _mD.days[T]) || {};
+      var _inkD = (+_mdD['背']||0);
+      var _tqD = 12, _tiD = 120;
+      try { var _rD = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); if (_rD && _rD.day === T) { _tqD = _rD.tgtQ || 3; _tiD = _rD.tgtInk || 30; } } catch(e){}
+      if (_cwD >= _tqD && _inkD >= _tiD) _isRM = true;
+    } catch(e){}
     if(_isRM){ mEl.textContent = ''; mEl.style.display = 'none'; }
     else if(Math.abs(match) < 5){ mEl.textContent = '匹配度 持平 ('+match.toFixed(1)+'%)'; mEl.style.color='#059669'; }
     else if(match > 0){ mEl.textContent = '匹配度 超前 +'+match.toFixed(1)+'%'; mEl.style.color='#059669'; }
