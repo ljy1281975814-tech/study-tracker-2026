@@ -2590,6 +2590,7 @@ function reqOf(s){
   /* V392 P1-2: 学习日**专属口径** —— 出席即算「学习日达标」，但**不计入真实2/2**
      （环用学习色而非绿、aria 说明「学习日」、不显示欠N/报数红链） */
   var quizOK = quizAttend && qualityOK;
+  /* V400 D: 学习日**配额已满**时，之后再做机判也保持学习日身份（此前一机判就撤销豁免 -> 额外练习被惩罚） */
   var _learnOnly = !!(_isLearnDay && _learnAttend && !quizAttend);
   /* V342 P0: 给 题 门打学习日标记，供 gate 渲染显示「学习 N/tgt」而非「✅ 0/12」 */
   try {
@@ -2742,6 +2743,8 @@ function reqOf(s){
   var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
   /* V396: 学习日专属环色 + 渐进半程中性色（**算完后覆盖**，不动嵌套三元式） */
   if (_isDoneR) col = '#059669';   /* V399: 已完成 -> 环绿（修琥珀三裂） */
+  /* V400 C: 恢复日「重启中」(未完成且非已完成) -> 中性色，与渐进半程同标准（此前纯红 = 把首因体验渲染成失败） */
+  if (!_isDoneR && _isRecoveryDay(T) && !cur.pass) col = '#0891b2';
   if (cur._learnOnly && !cur.pass) col = '#0891b2';
   if (cur.rq && cur.rq.gradual && _dispPct < 100) col = '#0891b2';
   pEl.style.color = col;
@@ -2751,7 +2754,8 @@ function reqOf(s){
   if(svg){
    svg.setAttribute('aria-valuenow', String(_dispPct));
    var _vt = '今日完成度 ' + _dispPct + '%';
-  if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
+  if(_isDoneR){ _vt += '（重启已完成，额外练习不计）'; }   /* V400 B: completed 优先，消掉「答题还差 0 题」 */
+  else if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
   else if(cur._learnOnly){ _vt += '（学习日出席，首遍不计正确率）'; }   /* V393 */   /* V362 */
   else if(cur.quizPartial && !cur.quizOK){
    var _need = Math.max(0, (cur.quizRowTgt||8) - (cur.quizRowDone||0));

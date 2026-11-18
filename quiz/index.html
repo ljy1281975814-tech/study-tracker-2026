@@ -4476,8 +4476,12 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _dd8 = (_pq8.days && _pq8.days[_rq8.day]) || {};
           _dq8 = (+_dd8.c || 0) + (+_dd8.w || 0);
         } catch(e){}
-        var _tq8 = (_rq8.tgtQ) || 3;
-        if (_dq8 >= _tq8 && !_rq8.completed) { _rq8.completed = 1; localStorage.setItem('dsh.347.recovery.v1', JSON.stringify(_rq8)); }
+        var _tq8 = (_rq8.tgtQ) || 3, _tink8 = (_rq8.tgtInk) || 30;
+        /* V400 A: **必须校验正确率 + 墨墨**（此前只判 c+w>=tgt -> 3 题全错/墨墨0 也写成「重启完成」） */
+        var _acc8 = 0, _ink8 = 0;
+        try { var _c8 = +((_dd8 && _dd8.c) || 0); _acc8 = _dq8 > 0 ? (_c8 / _dq8) : 0; } catch(e){}
+        try { var _mv8 = JSON.parse(localStorage.getItem('dsh.347.motiv.v3') || '{}'); var _md8 = (_mv8.days && _mv8.days[_rq8.day]) || {}; _ink8 = (+_md8['背'] || 0); } catch(e){}
+        if (_dq8 >= _tq8 && _acc8 >= 0.6 && _ink8 >= _tink8 && !_rq8.completed) { _rq8.completed = 1; localStorage.setItem('dsh.347.recovery.v1', JSON.stringify(_rq8)); }
       }
     } catch(e){}
  go('done'); }
