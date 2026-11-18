@@ -2710,7 +2710,8 @@ function reqOf(s){
   try {
     /* V412/V419: 恢复日/渐进日不亮学习标记；但**学习配额已满**(la>=tgt)时亮（含 +7~+11 课外练习） */
     /* V421: 学习配额满 + 墨墨达标时也亮学习样式（含课外练习）—— M4 的 ink=0 不触发，保住 M4 */
-    var _lqGate = !!(_isLearnDay || (qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && inkOK));
+    /* V422: 不能用 inkOK —— 它在本行之后才 var 赋值（var 提升 -> undefined -> 门仍 7/12）；直接用 inkRow */
+    var _lqGate = !!(_isLearnDay || (qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && inkRow && inkRow.done >= inkRow.tgt));
     if (quizRow && _lqGate && !_isRecoveryDay(s) && !_isGradualDay(s)) {
       quizRow.learn = 1;
       quizRow.learnN = (qa ? (qa.la || 0) : 0);
