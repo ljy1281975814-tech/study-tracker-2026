@@ -160,6 +160,9 @@ if key:
     time.sleep(1.3)
     card = ev("""(function(){ var r=document.getElementById('resultCard'); return r?(r.innerText||'').replace(/\\n/g,' | ').slice(0,60):'NONE'; })()""")
     results.append(("③ 单选选对", "提交=%s" % sb, cnt(), (card or "")[:55]))
+else:
+    # V384: key 提取失败时**显式 FAIL**，不再静默跳过（评审指出的假绿）
+    results.append(("③ 单选选对", "FAIL(单选 key 提取失败)", cnt(), ""))
 # ④ 选错
 reset()
 enter("社心|3")

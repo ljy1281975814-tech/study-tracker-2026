@@ -2848,7 +2848,7 @@ function reqOf(s){
    ? ('🎓 初试已结束 ｜ 全程实做 <b>' + df.actual + '</b> 题次')  // W7c：考后不再报欠账
    : ('📐 全程 <b>'+TOTAL_Q+'</b> 题次目标 · 已完成 <b>'+_sumQ2+'</b>（'+Math.round(_sumQ2/Math.max(1,TOTAL_Q)*100)+'%）· 剩余 '+_left614+' ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
    + (df.deficit > 0
-     ? (cur.pass || _isRecoveryDay(T) ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + (_isRecoveryDay(T) ? '（⭐ 重启日：3 题 + 30 词 = 今天算赢；欠账不追）' : '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）')
+     ? (cur.pass || _isRecoveryDay(T) ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + (cur.rq.gradual ? '（🌤 渐进第二天：6 题 + 60 词 = 今天算赢；欠账不追）' : (_isRecoveryDay(T) ? '（⭐ 重启日：3 题 + 30 词 = 今天算赢；欠账不追）' : '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）'))
      : '<span class="mv-good">不欠账 ✓</span>'));
 
   
@@ -2950,7 +2950,7 @@ function reqOf(s){
    c4 = sh(c4,-1);
   }
   var dl = Math.round((pd(EXAM)-pd(T))/864e5);
-  $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · ' + (_isRecoveryDay(T) ? '重启日 · 3 题 + 30 词' : (cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天'));   /* V363: 恢复日头部不写 12 题/天 */  // W7b
+  $id('mv-sub').textContent = (dl < 0 ? '已结束（D+'+(-dl)+'）' : 'D-'+dl) + ' · ' + (cur.rq.gradual ? '🌤 渐进第二天 · 6 题 + 60 词' : (_isRecoveryDay(T) ? '重启日 · 3 题 + 30 词' : (cur.rq.st.step+'期 · '+cur.rq.st.q+' 题/天')));   /* V363: 恢复日头部不写 12 题/天 */  // W7b
   $id('mv-chip').textContent = '🔥 '+streak+' 连击 · '+lit+'/'+total+' 天有进展';
   if(streak === 0 && $id('mv-chip')){ $id('mv-chip').classList.add('zero'); }  // V26: 0态中性色
   else if($id('mv-chip')){ $id('mv-chip').classList.remove('zero'); }
@@ -2987,14 +2987,19 @@ function reqOf(s){
     if(!document.body.classList.contains('minimal-mode')){
       el.innerHTML = '<button type="button" id="minimalBtn">🔄 今日只做两件（重启）</button>';
     } else {
-      var _mmRec = false, _mmQ = 3, _mmInk = 30;
+      var _mmRec = false, _mmQ = 3, _mmInk = 30, _mmGrad = false;
       try {
         var _mmR = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
         var _mmToday = _studyDaySafe();
         if (_mmR && _mmR.day === _mmToday) { _mmRec = true; _mmQ = _mmR.tgtQ || 3; _mmInk = _mmR.tgtInk || 30; }
+        else if (_mmR && _mmR.completed && _mmR.day) {
+          var _mmN = new Date(_mmR.day + 'T00:00:00'); _mmN.setDate(_mmN.getDate() + 1);
+          var _mmNS = _mmN.getFullYear() + '-' + ('0'+(_mmN.getMonth()+1)).slice(-2) + '-' + ('0'+_mmN.getDate()).slice(-2);
+          if (_mmNS === _mmToday) { _mmGrad = true; _mmQ = 6; _mmInk = 60; }
+        }
       } catch(e){}
-      el.innerHTML = _mmRec
-        ? '<div class="mm-list">⭐ <b>重启日</b>只做两件：<b>墨墨 ' + _mmInk + ' 词</b> + <b>' + _mmQ + ' 题（机判）</b> —— 做完就算赢，欠账不追。</div>'
+      el.innerHTML = (_mmRec || _mmGrad)
+        ? '<div class="mm-list">' + (_mmGrad ? '🌤 <b>渐进第二天</b>' : '⭐ <b>重启日</b>') + '只做两件：<b>墨墨 ' + _mmInk + ' 词</b> + <b>' + _mmQ + ' 题（机判）</b> —— 做完就算赢，欠账不追。</div>'
         : '<div class="mm-list">今天只做两件：<b>墨墨 120 词</b> + <b>按今日配额答题</b> —— 做完就算赢，欠账不追。</div>'
         + '<a href="quiz/index.html" id="minimalQuizBtn" style="display:inline-block;min-height:44px;line-height:44px;padding:0 16px;background:#131210;color:#f2efe7;text-decoration:none;font-size:15px;margin-right:8px">▶ ' + (_mmRec ? ('开始最小重启（' + _mmQ + ' 题）') : '开始今日答题') + '</a>'
         + '<button type="button" id="minimalBtn" style="min-height:44px;background:#f2efe7;color:#131210;border:1px solid #131210;padding:0 14px;font-size:14px;cursor:pointer">✓ 已开（点此关闭）</button>';
@@ -3674,14 +3679,34 @@ function reqOf(s){
     var totalDays = PM.total_days;
     var dleft = Math.max(0, Math.ceil((new Date(2026,11,19) - new Date())/86400000));
     var tPct = Math.min(100, (totalDays - dleft)/totalDays*100);
-    document.getElementById('PO-DAYS').textContent = '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
+    document.getElementById('PO-DAYS').textContent = (function(){
+      var _r = null; try { _r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
+      if (_r && _r.gradual && _r.day === T) return '距考试 '+dleft+' 天｜🌤 渐进第二天：'+(_r.tgtQ||6)+' 题 + '+(_r.tgtInk||60)+' 词（不追欠账）';
+      if (_r && _r.day === T) return '距考试 '+dleft+' 天｜⭐ 重启日：'+(_r.tgtQ||3)+' 题 + '+(_r.tgtInk||30)+' 词（不追欠账）';
+      if (_r && _r.completed && _r.day) {
+        var _n = new Date(_r.day+'T00:00:00'); _n.setDate(_n.getDate()+1);
+        var _nS = _n.getFullYear()+'-'+('0'+(_n.getMonth()+1)).slice(-2)+'-'+('0'+_n.getDate()).slice(-2);
+        if (_nS === T) return '距考试 '+dleft+' 天｜🌤 渐进第二天：'+(_r.tgtQ||6)+' 题 + '+(_r.tgtInk||60)+' 词（不追欠账）';
+      }
+      return '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
+    })();
     document.getElementById('PO-TPCT').textContent = tPct.toFixed(1)+'%';
     document.getElementById('PO-TBAR').style.width = tPct+'%';
     document.getElementById('PO-EPCT').textContent = ePct.toFixed(1)+'%（'+doneQ+'/'+TARGET_Q+' 题次）';
     document.getElementById('PO-EBAR').style.width = ePct+'%';
     var match = ePct - tPct;
     var mEl = document.getElementById('PO-MATCH');
-    if(Math.abs(match) < 5){ mEl.textContent = '匹配度 持平 ('+match.toFixed(1)+'%)'; mEl.style.color='#059669'; }
+    /* V382: 恢复日/渐进日隐藏匹配度（避免「完成却还落后」） */
+    var _rM = null; try { _rM = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
+    var _isRM = false;
+    if (_rM && _rM.day === T) _isRM = true;
+    else if (_rM && _rM.completed && _rM.day) {
+      var _nM = new Date(_rM.day+'T00:00:00'); _nM.setDate(_nM.getDate()+1);
+      var _nMS = _nM.getFullYear()+'-'+('0'+(_nM.getMonth()+1)).slice(-2)+'-'+('0'+_nM.getDate()).slice(-2);
+      if (_nMS === T) _isRM = true;
+    }
+    if(_isRM){ mEl.textContent = ''; mEl.style.display = 'none'; }
+    else if(Math.abs(match) < 5){ mEl.textContent = '匹配度 持平 ('+match.toFixed(1)+'%)'; mEl.style.color='#059669'; }
     else if(match > 0){ mEl.textContent = '匹配度 超前 +'+match.toFixed(1)+'%'; mEl.style.color='#059669'; }
     else { mEl.textContent = '匹配度 落后 '+match.toFixed(1)+'%'; mEl.style.color='#dc2626'; }
     document.getElementById('PO-STEP').textContent = '今日配额 · '+ST.step+'期';
