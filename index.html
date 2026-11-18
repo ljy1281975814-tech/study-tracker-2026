@@ -4015,6 +4015,8 @@ function paintPO(){
       var _tqD = 12, _tiD = 120;
       try { var _rD = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); if (_rD && _rD.day === T) { _tqD = _rD.tgtQ || 3; _tiD = _rD.tgtInk || 30; } } catch(e){}
       if (_cwD >= _tqD && _inkD >= _tiD) _isRM = true;
+      /* V411 H1: 学习日满配额(la>=12)+1~3额外机判 也隐藏（v409-b 实测 5 处「环100%+不欠账 vs 落后-16%」） */
+      if ((+_dD.la||0) >= 12) _isRM = true;
     } catch(e){}
     if(_isRM){ mEl.textContent = ''; mEl.style.display = 'none'; }
     else if(Math.abs(match) < 5){ mEl.textContent = '匹配度 持平 ('+match.toFixed(1)+'%)'; mEl.style.color='#059669'; }
