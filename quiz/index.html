@@ -3352,12 +3352,26 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           var _mgd = (_mg.days && _mg.days[TODAY]) || {};
           _gi = (+_mgd['背'] || 0);
         } catch(e){}
-        if (_gq >= 6 && _gi >= 60) {
+        /* V391: 补正确率门（6 题对 2 不庆祝，与 index qualityOK 同源） */
+        var _gc = 0;
+        try {
+          var _pgc = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+          var _dgc = (_pgc.days && _pgc.days[TODAY]) || {};
+          _gc = +(_dgc.c || 0);
+        } catch(e){}
+        var _gacc = _gq > 0 ? (_gc / _gq) : 0;
+        if (_gq >= 6 && _gi >= 60 && _gacc >= 0.6) {
           return masthead() +
             '<section class="hero shell"><h1>🎉 渐进成功 · 今天完成</h1>' +
             '<p class="hero-lead">今天 <b>' + _gq + ' 题</b> + <b>' + _gi + ' 词</b>，全部完成。<br>' +
             '明天回到正常节奏，<b>不用补欠账</b>。</p>' +
             '<p class="hero-foot">今天到此为止，收工。</p></section>';
+        }
+        if (_gq >= 6 && _gacc < 0.6) {
+          return masthead() +
+            '<section class="hero shell"><h1>今天做了 ' + _gq + ' 题，答对 ' + _gc + ' 题</h1>' +
+            '<p class="hero-lead">渐进第二天要求 <b>6 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(6 * 0.6) + ' 题）。<br>还差一点 —— 看一眼错的解析，明天继续。</p>' +
+            '<p class="hero-foot">渐进日不追欠账，但今天的题值得复盘。</p></section>';
         }
         return masthead() +
           '<section class="hero shell"><h1>🌤 渐进第二天</h1>' +
@@ -3378,14 +3392,29 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         /* V380: 终态必须**与 index 质量门同源** —— 机判 3 题且正确率≥60%
            （此前只看 c+w>=3 -> 0/3 也庆祝，与 index 67% 琥珀互斥） */
         var _accJ = _dq > 0 ? ((+((_dj.c)||0)) / _dq) : 0;
-        if (_dq >= _tqj && _accJ >= 0.6) {
+        /* V392 P1-1: 恢复日终态也**必须读墨墨**（此前 3/3+墨墨0 也 🎉，与 index 50% 琥珀分裂） */
+        var _inkJ = 0;
+        try {
+          var _mj = JSON.parse(localStorage.getItem('dsh.347.motiv.v3')||'{}');
+          var _mjd = (_mj.days && _mj.days[TODAY]) || {};
+          _inkJ = (+_mjd['背'] || 0);
+        } catch(e){}
+        var _tinkJ = _recJ.tgtInk || 30;
+        if (_dq >= _tqj && _accJ >= 0.6 && _inkJ >= _tinkJ) {
           return masthead() +
             '<section class="hero shell"><h1>🎉 今天已完成 · 收工</h1>' +
             '<p class="hero-lead">重启日只要 <b>' + _tqj + ' 题</b>，你已经做了 <b>' + _dq + '</b> 题。<br>' +
             '这就是赢了 —— <b>不用补欠账</b>，明天回到正常节奏。</p>' +
-            '<p class="hero-foot">今天不必再刷题，把 30 个墨墨词做完更划算。</p></section>';
+            '<p class="hero-foot">今天不必再刷题。' + (_inkJ >= (_recJ.tgtInk||30) ? '墨墨也 ' + _inkJ + ' 词做完了。' : '把 ' + ((_recJ.tgtInk||30) - _inkJ) + ' 个墨墨词补完更划算。') + '</p></section>';
         }
         /* V380: 做了但不达标 -> 明确说差距，不庆祝 */
+        if (_dq >= _tqj && _accJ >= 0.6 && _inkJ < _tinkJ) {
+          return masthead() +
+            '<section class="hero shell"><h1>题做完了，墨墨还差 ' + (_tinkJ - _inkJ) + ' 词</h1>' +
+            '<p class="hero-lead">重启日要 <b>' + _tqj + ' 题</b> + <b>' + _tinkJ + ' 词</b>（已 ' + _inkJ + '/' + _tinkJ + '）。<br>' +
+            '把词补上，今天就算重启成功。</p>' +
+            '<p class="hero-foot">重启日不追欠账，只差这一小步。</p></section>';
+        }
         if (_dq >= _tqj && _accJ < 0.6) {
           return masthead() +
             '<section class="hero shell"><h1>今天做了 ' + _dq + ' 题，答对 ' + (+((_dj.c)||0)) + ' 题</h1>' +
@@ -3394,13 +3423,6 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
             '<p class="hero-foot">重启日不追欠账，但今天的题值得复盘。</p></section>';
         }
         /* V380: 做了但不达标 -> 明确说差距，不庆祝 */
-        if (_dq >= _tqj && _accJ < 0.6) {
-          return masthead() +
-            '<section class="hero shell"><h1>今天做了 ' + _dq + ' 题，答对 ' + (+((_dj.c)||0)) + ' 题</h1>' +
-            '<p class="hero-lead">重启日要求 <b>' + _tqj + ' 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(_tqj * 0.6) + ' 题）。<br>' +
-            '还差一点 —— 把错的题看一眼解析，明天再来。</p>' +
-            '<p class="hero-foot">重启日不追欠账，但今天的题值得复盘。</p></section>';
-        }
         title = '⭐ 重启日 · 今天只需 ' + _tqj + ' 题';
         lead = '最小重启：<b>3 题</b>（机判）+ <b>30 个</b>墨墨词。做完就算赢，<b>不用补欠账</b>。';
         cta = '开始最小重启';

@@ -205,7 +205,7 @@ results.append(("⑥ 错题解析", "点击=%s" % opened, "errs=%d" % len(errs),
 print("=== 五条主流程 ===")
 fails = 0
 for r in results:
-    flag = "✓" if ("❌" not in r[1]) else "✗"
+    flag = "✓" if ("❌" not in r[1] and "FAIL" not in str(r[1])) else "✗"
     if flag == "✗":
         fails += 1
     print("  [%s] %-14s %-18s %-26s %s" % (flag, r[0], r[1], r[2], r[3]))
