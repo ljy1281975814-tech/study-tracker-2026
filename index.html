@@ -2709,7 +2709,9 @@ function reqOf(s){
   /* V342 P0: 给 题 门打学习日标记，供 gate 渲染显示「学习 N/tgt」而非「✅ 0/12」 */
   try {
     /* V412/V419: 恢复日/渐进日不亮学习标记；但**学习配额已满**(la>=tgt)时亮（含 +7~+11 课外练习） */
-    if (quizRow && _isLearnDay && !_isRecoveryDay(s) && !_isGradualDay(s)) {
+    /* V421: 学习配额满 + 墨墨达标时也亮学习样式（含课外练习）—— M4 的 ink=0 不触发，保住 M4 */
+    var _lqGate = !!(_isLearnDay || (qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && inkOK));
+    if (quizRow && _lqGate && !_isRecoveryDay(s) && !_isGradualDay(s)) {
       quizRow.learn = 1;
       quizRow.learnN = (qa ? (qa.la || 0) : 0);
       quizRow.learnAttend = !!_learnAttend;
@@ -2763,6 +2765,8 @@ function reqOf(s){
   var _hasReal = (quizRow && quizRow.done > 0) || (inkRow && inkRow.done > 0); var _mpEff = (_mp >= 0 && _hasReal) ? (((_rr && parseInt(_rr.mo,10)>=80 && parseInt(_rr.do,10)>=60)) ? 1 : _mp) : -1;   /* V116(G14): 报数达标即满贡献 */   /* V116(G14): 报数达标即满贡献 */ var _denom = (_mpEff >= 0) ? 3 : 2;
   var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
   var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;
+    /* V421: 非 pass 时不得四舍五入成 100%（119/120 墨墨 -> 99.58 -> 100 是假赢） */
+    if (realPct >= 100 && !(quizOK && inkOK)) realPct = 99;
     /* V416 H4: 学习日完成度取 max(学习日出席, 普通口径) —— 修 +4 机判断崖（学满12题后再练第4题不该从100%掉到66%）*/
     if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) >= (quizRow.tgt||99) && inkOK) { var _lp = Math.min(100, Math.round((((qa&&qa.la)||0) / Math.max(1, quizRow.tgt)) * 100));   /* V419: 去掉 c+w<=6（改由 coach 文字桥接，恢复单调） */ if (_lp > realPct) realPct = _lp; }   /* V418: 必须 inkOK + c+w<=6（与 _learnFull 对齐）—— 修「墨墨未满也100%」和「+7~+11 机判 100% 但说还差」 */
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
