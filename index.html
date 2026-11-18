@@ -2733,7 +2733,7 @@ function reqOf(s){
   if(_dispPct >= 100 && cur.pass && !_effReportOK) _dispPct = 99;  // V86
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
-  var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V392 学习日专用环色
+  var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
   pEl.style.color = col;
   var C = 2*Math.PI*44;
   ring.style.stroke = col;
@@ -2741,7 +2741,8 @@ function reqOf(s){
   if(svg){
    svg.setAttribute('aria-valuenow', String(_dispPct));
    var _vt = '今日完成度 ' + _dispPct + '%';
-  if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }   /* V362 */
+  if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
+  else if(cur._learnOnly){ _vt += '（学习日出席，首遍不计正确率）'; }   /* V393 */   /* V362 */
   else if(cur.quizPartial && !cur.quizOK){
    var _need = Math.max(0, (cur.quizRowTgt||8) - (cur.quizRowDone||0));
    _vt += '（答题还差 ' + _need + ' 题达标）';
@@ -2803,6 +2804,14 @@ function reqOf(s){
       } catch(e){}
       return '🎉 <b>重启完成</b> —— 今天做了 <b>' + _doneQ + '</b> 题（机判）+ <b>' + _doneInk + '</b> 词。<br>'
         + '这就是赢了：<b>不需要补欠账</b>。今天到此为止，可以收工；明天按正常节奏接上。';
+    }
+    /* V393 P1-b: 题已做满但**质量不足** -> 说清差距，不命令重做已满的题（修死路） */
+    if (_doneQ >= _rq2 && !_hitQ) {
+      var _ansQ = 0; try { _ansQ = +(cur.quizRowDone||0); } catch(e){}
+      var _corrQ = (cur.acc !== null) ? Math.round((cur.acc||0) * _ansQ) : 0;
+      return '👋 <b>欢迎回来</b> —— 你已做满 <b>' + _ansQ + '</b> 题（机判），答对 <b>' + _corrQ + '</b> 题。<br>'
+        + '重启日要求<b>正确率 ≥60%</b>（需答对 <b>' + Math.ceil(_rq2 * 0.6) + '</b> 题）。<br>'
+        + '<b>不用重做已做满的题</b> —— 看一眼错题解析，明天按 1–2 天回来再做机器判分就会计入。';
     }
     return '👋 <b>欢迎回来</b>（距上次学习 <b>' + _gapDays + '</b> 天）。<br>'
       + '不用补欠账 —— <b>今天只做最小重启</b>：'
@@ -3072,6 +3081,14 @@ function reqOf(s){
   /* V379: 恢复日不显示报数红链（恢复日定义里不要求报数） */
   var _recH = null; try { _recH = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
   var _isRecH = !!(_recH && _recH.day === day);
+  /* V393 P1-a: 学习日也豁免报数红链 */
+  var _isLearnH = false;
+  try {
+    var _qh = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+    var _dh = (_qh.days && _qh.days[day]) || {};
+    if ((+_dh.la||0) > 0 && (+_dh.c||0)+(+_dh.w||0) === 0) _isLearnH = true;
+  } catch(e){}
+  if (_isLearnH) _isRecH = true;
   if (!_isRecH && _recH && _recH.completed && _recH.day) { var _nH = new Date(_recH.day+'T00:00:00'); _nH.setDate(_nH.getDate()+1); var _nHS = _nH.getFullYear()+'-'+('0'+(_nH.getMonth()+1)).slice(-2)+'-'+('0'+_nH.getDate()).slice(-2); if (_nHS === day) _isRecH = true; }   /* V386: 渐进日也豁免报数 */
   if(!r || (r.mo==='' && r.do==='')){
     /* V390: 渐进日文案（此前错写成「重启日…3 题 + 30 词」） */
@@ -3687,11 +3704,21 @@ function reqOf(s){
   /* V379: 恢复日 PO-QUIZ 显示最小重启进度 */
   var _recI = null; try { _recI = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
   var _isRecI = !!(_recI && _recI.day === T);
-  document.getElementById('PO-QUIZ').innerHTML = _isRecI
+  /* V393 P2-a: 学习日 PO-QUIZ 显示学习题次 + 机判 0 */
+  var _isLearnI = false; var _laI = 0;
+  try {
+    var _qi2 = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+    var _di2 = (_qi2.days && _qi2.days[T]) || {};
+    _laI = (+_di2.la || 0);
+    if (_laI > 0 && (+_di2.c||0)+(+_di2.w||0) === 0) _isLearnI = true;
+  } catch(e){}
+  document.getElementById('PO-QUIZ').innerHTML = _isLearnI
+    ? ('📖 今天在<b>首遍学习</b> ' + _laI + ' 题（首遍不计分）· 机判 <b>0</b> 题 —— 明天按 1–2 天回来做机器判分')
+    : (_isRecI
     ? ('⭐ 重启日进度：答题 <b>' + quizN + '/' + ((_recI.tgtQ)||3) + '</b> 题（机判）· 墨墨 <b>' + (function(){ try { var _mv2 = JSON.parse(localStorage.getItem('dsh.347.motiv.v3')||'{}'); var _d2 = (_mv2.days&&_mv2.days[T])||{}; return (+_d2['背']||0); } catch(e){ return 0; } })() + '/' + ((_recI.tgtInk)||30) + '</b> 词 —— 做完就算赢，不追欠账')
     : (quizN>0
       ? '🎯 做题系统今日已答 <b>'+quizN+'</b> 题，其中答对 <b>'+quizOk+'</b> 题（自动同步）'
-      : '🎯 做题系统今日暂无记录（在 /quiz/ 作答后这里会自动显示）');
+      : '🎯 做题系统今日暂无记录（在 /quiz/ 作答后这里会自动显示）'));
   // 统计
   function render(){
     var totalQ = 0, doneQ = 0, totalMin = 0, doneMin = 0;

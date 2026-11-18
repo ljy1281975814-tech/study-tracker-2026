@@ -82,7 +82,7 @@ def enter(arg):
 def cur_ans():
     return ev("""(function(){
       try{
-        var stem=(document.querySelector('.q-stem')||{}).innerText||''; stem=stem.trim();
+        var stem=(document.querySelector('.q-stem')||{}).innerText||''; stem=stem.replace(/\\s|　|（|）|\\(|\\)/g,'').trim();   /* V393: 归一化全角括号+空白 */
         var el=document.getElementById('bank'); var B=JSON.parse(el.textContent);
         var arr=[].concat(B.diff||[], B.items||[]);
         for(var i=0;i<arr.length;i++){ var q=arr[i]; if(!q) continue;
@@ -210,6 +210,7 @@ for r in results:
         fails += 1
     print("  [%s] %-14s %-18s %-26s %s" % (flag, r[0], r[1], r[2], r[3]))
 print("  失败项: %d" % fails)
+if fails: sys.exit(1)   # V393: 失败必须非零退出（门禁才拦得住）
 print("  errs:", errs[:3] if errs else "NONE")
 
 ws.close()
