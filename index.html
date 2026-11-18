@@ -2727,19 +2727,21 @@ function reqOf(s){
   var pct = cur.pct;
   var pEl = $id('mv-pct'), ring = $id('mv-ring'), svg = $id('mv-ringsvg');
   var _dispPct = Math.round(pct);
+  /* V399: 恢复日已完成 -> **在文字/颜色之前**判定，否则出现「文字67% / 环100% / aria100%」三裂 */
+  var _isDoneR = false;
+  try {
+    var _rk8 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    if (_rk8 && _rk8.completed && _rk8.day === T) { _isDoneR = true; _dispPct = 100; }
+  } catch(e){}
   /* V362: 恢复日不要求报数 -> 视为已达标（修「重启完成却被 99% 琥珀+aria 报数未达标否定」） */
-  var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T);   /* V390: 渐进日也不要求报数 */
-  if(_dispPct >= 100 && !cur.pass) _dispPct = 99;  // V33
+  var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T) || _isDoneR;   /* V390/V399 */
+  if(_dispPct >= 100 && !cur.pass && !_isDoneR) _dispPct = 99;  // V33 / V399: 已完成不降 99
   if(_dispPct >= 100 && cur.pass && !_effReportOK) _dispPct = 99;  // V86
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
-  /* V397: 恢复日已完成 -> 完成度强制 100%（修「完成后继续做题 -> 环99%琥珀 + aria 还差0题」） */
-  try {
-    var _rk8 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
-    if (_rk8 && _rk8.completed && _rk8.day === T) { _dispPct = 100; }
-  } catch(e){}
   var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
   /* V396: 学习日专属环色 + 渐进半程中性色（**算完后覆盖**，不动嵌套三元式） */
+  if (_isDoneR) col = '#059669';   /* V399: 已完成 -> 环绿（修琥珀三裂） */
   if (cur._learnOnly && !cur.pass) col = '#0891b2';
   if (cur.rq && cur.rq.gradual && _dispPct < 100) col = '#0891b2';
   pEl.style.color = col;
@@ -3123,7 +3125,7 @@ function reqOf(s){
       }
     } catch(e){}
     el.innerHTML = _isLearnH
-      ? '📝 <span style="color:#6b7280">学习日不要求报数 —— 今天学满 ' + (function(){ try { var _q5 = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}'); var _d5 = (_q5.days&&_q5.days[day])||{}; return (+_d5.la||0); } catch(e){ return 0; } })() + ' 题就算有交代</span>'
+      ? '📝 <span style="color:#6b7280">学习日不要求报数 —— 首遍学习只是在铺路，明天回来机判才计分</span>'
       : (_isGradH
       ? '📝 <span style="color:#6b7280">渐进日不要求报数 —— 做完 6 题 + 60 词就算赢</span>'
       : (_isRecH
@@ -3806,7 +3808,13 @@ function reqOf(s){
     var _rM = null; try { _rM = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
     var _isRM = false;
     if (_rM && _rM.day === T) _isRM = true;
-    else if (_rM && _rM.completed && _rM.day) {
+    /* V398: 学习日也隐藏匹配度（此前只隐藏恢复/渐进日 -> 「不欠账✓」与「落后-16.5%」同屏） */
+    try {
+      var _qM2 = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+      var _dM2 = (_qM2.days && _qM2.days[T]) || {};
+      if ((+_dM2.la||0) > 0 && (+_dM2.c||0)+(+_dM2.w||0) === 0) _isRM = true;
+    } catch(e){}
+    if (!_isRM && _rM && _rM.completed && _rM.day) {
       var _nM = new Date(_rM.day+'T00:00:00'); _nM.setDate(_nM.getDate()+1);
       var _nMS = _nM.getFullYear()+'-'+('0'+(_nM.getMonth()+1)).slice(-2)+'-'+('0'+_nM.getDate()).slice(-2);
       if (_nMS === T) _isRM = true;
