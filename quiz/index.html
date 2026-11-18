@@ -3342,6 +3342,15 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
       /* V375: 恢复日首页改最小重启口径（此前仍显示 12 题队列） */
       /* V389: 渐进日 hero + 完成终态 */
       if (_isQuizGradual(TODAY)) {
+        /* V429 C: quiz 渐进分支读 index 写的 graddone（否则 index 100%🎉 而 quiz 说还差一点） */
+        try {
+          if (localStorage.getItem('dsh.347.graddone.v1') === TODAY) {
+            return masthead() +
+              '<section class="hero shell"><h1>🎉 渐进成功 · 今天已完成</h1>' +
+              '<p class="hero-lead">今天已达成渐进目标。<br>之后做的题只是额外练习，<b>不影响结论</b>。</p>' +
+              '<p class="hero-foot">今天到此为止，收工。</p></section>';
+          }
+        } catch(e){}
         var _gq = 0, _gi = 0;
         try {
           var _pg = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
@@ -3403,15 +3412,6 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
           _inkJ = (+_mjd['背'] || 0);
         } catch(e){}
         var _tinkJ = _recJ.tgtInk || 30;
-        /* V428 H5: quiz 也要读 index 写的「渐进已完成」标记（否则 index 100%🎉 而 quiz 说还差一点） */
-        var _gradDoneQ = false;
-        try { _gradDoneQ = (localStorage.getItem('dsh.347.graddone.v1') === TODAY); } catch(e){}
-        if (_gradDoneQ) {
-          return masthead() +
-            '<section class="hero shell"><h1>🎉 渐进成功 · 今天已完成</h1>' +
-            '<p class="hero-lead">今天已达成渐进目标。<br>之后做的题只是额外练习，<b>不影响结论</b>。</p>' +
-            '<p class="hero-foot">今天到此为止，收工。</p></section>';
-        }
         var _recDone = false;
         try {
           var _rdg = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null');

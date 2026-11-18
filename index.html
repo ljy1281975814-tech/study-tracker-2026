@@ -2692,7 +2692,7 @@ function reqOf(s){
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= (qa.a - (qa.sj || 0)) && (qa.a - (qa.sj || 0)) > 0);   /* V230 A2 + V412: 排除自评 sj（此前 la>=a 把 sj 算进 a -> 自评即撤销学习日身份） */
  /* V406 P1-3: **学习配额已满**后追加机判，仍是学习日（此前一机判就撤销豁免 -> 学完 12 题再答 1 题就翻红 = 惩罚继续学习）
     v405-b 给的公式：_learnFull = qa && quizRow && la>=tgt && (c+w)<tgt */
- var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 6));   /* V416: 上限 3->6（覆盖 +4/+5/+6 机判，M4 的 c+w=8 仍排除 -> 不断崖且不误判混合日） */
+ var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 6) && (acc === null || acc >= 0.6));   /* V429 B: acc>=60% 才保学习日身份（否则 m1-6 低正确率仍 100%） */   /* V416: 上限 3->6（覆盖 +4/+5/+6 机判，M4 的 c+w=8 仍排除 -> 不断崖且不误判混合日） */
  if (_learnFull) _isLearnDay = true;
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
@@ -3121,6 +3121,8 @@ function reqOf(s){
       var _rkg = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
       /* V409 P2-D: **只认今日 completed**（去掉 day+1 分支 —— 渐进日到达不是完成，否则 0/6 也显示 ✅） */
       if (_rkg && _rkg.completed && _rkg.day === T) { _isDoneG = true; }
+      /* V429 A: **渐进日已完成(graddone)也算完成** -> 门/跑道同步（此前只认 recovery） */
+      try { if (localStorage.getItem('dsh.347.graddone.v1') === String(T)) _isDoneG = true; } catch(e){}
     } catch(e){}
     if (_isDoneG) {
       /* V407 R-c2: 跑道今日格强制 pass —— **延后到所有渲染完成后**（跑道在门之后渲染，同步改会被覆盖） */
