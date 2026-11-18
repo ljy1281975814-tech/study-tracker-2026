@@ -2580,6 +2580,10 @@ function reqOf(s){
   var qa = QD_ACC[s] || null;
   var _den2 = qa ? (qa.a - (qa.la || 0) - (qa.sj || 0)) : 0;   /* V306: 排除 学习(la)+自评(sj) */
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= qa.a);   /* V230 A2: 全是学习题次 = 学习日 */
+ /* V406 P1-3: **学习配额已满**后追加机判，仍是学习日（此前一机判就撤销豁免 -> 学完 12 题再答 1 题就翻红 = 惩罚继续学习）
+    v405-b 给的公式：_learnFull = qa && quizRow && la>=tgt && (c+w)<tgt */
+ var _learnFull = !!(qa && quizRow && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 3));   /* V406: 只在小量额外练习(1-3题)时保留身份，避免混合日被误判 */
+ if (_learnFull) _isLearnDay = true;
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
   var _gradedN0 = Math.max(0, (qa ? (qa.a||0) : 0) - (qa ? (qa.la||0) : 0) - (qa ? (qa.sj||0) : 0));   /* V334 ②: 机判题次 */
@@ -2628,9 +2632,12 @@ function reqOf(s){
   var realTotal = 0;
   for(var z3=0;z3<rows.length;z3++){ var k3 = rows[z3].k; if(k3 === '题' || k3 === '背') realTotal++; }
   // V30: 环改【连续进度】——98/120 显示 41% 琥珀（near-win），不再全或无
+  /* V406 P1-2: 学习日**按出席比例**计答题贡献（此前用机判 done(c+w)=0 -> 环永远 0%/50%）*/
   var _qp = quizOK ? 1
-    : ((quizRow ? (quizRow.done / Math.max(1, quizRow.tgt)) : 0)
-       * ((_isLearnDay || acc === null) ? 1 : Math.max(0, Math.min(1, acc))));
+    : (_isLearnDay
+       ? Math.min(1, ((qa ? (qa.la || 0) : 0) / Math.max(1, (quizRow ? quizRow.tgt : 1))))
+       : ((quizRow ? (quizRow.done / Math.max(1, quizRow.tgt)) : 0)
+          * ((acc === null) ? 1 : Math.max(0, Math.min(1, acc)))));
    /* V231: 学习日/无正式作答时，答题贡献按「出席」给满 —— 不再因 acc=null 乘 0 导致 0% 红环 */  // V37: 出席比例×正确率，7/8全对=0.875不再0%
   var _ip = inkOK ? 1 : (inkRow && inkRow.tgt > 0 ? Math.min(1, inkRow.done / inkRow.tgt) : 0);
   // V67: 默写纳入完成度（读今日报数）
@@ -2648,7 +2655,7 @@ function reqOf(s){
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
-    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s)) realPct = 66;   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
+    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay) realPct = 66;   /* V406: 学习日不要求报数 -> 不封顶 */   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
@@ -2735,8 +2742,8 @@ function reqOf(s){
     if (_rk8 && _rk8.completed && _rk8.day === T) { _isDoneR = true; _dispPct = 100; }
   } catch(e){}
   /* V362: 恢复日不要求报数 -> 视为已达标（修「重启完成却被 99% 琥珀+aria 报数未达标否定」） */
-  var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T) || _isDoneR;   /* V390/V399 */
-  if(_dispPct >= 100 && !cur.pass && !_isDoneR) _dispPct = 99;  // V33 / V399: 已完成不降 99
+  var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T) || _isDoneR || !!cur._learnDay;   /* V390/V399/V406: 学习日也不要求报数 -> 不封顶 66% */
+  if(_dispPct >= 100 && !cur.pass && !_isDoneR && !cur._learnDay) _dispPct = 99;  // V33/V399/V406: 学习日按出席满也不降 99
   if(_dispPct >= 100 && cur.pass && !_effReportOK) _dispPct = 99;  // V86
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
@@ -2948,6 +2955,30 @@ function reqOf(s){
   }
   if(_isPastNow) gh = '';  // V62: 考后清空门
   $id('mv-gates').innerHTML = gh;
+  /* V406 P1-1a: **门渲染后覆盖** —— completed 时「答题」门不得回退成 ✍️/ro（否则 coach「这就是赢了」被门打脸） */
+  try {
+    var _isDoneG = false;
+    try {
+      var _rkg = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+      if (_rkg && _rkg.completed && _rkg.day) {
+        if (_rkg.day === T) _isDoneG = true;
+        else {
+          var _ng = new Date(_rkg.day + 'T00:00:00'); _ng.setDate(_ng.getDate() + 1);
+          var _ngs = _ng.getFullYear() + '-' + ('0'+(_ng.getMonth()+1)).slice(-2) + '-' + ('0'+_ng.getDate()).slice(-2);
+          if (_ngs === String(T)) _isDoneG = true;
+        }
+      }
+    } catch(e){}
+    if (_isDoneG) {
+      var _glist = document.querySelectorAll('#mv-gates .mv-gate');
+      for (var _gk = 0; _gk < _glist.length; _gk++) {
+        if (/答题/.test(_glist[_gk].textContent || '')) {
+          _glist[_gk].classList.remove('ro'); _glist[_gk].classList.remove('next');
+          _glist[_gk].classList.add('ok');
+        }
+      }
+    }
+  } catch(e){}
   // P1_20261115: 焦点保持（在下一帧恢复，避免被 60s 重绘打断）
   // W5_20261115: 只在「刚点过门」时恢复焦点，且输入框聚焦时绝不抢
   if(_lastGate){
