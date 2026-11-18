@@ -3099,6 +3099,15 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   };
 
   /* V368: 恢复日（index 写的 dsh.347.recovery.v1）—— quiz 页读它，只出 3 题 */
+  function _isQuizGradual(s){
+    try {
+      var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+      if (!r || !r.completed || !r.day) return false;
+      var n = new Date(r.day + 'T00:00:00'); n.setDate(n.getDate() + 1);
+      var nS = n.getFullYear() + '-' + ('0'+(n.getMonth()+1)).slice(-2) + '-' + ('0'+n.getDate()).slice(-2);
+      return nS === String(s);
+    } catch(e) { return false; }
+  }
   function _isQuizRecovery(s){
     try {
       var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
@@ -3108,9 +3117,13 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
   function startSession(ids, mode, title) {
     /* V368: 恢复日限量 3 题（最高意愿入口不再显示 12 题压力） */
     try {
-      if (_isQuizRecovery((typeof TODAY !== 'undefined') ? TODAY : '')) {
+      var _t2 = (typeof TODAY !== 'undefined') ? TODAY : '';
+      if (_isQuizRecovery(_t2)) {
         if (ids && ids.length > 3) ids = ids.slice(0, 3);
         title = '最小重启 · 只做 3 题';
+      } else if (_isQuizGradual(_t2)) {
+        if (ids && ids.length > 6) ids = ids.slice(0, 6);
+        title = '渐进第二天 · 只做 6 题';
       }
     } catch(e) {}
 
@@ -3326,6 +3339,32 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
          「…新题 8 题。0 题。只放已学…」的错句。改为队列内分解，保证 待复习 + 新题 === q.length（D0046 断言1）。 */
       var _qNewN = newItemsIn(q).length, _qDueN = q.length - _qNewN;
       /* V375: 恢复日首页改最小重启口径（此前仍显示 12 题队列） */
+      /* V389: 渐进日 hero + 完成终态 */
+      if (_isQuizGradual(TODAY)) {
+        var _gq = 0, _gi = 0;
+        try {
+          var _pg = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}');
+          var _dg = (_pg.days && _pg.days[TODAY]) || {};
+          _gq = (+_dg.c || 0) + (+_dg.w || 0);
+        } catch(e){}
+        try {
+          var _mg = JSON.parse(localStorage.getItem('dsh.347.motiv.v3')||'{}');
+          var _mgd = (_mg.days && _mg.days[TODAY]) || {};
+          _gi = (+_mgd['背'] || 0);
+        } catch(e){}
+        if (_gq >= 6 && _gi >= 60) {
+          return masthead() +
+            '<section class="hero shell"><h1>🎉 渐进成功 · 今天完成</h1>' +
+            '<p class="hero-lead">今天 <b>' + _gq + ' 题</b> + <b>' + _gi + ' 词</b>，全部完成。<br>' +
+            '明天回到正常节奏，<b>不用补欠账</b>。</p>' +
+            '<p class="hero-foot">今天到此为止，收工。</p></section>';
+        }
+        return masthead() +
+          '<section class="hero shell"><h1>🌤 渐进第二天</h1>' +
+          '<p class="hero-lead">昨天重启成功，今天只要 <b>6 题</b>（已 <b>' + _gq + '/6</b>）+ <b>60 词</b>（已 <b>' + _gi + '/60</b>）。</p>' +
+          '<button class="hero-cta" data-act="start" data-arg="daily">开始渐进 6 题</button>' +
+          '<p class="hero-foot">做完就收工，明天回到正常节奏。</p></section>';
+      }
       if (_isQuizRecovery(TODAY)) {
         /* V379: 恢复日**终态** —— 3 题做完后不再拉回队列 */
         var _recJ = {}; try { _recJ = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'{}'); } catch(e){}

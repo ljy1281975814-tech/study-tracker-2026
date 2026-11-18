@@ -2472,6 +2472,15 @@ function _ensureRecovery(s){
     return _nr;
   } catch(e) { return null; }
 }
+function _isGradualDay(s){
+  try {
+    var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    if (!r || !r.completed || !r.day) return false;
+    var n = new Date(r.day + 'T00:00:00'); n.setDate(n.getDate() + 1);
+    var nS = n.getFullYear() + '-' + ('0'+(n.getMonth()+1)).slice(-2) + '-' + ('0'+n.getDate()).slice(-2);
+    return nS === String(s);
+  } catch(e) { return false; }
+}
 function _isRecoveryDay(s){
   try {
     var r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
@@ -2577,7 +2586,8 @@ function reqOf(s){
  var _learnAttend = !!(qa && (qa.a||0) >= (quizRow ? (quizRow.tgt||1) : 1));   /* V337 B1b: 学习日出席按 days.a */
   var qualityOK = !!(_isLearnDay ? _learnAttend : (acc !== null && acc >= 0.6 && _gradedN0 >= 3));   /* V334 ②: n>=3 最小样本 */   /* V236 A: 学习日按出席算质量（不再恒 false -> 永远到不了 100%） */
   // 答题「达标」= 出席 + 正确率≥60%
-  var quizOK = (quizAttend || (_isLearnDay && _learnAttend)) && qualityOK;   /* V336 B1c: 学习日出席也算 quizOK 的前置 */
+  /* V386: quizOK **必须机判出席**（禁用 learnAttend 充当 pass）—— 修「学习日 coach 说输但环 100% 绿说赢」*/
+  var quizOK = quizAttend && qualityOK;
   /* V342 P0: 给 题 门打学习日标记，供 gate 渲染显示「学习 N/tgt」而非「✅ 0/12」 */
   try {
     if (quizRow && _isLearnDay) {
@@ -2634,7 +2644,7 @@ function reqOf(s){
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
-    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s)) realPct = 66;   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
+    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s)) realPct = 66;   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
@@ -2715,7 +2725,7 @@ function reqOf(s){
   var pEl = $id('mv-pct'), ring = $id('mv-ring'), svg = $id('mv-ringsvg');
   var _dispPct = Math.round(pct);
   /* V362: 恢复日不要求报数 -> 视为已达标（修「重启完成却被 99% 琥珀+aria 报数未达标否定」） */
-  var _effReportOK = cur.reportOK || _isRecoveryDay(T);
+  var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T);   /* V390: 渐进日也不要求报数 */
   if(_dispPct >= 100 && !cur.pass) _dispPct = 99;  // V33
   if(_dispPct >= 100 && cur.pass && !_effReportOK) _dispPct = 99;  // V86
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
@@ -2756,7 +2766,16 @@ function reqOf(s){
   } catch(e) { _gapOk = false; _recov = false; }
 
   if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
-  else if(cur.rq && cur.rq.gradual) msg = '🌤 <b>渐进第二天</b> —— 昨天重启成功，今天只要 <b>6 题</b> + <b>60 词</b>。<br>做完就收工，明天回到正常节奏。不用补任何欠账。';
+  else if(cur.rq && cur.rq.gradual) msg = (function(){
+    /* V386: 渐进日**完成终态**（6/6 机判 + 60/60 词 -> 100% 绿 + 庆祝） */
+    var _dim = 6; try { var _rv = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); if (_rv) _dim = _rv.tgtQ || 6; } catch(e){}
+    var _din = 60; try { var _rv2 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); if (_rv2) _din = _rv2.tgtInk || 60; } catch(e){}
+    var _dq2 = +(cur.quizRowDone || 0), _di2 = +(cur.inkRowDone || 0);
+    var _okQ = _dq2 >= _dim && (cur.qualityOK === true) && (cur.acc === null || cur.acc >= 0.6);
+    var _okI = _di2 >= _din;
+    if (_okQ && _okI) return '🎉 <b>渐进成功</b> —— 今天 <b>' + _dq2 + '</b> 题 + <b>' + _di2 + '</b> 词，全部完成。<br>明天回到正常节奏，<b>不用补欠账</b>。今天到此为止。';
+    return '🌤 <b>渐进第二天</b> —— 昨天重启成功，今天只要 <b>' + _dim + ' 题</b>（已 ' + _dq2 + '/' + _dim + '）+ <b>' + _din + ' 词</b>（已 ' + _di2 + '/' + _din + '）。<br>做完就收工，明天回到正常节奏。不用补任何欠账。';
+  })();
   else if(_gapOk) msg = (function(){
     /* V349: recovery 真状态机 —— 目标 3 题(机判 c+w) + 30 词，当天不消失，达标给终态 */
     var _rq2 = 3, _rink2 = 30;
@@ -2805,7 +2824,7 @@ function reqOf(s){
   else msg = ((cur.inkRowDone||0)>0 || (cur.quizRowDone||0)>0)
    ? '接下来：' + nx + '（墨墨 '+(cur.inkRowDone||0)+'/'+(cur.inkRowTgt||120)+' 还差 '+Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词'+ '；答题 '+(cur.quizRowDone||0)+'/'+(cur.quizRowTgt||8)+' 还差 '+Math.max(0,(cur.quizRowTgt||8)-(cur.quizRowDone||0))+' 题）'
    : '下一步：'+nx;  // V34: 兜底也量化
-  if(cur.pass && !cur.reportOK && !_isRecoveryDay(T)){ msg += '<br><b style="color:#b45309">⚠️ 但今日报数未达标</b>（需默≥80/做≥60），报数区补上才算完整。'; }   /* V357: 恢复日不追加 */
+  if(cur.pass && !cur.reportOK && !_isRecoveryDay(T) && !_isGradualDay(T)){ msg += '<br><b style="color:#b45309">⚠️ 但今日报数未达标</b>（需默≥80/做≥60），报数区补上才算完整。'; }   /* V357: 恢复日不追加 */
   if($id('mv-coach').innerHTML !== msg) $id('mv-coach').innerHTML = msg;
 
   /* V340: 静态 hero 阶段接真实 RAMP（修「11-28 后 PO-DAYS 说加速18 但 hero 仍 P2铺开」） */
@@ -2848,7 +2867,7 @@ function reqOf(s){
    ? ('🎓 初试已结束 ｜ 全程实做 <b>' + df.actual + '</b> 题次')  // W7c：考后不再报欠账
    : ('📐 全程 <b>'+TOTAL_Q+'</b> 题次目标 · 已完成 <b>'+_sumQ2+'</b>（'+Math.round(_sumQ2/Math.max(1,TOTAL_Q)*100)+'%）· 剩余 '+_left614+' ｜ 计划应做 '+df.planned+' 实做 '+df.actual+' ｜ '
    + (df.deficit > 0
-     ? (cur.pass || _isRecoveryDay(T) ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + (cur.rq.gradual ? '（🌤 渐进第二天：6 题 + 60 词 = 今天算赢；欠账不追）' : (_isRecoveryDay(T) ? '（⭐ 重启日：3 题 + 30 词 = 今天算赢；欠账不追）' : '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）'))
+     ? (cur.pass || _isRecoveryDay(T) || _isGradualDay(T) ? '' : '<span class="mv-bad">欠 '+df.deficit+'</span>') + (cur.rq.gradual ? '（🌤 渐进第二天：6 题 + 60 词 = 今天算赢；欠账不追）' : (_isRecoveryDay(T) ? '（⭐ 重启日：3 题 + 30 词 = 今天算赢；欠账不追）' : '（⭐ 先做今天保底：墨墨120 + 答题'+(cur.rq.st?cur.rq.st.q:8)+' = 有进展；欠账不追，只看今天）'))
      : '<span class="mv-good">不欠账 ✓</span>'));
 
   
@@ -3045,10 +3064,22 @@ function reqOf(s){
   /* V379: 恢复日不显示报数红链（恢复日定义里不要求报数） */
   var _recH = null; try { _recH = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
   var _isRecH = !!(_recH && _recH.day === day);
+  if (!_isRecH && _recH && _recH.completed && _recH.day) { var _nH = new Date(_recH.day+'T00:00:00'); _nH.setDate(_nH.getDate()+1); var _nHS = _nH.getFullYear()+'-'+('0'+(_nH.getMonth()+1)).slice(-2)+'-'+('0'+_nH.getDate()).slice(-2); if (_nHS === day) _isRecH = true; }   /* V386: 渐进日也豁免报数 */
   if(!r || (r.mo==='' && r.do==='')){
-    el.innerHTML = _isRecH
-      ? '📝 <span style="color:#6b7280">重启日不要求报数 —— 做完 3 题 + 30 词就算赢</span>'
-      : '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>';
+    /* V390: 渐进日文案（此前错写成「重启日…3 题 + 30 词」） */
+    var _isGradH = false;
+    try {
+      if (_recH && _recH.completed && _recH.day) {
+        var _nH2 = new Date(_recH.day+'T00:00:00'); _nH2.setDate(_nH2.getDate()+1);
+        var _nHS2 = _nH2.getFullYear()+'-'+('0'+(_nH2.getMonth()+1)).slice(-2)+'-'+('0'+_nH2.getDate()).slice(-2);
+        if (_nHS2 === day) _isGradH = true;
+      }
+    } catch(e){}
+    el.innerHTML = _isGradH
+      ? '📝 <span style="color:#6b7280">渐进日不要求报数 —— 做完 6 题 + 60 词就算赢</span>'
+      : (_isRecH
+        ? '📝 <span style="color:#6b7280">重启日不要求报数 —— 做完 3 题 + 30 词就算赢</span>'
+        : '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>');
     return;
   }
   var mo = parseInt(r.mo||'', 10), doP = parseInt(r.do||'', 10);
@@ -3638,7 +3669,9 @@ function reqOf(s){
     try {
       var _dT = (p && p.days && p.days[T]) || null;
       if (_dT) {
-        if (typeof _dT.a === 'number') quizN = _dT.a;
+        /* V390: 「机判」数必须用 c+w（此前用 a 含学习/自评题次 -> 学习日显示 3/3(机判) 与 coach 0/3 矛盾） */
+        if (typeof _dT.c === 'number' || typeof _dT.w === 'number') quizN = (+(_dT.c||0)) + (+(_dT.w||0));
+        else if (typeof _dT.a === 'number') quizN = _dT.a;
         if (typeof _dT.c === 'number') quizOk = _dT.c;
       }
     } catch(e2){}
