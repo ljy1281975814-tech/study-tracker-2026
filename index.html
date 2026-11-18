@@ -2652,7 +2652,7 @@ function reqOf(s){
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
        inkRowDone: inkRow ? inkRow.done : 0, inkRowTgt: inkRow ? inkRow.tgt : 0,  // V32: 供 coach 量化
-       acc:acc, qualityOK:qualityOK, _learnDay: !!_isLearnDay, _learnN: qa ? (qa.la || 0) : 0,   /* V236 B: _learnN 真定义（此前未定义 -> 教练假分母） */
+       acc:acc, qualityOK:qualityOK, _learnDay: !!_isLearnDay, _learnN: qa ? (qa.la || 0) : 0, _learnOnly: _learnOnly,   /* V394 P1: 此前定义未带出 -> 学习日豁免全是死代码 */   /* V236 B: _learnN 真定义（此前未定义 -> 教练假分母） */
        // X3: pass = 真实部分全达标（答题质量 + 墨墨）
        pass: rq.list.length>0 && quizOK && inkOK,
        next:next, extra:extra,
@@ -2758,7 +2758,20 @@ function reqOf(s){
   // 教练句：100% 必须 pass && hit===need（B 的处方）
   var nx = cur.next ? (cur.next.ico+' '+cur.next.nm+' '+cur.next.t) : '';
   var msg;
-  var _isPast = (T >= EXAM);  // V52: 考试日当天也终态
+  var _isPast = (T >= EXAM);
+  /* V394 P2: 恢复日已 completed -> 后续再做题（可能答错）**不得回退**到「欢迎回来」 */
+  var _isDoneRec = false;
+  try {
+    var _rk9 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
+    if (_rk9 && _rk9.completed && _rk9.day === T) _isDoneRec = true;
+  } catch(e){}
+  var _doneRecMsg = null;
+  if (_isDoneRec) {
+    var _r9q = (_rk9.tgtQ) || 3, _r9i = (_rk9.tgtInk) || 30;
+    _doneRecMsg = '🎉 <b>重启完成</b> —— 今天做了 <b>' + Math.max(+(cur.quizRowDone||0), _r9q) + '</b> 题（机判）+ <b>' + Math.max(+(cur.inkRowDone||0), _r9i) + '</b> 词。<br>'
+      + '<b>这就是赢了 —— 不需要补欠账。</b>今天到此为止，可以收工。<br>'
+      + '<span style="color:#6b7280;font-size:12px">今天之后做的题只是额外练习，不影响「重启成功」这个结论。</span>';
+  }  // V52: 考试日当天也终态
   /* V348: 断档检测（**多源**：quiz 答题 / 墨墨填数 / 手报门 / 报数，任一有记录即算「学过」）
      + recovery 日持久化（当天不因答了题而消失） */
   /* V370: **单源** —— 直接用 _ensureRecovery(T)（此前是独立第二套扫描，没有 firstuse 守卫
@@ -2769,7 +2782,8 @@ function reqOf(s){
     if (_rr0 && _rr0.day === T) { _gapOk = true; _recov = true; _gapDays = _rr0.gapDays || 0; }
   } catch(e) { _gapOk = false; _recov = false; }
 
-  if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
+  if(_doneRecMsg) msg = _doneRecMsg;   /* V394 P2b: 恢复日已完成 -> 永远终态，不回退 */
+  else if(_isPast) msg = '🎓 <b>初试已结束</b>（' + EXAM + '）—— 这个面板到此为止，辛苦了。';
   else if(cur.rq && cur.rq.gradual) msg = (function(){
     /* V386: 渐进日**完成终态**（6/6 机判 + 60/60 词 -> 100% 绿 + 庆祝） */
     /* V391: 渐进日目标必须与门**同源**（reqOf 返回 6/60），不能读 recovery.v1 的陈旧 tgtQ=3
