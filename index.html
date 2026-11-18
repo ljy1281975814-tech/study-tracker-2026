@@ -2734,6 +2734,9 @@ function reqOf(s){
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
   var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
+  /* V396: 学习日专属环色 + 渐进半程中性色（**算完后覆盖**，不动嵌套三元式） */
+  if (cur._learnOnly && !cur.pass) col = '#0891b2';
+  if (cur.rq && cur.rq.gradual && _dispPct < 100) col = '#0891b2';
   pEl.style.color = col;
   var C = 2*Math.PI*44;
   ring.style.stroke = col;
@@ -3114,11 +3117,13 @@ function reqOf(s){
         if (_nHS2 === day) _isGradH = true;
       }
     } catch(e){}
-    el.innerHTML = _isGradH
+    el.innerHTML = _isLearnH
+      ? '📝 <span style="color:#6b7280">学习日不要求报数 —— 今天学满 ' + (function(){ try { var _q5 = JSON.parse(localStorage.getItem('dsh.347.quiz.v3')||'{}'); var _d5 = (_q5.days&&_q5.days[day])||{}; return (+_d5.la||0); } catch(e){ return 0; } })() + ' 题就算有交代</span>'
+      : (_isGradH
       ? '📝 <span style="color:#6b7280">渐进日不要求报数 —— 做完 6 题 + 60 词就算赢</span>'
       : (_isRecH
         ? '📝 <span style="color:#6b7280">重启日不要求报数 —— 做完 3 题 + 30 词就算赢</span>'
-        : '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>');
+        : '📝 <a href="#reportForm" style="color:#b91c1c;text-decoration:underline">今日还没报数 → 去填</a>'));
     return;
   }
   var mo = parseInt(r.mo||'', 10), doP = parseInt(r.do||'', 10);
