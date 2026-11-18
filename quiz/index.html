@@ -3372,7 +3372,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (_gq >= 6 && _gacc < 0.6) {
           return masthead() +
             '<section class="hero shell"><h1>今天做了 ' + _gq + ' 题，答对 ' + _gc + ' 题</h1>' +
-            '<p class="hero-lead">渐进第二天要求 <b>6 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(6 * 0.6) + ' 题）。<br>还差一点 —— 看一眼错的解析，明天继续。</p>' +
+            '<p class="hero-lead">渐进第二天要求 <b>6 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(Math.max(_gq, 6) * 0.6) + ' 题）。<br>还差一点 —— 看一眼错的解析，明天继续。</p>' +
             '<p class="hero-foot">渐进日不追欠账，但今天的题值得复盘。</p></section>';
         }
         return masthead() +
@@ -3427,7 +3427,7 @@ function _in1v1(x){ return !!(x && ONEVONE[x.s] && ONEVONE[x.s].indexOf(x.c) >= 
         if (_dq >= _tqj && _accJ < 0.6) {
           return masthead() +
             '<section class="hero shell"><h1>今天做了 ' + _dq + ' 题，答对 ' + (+((_dj.c)||0)) + ' 题</h1>' +
-            '<p class="hero-lead">重启日要求 <b>' + _tqj + ' 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(_tqj * 0.6) + ' 题）。<br>' +
+            '<p class="hero-lead">重启日要求 <b>' + _tqj + ' 题</b>且<b>正确率 ≥60%</b>（需答对 ' + Math.ceil(Math.max(_dq, _tqj) * 0.6) + ' 题）。<br>' +
             '还差一点 —— 把错的题看一眼解析，明天再来。</p>' +
             '<p class="hero-foot">重启日不追欠账，但今天的题值得复盘。</p></section>';
         }
