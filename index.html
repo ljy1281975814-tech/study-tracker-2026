@@ -3954,7 +3954,7 @@ function paintPO(){
       var _done7 = false; try { var _r7 = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); if (_r7 && _r7.completed && _r7.day === T) _done7 = true; } catch(e){}
       if (_n7 >= _t7 && _a7 < 0.6 && !_done7) {
         document.getElementById('PO-QUIZ').innerHTML =
-          '⭐ 重启日：已做满 <b>' + _n7 + '</b> 题，但<b>答对率 ' + Math.round(_a7*100) + '% 不足 60%</b>（需答对 ' + Math.ceil(_t7*0.6) + ' 题）—— 看一眼错题解析，明天按 1–2 天回来再做机判';
+          '⭐ 重启日：已做满 <b>' + _n7 + '</b> 题，但<b>答对率 ' + Math.round(_a7*100) + '% 不足 60%</b>（需答对 ' + Math.ceil(Math.max(_n7,_t7)*0.6) + ' 题）—— 看一眼错题解析，明天按 1–2 天回来再做机判';
       }
     }
   } catch(e){}
