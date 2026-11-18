@@ -2692,9 +2692,9 @@ function reqOf(s){
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= (qa.a - (qa.sj || 0)) && (qa.a - (qa.sj || 0)) > 0);   /* V230 A2 + V412: 排除自评 sj（此前 la>=a 把 sj 算进 a -> 自评即撤销学习日身份） */
  /* V406 P1-3: **学习配额已满**后追加机判，仍是学习日（此前一机判就撤销豁免 -> 学完 12 题再答 1 题就翻红 = 惩罚继续学习）
     v405-b 给的公式：_learnFull = qa && quizRow && la>=tgt && (c+w)<tgt */
+ var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V430: **必须前移**（_learnFull 用它；此前在后 -> var 提升 -> 死代码第3次） */
  var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 6) && (acc === null || acc >= 0.6));   /* V429 B: acc>=60% 才保学习日身份（否则 m1-6 低正确率仍 100%） */   /* V416: 上限 3->6（覆盖 +4/+5/+6 机判，M4 的 c+w=8 仍排除 -> 不断崖且不误判混合日） */
  if (_learnFull) _isLearnDay = true;
- var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
   var _gradedN0 = Math.max(0, (qa ? (qa.a||0) : 0) - (qa ? (qa.la||0) : 0) - (qa ? (qa.sj||0) : 0));   /* V334 ②: 机判题次 */
  var _learnAttend = !!(qa && ((qa.la||0) >= (quizRow ? (quizRow.tgt||1) : 1)));   /* V337 B1b + V413 H3: 用 la 排除自评 sj（此前 a 含 sj -> 8学+4自评 被当满出席 -> 门✅ 而 coach 说还差4） */
@@ -2711,7 +2711,9 @@ function reqOf(s){
     /* V412/V419: 恢复日/渐进日不亮学习标记；但**学习配额已满**(la>=tgt)时亮（含 +7~+11 课外练习） */
     /* V421: 学习配额满 + 墨墨达标时也亮学习样式（含课外练习）—— M4 的 ink=0 不触发，保住 M4 */
     /* V422: 不能用 inkOK —— 它在本行之后才 var 赋值（var 提升 -> undefined -> 门仍 7/12）；直接用 inkRow */
-    var _lqGate = !!(_isLearnDay || (qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && inkRow && inkRow.done >= inkRow.tgt));
+    /* V430: 门也要与 coach/环/aria 同源 —— 有额外机判时 acc>=60% 才亮学习 ✅（否则门✅ 与 coach「还差N题」打架） */
+    var _gateAcc = (acc === null) || (acc >= 0.6);
+    var _lqGate = !!(_isLearnDay || (qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && inkRow && inkRow.done >= inkRow.tgt && _gateAcc));
     if (quizRow && _lqGate && !_isRecoveryDay(s) && !_isGradualDay(s)) {
       quizRow.learn = 1;
       quizRow.learnN = (qa ? (qa.la || 0) : 0);
