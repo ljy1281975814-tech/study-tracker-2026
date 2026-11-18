@@ -3192,6 +3192,22 @@ function reqOf(s){
   wrap.querySelector('#cs-cancel').onclick = function(){ wrap.remove(); };
   return { wrap: wrap, body: body, close: function(){ wrap.remove(); } };
  }
+ /* UNIFY_20261118：PO 计划行是载入时一次性绘制的，课/政治改写后不会自己重画；
+    这里按门禁同源值（motiv 学习日记录）直接同步这两行，消掉同屏两套数。 */
+ function syncPORows(){
+  try{
+   var o = JSON.parse(localStorage.getItem('dsh.347.motiv.v3') || '{}');
+   var d = ((o && o.days) || {})[studyDay()] || {};
+   [['课','课'],['政治','政']].forEach(function(pair){
+    var inp = document.querySelector('#PO-ROWS input[data-k="' + pair[0] + '"]');
+    if(!inp) return;
+    var v = +(d[pair[1]] || 0), tgt = +(inp.getAttribute('data-t') || 0);
+    inp.checked = v >= tgt;
+    var sp = inp.parentElement.querySelector('span:last-child');
+    if(sp) sp.textContent = v + '/' + tgt;
+   });
+  }catch(e){}
+ }
  function openCourseSheet(){
   var T = studyDay(), o = loadOwn(), rec = o.days[T] = o.days[T] || {};
   var cdata = loadCourse(), day = cdata[T] = cdata[T] || {};
@@ -3224,6 +3240,7 @@ function reqOf(s){
     });
     cdata[T] = day; saveCourse(cdata);
     rec['课'] = tot; saveOwn(o); render();
+    try{ syncPORows(); }catch(e){}
    };
   });
   s.wrap.querySelector('#cs-ok').onclick = function(){ s.body.__collect(); s.close(); };
@@ -3262,6 +3279,7 @@ function reqOf(s){
     pol.updated = new Date().toISOString();
     try{ localStorage.setItem(PK, JSON.stringify(pol)); }catch(e){}
     saveOwn(o); render();
+    try{ syncPORows(); }catch(e){}
    };
   });
   s.wrap.querySelector('#cs-ok').onclick = function(){ s.body.__collect(); s.close(); };
@@ -3666,7 +3684,7 @@ function reqOf(s){
 </section>
 <script>
 (function(){
-  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 38}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "题", "target": 300}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
+  var PM = {"exam": "2026-12-19", "total_days": 38, "daily_time_min": 210, "quota": {"背": {"min": 50, "unit": "词", "target": 4560}, "题": {"min": 35, "unit": "题次", "target": 614}, "课": {"min": 60, "unit": "节", "target": 6}, "英语": {"min": 2, "unit": "篇", "target": 70}, "政治": {"min": 30, "unit": "讲", "target": 14, "weekly": {"unit": "题", "target": 300}}, "模拟考": {"min": 0, "unit": "次", "target": 8}}, "ramp": [{"days": 7, "from": "11-11", "to": "11-17", "step": "起步", "题": 8, "时": 150}, {"days": 10, "from": "11-18", "to": "11-27", "step": "铺开", "题": 12, "时": 180}, {"days": 11, "from": "11-28", "to": "12-08", "step": "加速", "题": 18, "时": 210}, {"days": 10, "from": "12-09", "to": "12-18", "step": "冲刺", "题": 24, "时": 240}], "quiz_link": {"localStorage_key": "dsh.347.quiz.v3"}};
   var KEY_DAILY = 'dsh.347.daily';
   var KEY_QUIZ  = 'dsh.347.quiz.v3';
   function today(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -3685,23 +3703,33 @@ function reqOf(s){
   var rows = [
     ['背', '墨墨 '+q['背'].target===undefined?'':('120 词'), ST.题? '' : ''],
     ['题', '答题 ' + ST.题 + ' 题', ''],
-    ['课', '强化课 1 节', ''],
+    ['课', '今日课表 6 节', ''],
     ['英语', '阅读 1 篇', ''],
-    ['政治', '政治 8 题', ''],
+    ['政治', '救命课 14 讲', ''],
     ['模拟考', '—(11/24、12/1)', '']
   ];
   var ROWS = [
     ['背', 120, '词'],
     ['题', ST.题, '题'],
-    ['课', 1, '节'],
+    ['课', 6, '节'],
     ['英语', 1, '篇'],
-    ['政治', 8, '题'],
+    ['政治', 14, '讲'],
     ['模拟考', (T==='2026-11-24'||T==='2026-12-01')?1:0, '次']
   ];
   var html = '';
+  /* UNIFY_20261118：课/政治的完成数一律取门禁同一数据源（motiv 当日记录），
+     避免同屏出现「门禁 3/6、计划行 0/6」这种两套数 */
+  function motivDone(k){
+    try{
+      var o = JSON.parse(localStorage.getItem('dsh.347.motiv.v3') || '{}');
+      var d = ((o && o.days) || {})[studyDay()] || {};   /* 与门禁同一学习日口径，不跟 PO 的 T 走 */
+      return +(d[k] || 0);
+    }catch(e){ return 0; }
+  }
   ROWS.forEach(function(r){
     var k=r[0], tgt=r[1], unit=r[2];
     var done = D[T][k]||0;
+    if(k === '课' || k === '政治'){ done = motivDone(k); }
     var okColor = done>=tgt ? '#059669' : '#9ca3af';
     html += '<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:9px;cursor:pointer;min-height:44px">'
       + '<input type="checkbox" data-k="'+k+'" data-t="'+tgt+'" '+(done>=tgt?'checked':'')+' style="width:20px;height:20px">'
@@ -3711,6 +3739,7 @@ function reqOf(s){
   document.getElementById('PO-ROWS').innerHTML = html;
   document.getElementById('PO-ROWS').addEventListener('change', function(ev){
     var el = ev.target; if(!el.dataset.k) return;
+    if(el.dataset.k === '课') return;   /* LESSON_20261117：课只由课表弹层写，防第二写入口覆盖 */
     var tgt = parseInt(el.dataset.t||'1',10);
     D[T][el.dataset.k] = el.checked ? tgt : 0;
     save(D); render();
@@ -3772,7 +3801,7 @@ function reqOf(s){
     var debt = 0;
     for(var i=0;i<PM.ramp.length;i++){ totalMin += PM.ramp[i].days*PM.ramp[i].时; }
     // 今日
-    var tTgt = {背:120, 题:ST.题, 课:1, 英语:1, 政治:8, 模拟考:ROWS[5][1]};
+    var tTgt = {背:120, 题:ST.题, 课:6, 英语:1, 政治:14, 模拟考:ROWS[5][1]};
     var tDone = 0, tNeed = 0;
     ROWS.forEach(function(r){ var k=r[0], tgt=r[1]; if(tgt<=0) return; tNeed++; if((D[T][k]||0)>=tgt) tDone++; });
     document.getElementById('PO-DPCT').textContent = '见 🔥 末路灯带';   // PO_MERGE_20261115: 今日完成度唯一口径在 MOTIV
