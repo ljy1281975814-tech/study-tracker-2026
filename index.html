@@ -3686,7 +3686,7 @@ function reqOf(s){
       if (_r && _r.completed && _r.day) {
         var _n = new Date(_r.day+'T00:00:00'); _n.setDate(_n.getDate()+1);
         var _nS = _n.getFullYear()+'-'+('0'+(_n.getMonth()+1)).slice(-2)+'-'+('0'+_n.getDate()).slice(-2);
-        if (_nS === T) return '距考试 '+dleft+' 天｜🌤 渐进第二天：'+(_r.tgtQ||6)+' 题 + '+(_r.tgtInk||60)+' 词（不追欠账）';
+        if (_nS === T) return '距考试 '+dleft+' 天｜🌤 渐进第二天：6 题 + 60 词（不追欠账）';
       }
       return '距考试 '+dleft+' 天｜阶段：'+ST.step+'（'+ST.题+' 题/天·'+ST.时+' 分钟）';
     })();
