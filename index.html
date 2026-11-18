@@ -6,8 +6,8 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#f2efe7">
-<meta name="description" content="北师大 MAP 347 备考仪表盘：距初试 D—31，P2 主观题输出强化期。">
-<title>MAP 347 · 备考仪表盘 · D—31</title>
+<meta name="description" content="北师大 MAP 347 备考仪表盘：倒计时与阶段由 PLAN 动态渲染。">
+<title>MAP 347 · 备考仪表盘</title>
  <link rel="icon" href="data:,">
 <style>
  :root{
@@ -2109,8 +2109,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   </nav>
 
   <div class="issue">
-   <span>26.11.06 <b>周一</b></span>
-   <span class="issue-d">D—31</span>
+   <span id="issueDate">—</span>
+   <span class="issue-d" id="issueD">—</span>
   </div>
  </div>
 </header>
@@ -2248,7 +2248,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     <span class="sec-index" aria-hidden="true">01</span>
     <div class="sec-title">
      <h2 id="today-title">计划参考（历史）</h2>
-     <p>11.05 快照 · 首项优先，其余按剩余精力排</p>
+     <p><b id="planSnapDay">—</b> 快照 · 首项优先，其余按剩余精力排</p>
     </div>
     <div class="sec-side">
      <b>计划核心 4.3h</b>
@@ -2266,7 +2266,6 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
  'use strict';
  // MOTIV_V3_20261115
  var KEY = 'dsh.347.motiv.v3', KEY_OLD = 'dsh.347.daily', KEY_Q = 'dsh.347.quiz.v3';
- var EXAM = '2026-12-19', START = '2026-11-11', END = '2026-12-18';
  /* V265 B2: 首次使用日自记（不再依赖 quiz days，修「真首日仍欠 56」） */
  var KEY_FIRST = 'dsh.347.firstuse';
  var FIRSTUSE = (function () {
@@ -2286,6 +2285,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     改口径只改这里；改完门禁、计划行、环形同时变。 */
  var PLAN = {
   exam: '2026-12-19',
+  start: '2026-11-11',
+  end: '2026-12-18',
+  totalDays: 38,
+  dailyMin: 210,
   mockDays: ['2026-11-24','2026-12-01'],
   pass: 0.6,
   polityWeeklyQ: 300,
@@ -2346,6 +2349,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   ];
  }
  var RAMP = PLAN.ramp;
+ var EXAM = PLAN.exam, START = PLAN.start, END = PLAN.end;   /* SSOT：期参数只在 PLAN 里，声明放在 PLAN 之后 */
  // 六项；'题' 只读（从 quiz 读），item 其它可点
  var GATES = buildGates();   /* 全部字段由 PLAN 派生 */
  var MOCK = PLAN.mockDays;
@@ -2407,6 +2411,24 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   try{ if(window.paintPO) window.paintPO(); }catch(e){}
   try{ paintFooterAsOf(); }catch(e){}
  }
+ /* SSOT_20261118：标题/页头/页脚/倒计时一律按当天计算，不再写死 */
+ /* SSOT_20261118：只补既有代码未覆盖的两处——页头日期、计划快照日；
+    倒计时/标题由既有 PO 代码按 PLAN.exam 计算，不重复实现。 */
+ function syncDates(){
+  try{
+   var d = new Date(Date.now() - 4 * 3600e3);
+   var pad2 = function(n){ return (n < 10 ? '0' : '') + n; };
+   var wk = '日一二三四五六'.charAt(d.getDay());
+   var iD = document.getElementById('issueDate');
+   if(iD) iD.innerHTML = ((d.getFullYear() % 100) + '.' + pad2(d.getMonth() + 1) + '.' + pad2(d.getDate()) +
+     ' <b>周' + wk + '</b>');
+   var pS = document.getElementById('planSnapDay');
+   if(pS) pS.textContent = lastLoggedDay();
+  }catch(e){}
+ }
+ try { window.syncDates = syncDates; } catch(e){}
+ document.addEventListener('DOMContentLoaded', function(){ try{ syncDates(); }catch(e){} });
+
  function lastLoggedDay(){
   try{
    var o = loadOwn(), ds = Object.keys(o.days || {}).sort();
@@ -3622,7 +3644,7 @@ function reqOf(s){
    <div class="carry" aria-label="上一条记录与墨墨数据">
     <span class="carry-label">11.01 收口（历史）</span>
     <span class="carry-item"><b>答题营 01 期</b> ✓ 已完成</span>
-    <span class="carry-item"><b>墨墨 46 词（11.05 快照）</b><small>11.05 06:30 API：finished 12（App 目标 150 ≠ 本页过关线 120）</small></span>
+    <span class="carry-item"><b>墨墨 46 词（11.05 历史读数）</b><small>11.05 06:30 API：finished 12（App 目标 150 ≠ 本页过关线 120）</small></span>
     <span class="carry-item"><b>墨墨累计在学 809 词</b><small>只认平台数字，不凭印象</small></span>
    </div>
 
@@ -3667,7 +3689,7 @@ function reqOf(s){
        <h3 class="t-title">墨墨 <span>120 词</span></h3>
        <span class="tag">每日</span>
       </div>
-      <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.05 快照），累计 809。</span></p>
+      <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.05 历史读数，不参与今日判定），累计 809。</span></p>
      </div>
      <span class="check-ro" aria-hidden="true">历史</span>
     </article>
@@ -3788,8 +3810,8 @@ function reqOf(s){
   /* SSOT_20261118：期目标与 ramp 一律由 PLAN 派生，本文件不再写第二份数值 */
   var PM = {
    exam: PL.exam || '2026-12-19',
-   total_days: 38,
-   daily_time_min: 210,
+   total_days: PL.totalDays || 38,
+   daily_time_min: PL.dailyMin || 210,
    quiz_link: { localStorage_key: (PL.store && PL.store.quiz) || 'dsh.347.quiz.v3' }
   };
   PM.quota = (function(){
@@ -3879,7 +3901,9 @@ function paintPO(){
   try { window.paintPO = paintPO; } catch(e){}
   try { if(window.refreshAll) window.refreshAll(); } catch(e){}
   /* footer 在脚本之后解析：DOM 就绪后再填一次最晚记录日 */
-  document.addEventListener('DOMContentLoaded', function(){ try{ if(window.paintFooterAsOf) window.paintFooterAsOf(); }catch(e){} });
+  document.addEventListener('DOMContentLoaded', function(){
+   try{ if(window.paintFooterAsOf) window.paintFooterAsOf(); }catch(e){}
+  });
   
 // 做题联动：读 quiz localStorage
   var quizN = 0, quizOk = 0;
@@ -4038,10 +4062,10 @@ function paintPO(){
     <span class="sec-index" aria-hidden="true">02</span>
     <div class="sec-title">
      <h2 id="progress-title">四条战线</h2>
-     <p>历史进度（11.05 快照）· 不作今日承诺</p>
+     <p>历史进度（11.05 读数，不参与今日判定）· 不作今日承诺</p>
     </div>
     <div class="sec-side">
-     <b>历史数据 11.05 06:30</b>
+     <b>历史读数 11.05 06:30</b>
      <span>平台 / API / 自述</span>
     </div>
    </header>
@@ -4144,7 +4168,7 @@ function paintPO(){
      </div>
      <div class="dark-pair">
       <b>第 1 期已完成</b>
-      <span>第 2 期（11.05 时点）</span>
+      <span>第 2 期（11.05 历史时点）</span>
      </div>
      <p class="pfoot">这是四条线里最慢的一条（历史快照，见现役今日灯带）。</p>
     </article>
@@ -4257,7 +4281,7 @@ function paintPO(){
   
   <span class="foot-item">已脱敏：无姓名 / 编号 / 账号</span>
   <span class="foot-spacer" aria-hidden="true"></span>
-  <span class="stamp" id="footD">MAP 347 / D—31</span>
+  <span class="stamp" id="footD">MAP 347 / D—</span>
  </div>
 <div style="max-width:1240px;margin:0 auto;padding:0 20px"><span class="dash-marks" style="display:block;font-size:12px;color:#c9c3b6;margin-top:6px">｜生成时间 <time id="renderAt">--</time></span><span>整体加权完成度 ≈ 0.0%（已掌握 0/4 章）</span></div></footer>
 
