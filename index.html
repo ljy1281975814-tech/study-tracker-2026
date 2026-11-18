@@ -2692,12 +2692,12 @@ function reqOf(s){
  var _isLearnDay = !!(qa && qa.a > 0 && (qa.la || 0) >= (qa.a - (qa.sj || 0)) && (qa.a - (qa.sj || 0)) > 0);   /* V230 A2 + V412: 排除自评 sj（此前 la>=a 把 sj 算进 a -> 自评即撤销学习日身份） */
  /* V406 P1-3: **学习配额已满**后追加机判，仍是学习日（此前一机判就撤销豁免 -> 学完 12 题再答 1 题就翻红 = 惩罚继续学习）
     v405-b 给的公式：_learnFull = qa && quizRow && la>=tgt && (c+w)<tgt */
- var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 3));   /* V406: 只在小量额外练习(1-3题)时保留身份，避免混合日被误判 */
+ var _learnFull = !!(qa && quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && (qa.la || 0) >= (quizRow.tgt || 99) && (((qa.c || 0) + (qa.w || 0)) > 0) && (((qa.c || 0) + (qa.w || 0)) <= 3));   /* V413: 回滚 H4（去掉上限会让 M4 混合日误判学习日）；+3 断崖保留 */
  if (_learnFull) _isLearnDay = true;
  var acc = (qa && _den2 > 0 && !_isLearnDay) ? Math.min(1, qa.c / _den2) : null;   /* V330: clamp 修违规数据下首页 171% */
   var quizAttend = !!(quizRow && quizRow.done >= quizRow.tgt);
   var _gradedN0 = Math.max(0, (qa ? (qa.a||0) : 0) - (qa ? (qa.la||0) : 0) - (qa ? (qa.sj||0) : 0));   /* V334 ②: 机判题次 */
- var _learnAttend = !!(qa && (qa.a||0) >= (quizRow ? (quizRow.tgt||1) : 1));   /* V337 B1b: 学习日出席按 days.a */
+ var _learnAttend = !!(qa && ((qa.la||0) >= (quizRow ? (quizRow.tgt||1) : 1)));   /* V337 B1b + V413 H3: 用 la 排除自评 sj（此前 a 含 sj -> 8学+4自评 被当满出席 -> 门✅ 而 coach 说还差4） */
   var qualityOK = !!(_isLearnDay ? _learnAttend : (acc !== null && acc >= 0.6 && _gradedN0 >= 3));   /* V334 ②: n>=3 最小样本 */   /* V236 A: 学习日按出席算质量（不再恒 false -> 永远到不了 100%） */
   // 答题「达标」= 出席 + 正确率≥60%
   /* V386: quizOK **必须机判出席**（禁用 learnAttend 充当 pass）—— 修「学习日 coach 说输但环 100% 绿说赢」*/
@@ -2705,7 +2705,7 @@ function reqOf(s){
      （环用学习色而非绿、aria 说明「学习日」、不显示欠N/报数红链） */
   var quizOK = quizAttend && qualityOK;
   /* V400 D: 学习日**配额已满**时，之后再做机判也保持学习日身份（此前一机判就撤销豁免 -> 额外练习被惩罚） */
-  var _learnOnly = !!(_isLearnDay && _learnAttend && !quizAttend);
+  var _learnOnly = !!(_isLearnDay && _learnAttend && !quizAttend && !_isRecoveryDay(s) && !_isGradualDay(s));   /* V413 H6: 恢复/渐进日不宣示学习日出席（aria 说学习日出席 但 coach 说已 0/N） */
   /* V342 P0: 给 题 门打学习日标记，供 gate 渲染显示「学习 N/tgt」而非「✅ 0/12」 */
   try {
     /* V412: 恢复日/渐进日**不亮学习标记**（否则门 ✅「学习 N/N」而 coach 说「机判已 0/N」= 反向矛盾） */
@@ -2766,7 +2766,7 @@ function reqOf(s){
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
-    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay) realPct = 66;   /* V406: 学习日不要求报数 -> 不封顶 */   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
+    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay && !(quizOK && inkOK)) realPct = 66;   /* V413 H5: 真实两项已达标(pass)时不封顶（否则「已过线」与 66% 同屏） */   /* V406: 学习日不要求报数 -> 不封顶 */   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
        quizRowDone: quizRow ? quizRow.done : 0, quizRowTgt: quizRow ? quizRow.tgt : 0,
@@ -2876,8 +2876,10 @@ function reqOf(s){
   else if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
   else if(cur._learnOnly){ _vt += '（学习日出席，首遍不计正确率）'; }   /* V393 */   /* V362 */
   else if(cur.quizPartial && !cur.quizOK){
-   var _need = Math.max(0, (cur.quizRowTgt||8) - (cur.quizRowDone||0));
-   _vt += '（答题还差 ' + _need + ' 题达标）';
+   var _need = Math.max(0, (cur.quizRowTgt||8) - Math.min(cur.quizRowTgt||8, cur.quizRowDone||0));
+   /* V413 H1/H2: 题已做满(_need=0)但质量不达标 -> **不能说「还差0题」**，改成质量差距 */
+   if (_need === 0) { _vt += '（题已做满，但**正确率未达 60%**）'; }
+   else { _vt += '（答题还差 ' + _need + ' 题达标）'; }
   } else if(cur.inkPartial && !cur.inkOK){
    var _need2 = Math.max(0, (cur.inkRowTgt||120) - (cur.inkRowDone||0));
    _vt += '（墨墨还差 ' + _need2 + ' 词达标）';
