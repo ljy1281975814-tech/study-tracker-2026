@@ -3818,7 +3818,9 @@ function reqOf(s){
   // 阶段判定
   function stageOf(t){ for(var i=0;i<PM.ramp.length;i++){ var r=PM.ramp[i]; if(t>=parseMD(r.from)&&t<=parseMD(r.to)) return r; } return PM.ramp[PM.ramp.length-1]; }
   var ST = stageOf(new Date());   /* 阶段只算一次，供 paintPO 与后续统计共用 */
-var TARGET_Q = 0; for(var i=0;i<PM.ramp.length;i++) TARGET_Q += PM.ramp[i].days * PM.ramp[i].题;
+/* V410: TARGET_Q 直接用**声明值** PM.quota.题.target（D 的 SSOT 重构后 ramp 重算得到 80，正确值 614） */
+var TARGET_Q = (PM.quota && PM.quota.题 && (+PM.quota.题.target)) || 614;
+if (!(TARGET_Q > 0)) { TARGET_Q = 0; for(var i=0;i<PM.ramp.length;i++) TARGET_Q += (PM.ramp[i].days||0) * (PM.ramp[i].题||0); }
 function paintPO(){
   var q = PM.quota;
   var PG = (PL.gates || {}), lastP = (PL.polity || []).slice(-1)[0] || { to: 14 };
