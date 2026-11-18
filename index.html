@@ -2892,8 +2892,9 @@ function reqOf(s){
    svg.setAttribute('aria-valuenow', String(_dispPct));
    var _vt = '今日完成度 ' + _dispPct + '%';
   var _lqFullA = false;
-  try { _lqFullA = !!(!_isRecoveryDay(T) && !_isGradualDay(T) && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt); } catch(e){}
-  if(_isDoneR){ _vt += '（重启已完成，额外练习不计）'; }   /* V400 B: completed 优先，消掉「答题还差 0 题」 */
+  try { _lqFullA = !!(!_isRecoveryDay(T) && !_isGradualDay(T) && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && cur.inkOK && (cur.acc === null || cur.acc >= 0.6)); } catch(e){}   /* V428 H3: 与 coach/环同源 */
+  /* V428 H4: **完成态跨链路同源** —— 渐进日已完成(_gradDone)也算完成，aria 不再说正确率不足 */
+  if(_isDoneR || (typeof _gradDone !== 'undefined' && _gradDone)){ _vt += '（今天已完成，额外练习不计）'; }
   else if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
   else if(cur._learnOnly){ _vt += '（学习日出席，首遍不计正确率）'; }   /* V393 */   /* V362 */
   else if(_lqFullA){
@@ -2920,7 +2921,8 @@ function reqOf(s){
   /* V419: 学习配额已满（la>=tgt，且非恢复/渐进日）—— 供 coach 做「完成+课外练习」桥接 */
   /* V420: **必须用 cur（render 内可见）**，qa/quizRow 是 dayOf 局部变量 -> 此前抛 ReferenceError 被吞 = 死代码 */
   var _lqFull = false;
-  try { _lqFull = !!(cur && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && cur.inkOK && !_isRecoveryDay(T) && !_isGradualDay(T)); } catch(e){}
+  /* V428 H1: _lqFull 必须与环的 _lp 同源 —— 有额外机判时 acc 也要 >=60%（否则 coach 说完成而环 67%） */
+  try { _lqFull = !!(cur && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && cur.inkOK && (cur.acc === null || cur.acc >= 0.6) && !_isRecoveryDay(T) && !_isGradualDay(T)); } catch(e){}
   /* V394 P2: 恢复日已 completed -> 后续再做题（可能答错）**不得回退**到「欢迎回来」 */
   var _isDoneRec = false;
   try {
