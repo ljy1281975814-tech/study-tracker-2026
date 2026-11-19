@@ -291,8 +291,7 @@
   position:absolute;
   left:0;
   right:0;
-  bottom:.02em;
-  height:.09em;
+  bottom:-.08em;height:.06em;
   background:var(--red);
  }
  .hero-lead{
@@ -4322,7 +4321,7 @@ function paintPO(){
   var d = clampPct(doPct ? doPct.value.trim() : "");
   var _day = reportDay();
   var _short = (_day.replace(/-/g, '').slice(4) + (m || '') + (d || '')).slice(0, 6).toUpperCase();
-  return _day + "：默 " + (m || "__") + "% 做 " + (d || "__") + "% · 凭证" + _short;
+  return _day + "：默 " + (m || "__") + "% 做 " + (d || "__") + "% · 凭证号 " + _short;
  }
  function renderReportHistory(){
   var el = document.getElementById('reportHistory');
