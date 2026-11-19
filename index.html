@@ -2125,7 +2125,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
     </div>
 
     <div class="countline" role="img" aria-label="距 2026 年 12 月 19 日初试还有 30 天，截至 2026-11-19">
-     <b Y</b>
+     <b class="count-num" id="countNum">—</b>
      <span class="count-unit">
       <b>天</b>
       <span>至 12.19</span>
@@ -2174,8 +2174,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 
     <div class="focus-card">
      <div class="focus-top">
-      <span class="focus-kicker">参考首项</span>
-      <span class="focus-time mono">计划参考</span>
+      <span class="focus-kicker">今日首项</span>
+      <span class="focus-time mono">今日</span>
      </div>
      <h3 class="focus-title">普心 04 <span>感觉</span></h3>
      <p class="focus-desc">看框架卡 11 张 15′ → 默 L1 20 张 35′ → 做题 42 张 50′ → 错题回填 10′</p>
@@ -2244,19 +2244,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
   答题题数只读做题系统（不可手点，防伪造）；学习日按 04:00 切（你 00:15 收工不算次日）。
  </p>
 </section>
-   <header class="section-head">
-    <span class="sec-index" aria-hidden="true">01</span>
-    <div class="sec-title">
-     <h2 id="today-title">计划参考（历史）</h2>
-     <p><b id="planSnapDay">—</b> 快照 · 首项优先，其余按剩余精力排</p>
-    </div>
-    <div class="sec-side">
-     <b>计划核心 4.3h</b>
-     <span>求十得五 · 实落 2.5–3h</span>
-    </div>
-   </header>
+   
 <!--TS-SHELL:BEGIN-->
-<div class="ts-shell" id="TASK-SHELL" style="margin:18px 0;padding:16px;border:1px solid #e5e7eb;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#6b7280">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 专业课 12 题（A 档优先）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#6b7280">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#6b7280">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #e5e7eb;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档</b> 0/447（<b>0.0%</b>）</div><div>📊 标准 <b>全部</b> 0/859（<b>0.0%</b>）</div><div>🔥 连续 <b>0</b> 天</div></div><p style="margin:12px 0 0;font-size:13px;color:#9ca3af">阶段2：每天 12 题 × 40 天 ⇒ 足量覆盖 859 题（底线 A 档需 7.3 题/天）</p></div>
 <!--TS-SHELL:END-->
 
 <!--MOTIV:BEGIN-->
@@ -2424,6 +2413,13 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
      ' <b>周' + wk + '</b>');
    var pS = document.getElementById('planSnapDay');
    if(pS) pS.textContent = lastLoggedDay();
+   /* 倒计时大数字与 D 标同源：按学习日到考试日（含今日）计算 */
+   var today = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+   var left = Math.max(0, Math.ceil((parseMD(EXAM) - parseMD(today)) / 86400000));
+   var cN = document.getElementById('countNum');
+   if(cN) cN.textContent = String(left);
+   var cl = document.querySelector('.countline');
+   if(cl) cl.setAttribute('aria-label', '距 2026 年 12 月 19 日初试还有 ' + left + ' 天（含今日），截至 ' + today);
   }catch(e){}
  }
  try { window.syncDates = syncDates; } catch(e){}
@@ -3670,7 +3666,6 @@ function reqOf(s){
 </script>
 <!--MOTIV:END-->
 
-<div data-dup="1" class="ts-shell" id="TASK-SHELL-dup" style="margin:18px 0;padding:16px;border:1px solid #c9c3b6;border-radius:14px;background:#fff"><h3 style="margin:0 0 10px;font-size:17px">今日基础包 <small style="font-weight:400;color:#57534e">约 16 分钟 · 阶段2</small></h3><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 按今日配额答题（见末路灯带）</label><label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px"><input type="checkbox" style="width:22px;height:22px"> 墨墨 120 词</label><p style="margin:8px 0 0;font-size:14px;color:#57534e">完成基础包 = 今天及格。不设上限，状态好就加码。</p><h3 style="margin:16px 0 8px;font-size:16px">加码 <small style="font-weight:400;color:#57534e">状态好就点，随时停</small></h3><div style="display:flex;flex-wrap:wrap;gap:8px"><button class="ts-b" data-add="quiz_more" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">+5 题</button><button class="ts-b" data-add="shiyan" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">实验营 1 节</button><button class="ts-b" data-add="dati" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">答题营 1 节</button><button class="ts-b" data-add="zhengzhi" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">政治 1 讲</button><button class="ts-b" data-add="yingyu" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">英语 1 篇</button><button class="ts-b" data-add="shexin" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">社心 1 讲</button><button class="ts-b" data-add="baoming" style="min-height:44px;padding:8px 14px;font-size:15px;border:1px solid #c9c3b6;border-radius:10px;background:#f9fafb;cursor:pointer">保命班 1 节</button></div><div style="margin-top:16px;padding-top:14px;border-top:1px dashed #c9c3b6;font-size:15px;line-height:1.9"><div>📊 底线 <b>A 档目标</b> 461 题次</div><div>📊 标准 <b>目标</b> 851 题次</div><div>🔥 连击（实时见末路灯带）</div></div></div>
 
 
 
@@ -3693,116 +3688,6 @@ function reqOf(s){
 
 
 
-
-   <div class="carry" aria-label="上一条记录与墨墨数据">
-    <span class="carry-label">11.01 收口（历史）</span>
-    <span class="carry-item"><b>答题营 01 期</b> ✓ 已完成</span>
-    <span class="carry-item"><b>墨墨 46 词（11.05 历史读数）</b><small>11.05 06:30 API：finished 12（App 目标 150 ≠ 本页过关线 120）</small></span>
-    <span class="carry-item"><b>墨墨累计在学 809 词</b><small>只认平台数字，不凭印象</small></span>
-   </div>
-
-   <div class="thesis">
-    <div>
-     <p class="thesis-k">求十得五</p>
-     <p>核心 4.3h，按 <b>2.5–3h</b> 落。先保首项，别用加量替代收口。</p>
-    </div>
-    <div class="thesis-num" aria-label="今日 6 项任务，其中 1 项核心">
-     <b>6</b>
-     <span>项 / 1 个核心</span>
-    </div>
-   </div>
-
-   <div class="timeline" aria-label="今日计划参考（历史，不计入末路灯带完成度）">
-    <article class="task task--core" data-task="puxin">
-     <span class="t-seq">01</span>
-     <div class="t-time"><span>必做</span><em>核心 120′</em></div>
-     <div class="t-body">
-      <div class="t-title-row">
-       <h3 class="t-title">普心 第 4 章 <span>感觉</span></h3>
-       <span class="tag tag--red">首项</span>
-      </div>
-      <div class="steps" aria-label="普心第4章执行步骤">
-       <span><i>看</i><b>15′</b></span>
-       <span class="step-arrow" aria-hidden="true">→</span>
-       <span><i>默 L1</i><b>20 卡 · 35′</b></span>
-       <span class="step-arrow" aria-hidden="true">→</span>
-       <span><i>做题</i><b>30′</b></span>
-      </div>
-      <p class="t-pass"><b>达标线</b> 默 ≥80%（≥16/20 卡）· <span class="nowrap">做 ≥60%</span></p>
-      <p class="t-report">报数格式 <code>第4章：默 __% 做 __%</code></p>
-     </div>
-     <span class="check-ro" aria-hidden="true">历史</span>
-    </article>
-
-    <article class="task" data-task="momo">
-     <span class="t-seq">02</span>
-     <div class="t-time">机动<span>穿插完成</span></div>
-     <div class="t-body">
-      <div class="t-title-row">
-       <h3 class="t-title">墨墨 <span>120 词</span></h3>
-       <span class="tag">每日</span>
-      </div>
-      <p class="t-note">目标 120 词（App 自定 150，本页过关线 120）。<span class="muted">06:30 API 已学 12（11.05 历史读数，不参与今日判定），累计 809。</span></p>
-     </div>
-     <span class="check-ro" aria-hidden="true">历史</span>
-    </article>
-
-    <article class="task" data-task="politics">
-     <span class="t-seq">03</span>
-     <div class="t-time">机动<span>公共课</span></div>
-     <div class="t-body">
-      <div class="t-title-row">
-       <h3 class="t-title">政治 <span>第 3 讲</span></h3>
-       <span class="tag">公共课</span>
-      </div>
-      <p class="t-note">只看当讲，不展开成整套计划。</p>
-     </div>
-     <span class="check-ro" aria-hidden="true">历史</span>
-    </article>
-
-    <article class="task" data-task="english">
-     <span class="t-seq">04</span>
-     <div class="t-time">机动<span>公共课</span></div>
-     <div class="t-body">
-      <div class="t-title-row">
-       <h3 class="t-title">英语 <span>阅读技巧 第 1 讲</span></h3>
-       <span class="tag">公共课</span>
-      </div>
-      <p class="t-note">阅读技巧第 1 讲，做完即收。</p>
-     </div>
-     <span class="check-ro" aria-hidden="true">历史</span>
-    </article>
-
-    <article class="task" data-task="social">
-     <span class="t-seq">05</span>
-     <div class="t-time">机动<span>强化课</span></div>
-     <div class="t-body">
-      <div class="t-title-row">
-       <h3 class="t-title">社心强化 <span>第 1 讲收口</span></h3>
-       <span class="tag">强化</span>
-      </div>
-      <p class="t-note">把第 2 章讲到的内容收口，不带账过夜。</p>
-     </div>
-     <span class="check-ro" aria-hidden="true">历史</span>
-    </article>
-
-    <article class="task" data-task="answer">
-     <span class="t-seq">06</span>
-     <div class="t-time">机动<span>输出</span></div>
-     <div class="t-body">
-      <div class="t-title-row">
-       <h3 class="t-title">答题营 <span>第 2 期</span></h3>
-       <span class="tag">输出</span>
-      </div>
-      <p class="t-note">第 2 期必须动笔。答完再谈质量。</p>
-     </div>
-     <span class="check-ro" aria-hidden="true">历史</span>
-    </article>
-   </div>
-
-   <div class="timeline-foot">
-    <span class="timeline-note">本区为「计划参考」（历史快照），今日完成度以 🔥 末路灯带为准。</span>
-   </div>
 
    <div class="report" aria-labelledby="report-title">
     <div>
@@ -3888,7 +3773,7 @@ function reqOf(s){
   function load(){ try { return JSON.parse(localStorage.getItem(KEY_DAILY)||'{}') } catch(e){ return {} } }
   function save(o){ try { localStorage.setItem(KEY_DAILY, JSON.stringify(o)) } catch(e){} }
   var D = load();
-  var T = today();
+  var T = (window.studyDay ? window.studyDay() : today());   /* 与门禁同一学习日口径（04:00 切天），避免 D-30 与「距考试 29 天」并存 */
   if(!D[T]) D[T] = {};
   // 阶段判定
   function stageOf(t){ for(var i=0;i<PM.ramp.length;i++){ var r=PM.ramp[i]; if(t>=parseMD(r.from)&&t<=parseMD(r.to)) return r; } return PM.ramp[PM.ramp.length-1]; }
@@ -4047,7 +3932,7 @@ function paintPO(){
     var ePct = TARGET_Q>0 ? Math.min(100, doneQ/TARGET_Q*100) : 0;
     // 时间进度
     var totalDays = PM.total_days;
-    var dleft = Math.max(0, Math.ceil((new Date(2026,11,19) - new Date())/86400000));
+    var dleft = Math.max(0, Math.ceil((new Date(2026,11,19) - new Date(T + 'T00:00:00'))/86400000));
     var tPct = Math.min(100, (totalDays - dleft)/totalDays*100);
     document.getElementById('PO-DAYS').textContent = (function(){
       var _r = null; try { _r = JSON.parse(localStorage.getItem('dsh.347.recovery.v1')||'null'); } catch(e){}
@@ -4109,134 +3994,9 @@ function paintPO(){
 })();
 </script>
 
- <section class="section" id="progress" aria-labelledby="progress-title">
-  <div class="shell">
-   <header class="section-head">
-    <span class="sec-index" aria-hidden="true">02</span>
-    <div class="sec-title">
-     <h2 id="progress-title">四条战线</h2>
-     <p>历史进度（11.05 读数，不参与今日判定）· 不作今日承诺</p>
-    </div>
-    <div class="sec-side">
-     <b>历史读数 11.05 06:30</b>
-     <span>平台 / API / 自述</span>
-    </div>
-   </header>
-
-   <div class="progress-grid">
-    <article class="pcard pcard--7" aria-labelledby="p1-title">
-     <div class="pcard-head">
-      <span class="pcode">A / 01</span>
-      <h3 id="p1-title">普心强化</h3>
-      <span class="ptag">主线</span>
-     </div>
-     <div class="big-metric">
-      <span class="big">7</span>
-      <span class="den">/ 8</span>
-      <div class="metric-side">
-       <b>87.5%</b>
-       <span>已学完</span>
-      </div>
-     </div>
-     <div class="blocks8" role="img" aria-label="普心强化 8 期中已学完 7 期">
-      <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
-      <i class="on"></i><i class="on"></i><i class="on"></i><i class="off"></i>
-     </div>
-     <div class="subline">
-      <span>14–16 章 <b>18%</b></span>
-      <span class="mini-track" aria-hidden="true"><i></i></span>
-      <span class="mono">章内进度 · 另计</span>
-     </div>
-     <p class="pfoot">8 期余 1 期；14–16 章单独计，不与 7/8 混算。</p>
-    </article>
-
-    <article class="pcard pcard--5" aria-labelledby="p2-title">
-     <div class="pcard-head">
-      <span class="pcode">B / 02</span>
-      <h3 id="p2-title">社心强化</h3>
-      <span class="ptag">自述</span>
-     </div>
-     <div class="ring-wrap">
-      <svg class="ring" viewBox="0 0 160 160" role="img" aria-label="社心强化社心第 2 章完成 82%（1–3 章自述）">
-       <circle class="ring-ticks" cx="80" cy="80" r="73"></circle>
-       <circle class="ring-track" cx="80" cy="80" r="62"></circle>
-       <circle class="ring-fill" cx="80" cy="80" r="62" stroke-dasharray="319.4 389.6"></circle>
-      </svg>
-      <div class="ring-center">
-       <span class="big">82</span>
-       <span class="pct">%</span>
-      </div>
-     </div>
-     <div class="ring-meta">
-      <span class="chip">1–3 章</span>
-      <span>自述：学到第 2 章</span>
-     </div>
-     <p class="pfoot">第2章82%（1–3章自述）；自述口径，按“学到第 2 章”继续核。</p>
-    </article>
-
-    <article class="pcard pcard--5" aria-labelledby="p3-title">
-     <div class="pcard-head">
-      <span class="pcode">C / 03</span>
-      <h3 id="p3-title">研方法速成营</h3>
-      <span class="ptag">进行中</span>
-     </div>
-     <div class="duo-metric">
-      <div class="duo-item">
-       <span class="big">4</span>
-       <span class="duo-lab"><b>期完成</b><em>已收口</em></span>
-      </div>
-      <span class="duo-plus" aria-hidden="true">+</span>
-      <div class="duo-item">
-       <span class="big">78</span><span class="duo-pct">%</span>
-       <span class="duo-lab"><b>第 5 期</b><em>当前推进</em></span>
-      </div>
-     </div>
-     <div class="tally" role="img" aria-label="研方法速成营 4 期完成，第 5 期进行到 78%">
-      <div class="tbar"><div class="tbar-track"><i style="--h:100%"></i></div><span class="tbar-label">01</span></div>
-      <div class="tbar"><div class="tbar-track"><i style="--h:100%"></i></div><span class="tbar-label">02</span></div>
-      <div class="tbar"><div class="tbar-track"><i style="--h:100%"></i></div><span class="tbar-label">03</span></div>
-      <div class="tbar"><div class="tbar-track"><i style="--h:100%"></i></div><span class="tbar-label">04</span></div>
-      <div class="tbar tbar--current"><div class="tbar-track"><i style="--h:78%"></i></div><span class="tbar-label">05</span></div>
-     </div>
-     <p class="pfoot">4 期完成 + 第 5 期 78%。不推算总进度，只记已知节点。</p>
-    </article>
-
-    <article class="pcard pcard--7 pcard--dark" aria-labelledby="p4-title">
-     <div class="pcard-head">
-      <span class="pcode">D / 04</span>
-      <h3 id="p4-title">答题营</h3>
-      <span class="ptag ptag--alert">最需盯</span>
-     </div>
-     <div class="big-metric">
-      <span class="big">1</span>
-      <span class="den">/ 8</span>
-      <div class="metric-side">
-       <b>12.5%</b>
-       <span>期完成</span>
-      </div>
-     </div>
-     <div class="blocks8" role="img" aria-label="答题营 8 期中已完成 1 期，第 2 期在今日">
-      <i class="on"></i><i class="off"></i><i class="off"></i><i class="off"></i>
-      <i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i>
-     </div>
-     <div class="dark-pair">
-      <b>第 1 期已完成</b>
-      <span>第 2 期（11.05 历史时点）</span>
-     </div>
-     <p class="pfoot">这是四条线里最慢的一条（历史快照，见现役今日灯带）。</p>
-    </article>
-   </div>
-
-   <p class="progress-note">
-    <span><b>口径</b> 普心 7/8 与 14–16 章 18% 分开记；社心 82% 为 1–3 章、自述已学到第 2 章；研方法按「4 期 + 第 5 期 78%」记，不推算总进度；答题营 1/8 按已完成期数记。</span>
-   </p>
-  </div>
- </section>
-
  <section class="section" id="rhythm" aria-labelledby="rhythm-title">
   <div class="shell">
    <header class="section-head">
-    <span class="sec-index" aria-hidden="true">03</span>
     <div class="sec-title">
      <h2 id="rhythm-title">节奏：学 · 验 · 调</h2>
      <p>每轮闭环，输入 15 分，输出 65 分</p>
