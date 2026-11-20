@@ -2705,7 +2705,11 @@ function reqOf(s){
     /* V422: 不能用 inkOK —— 它在本行之后才 var 赋值（var 提升 -> undefined -> 门仍 7/12）；直接用 inkRow */
     /* V430: 门也要与 coach/环/aria 同源 —— 有额外机判时 acc>=60% 才亮学习 ✅（否则门✅ 与 coach「还差N题」打架） */
     var _gateAcc = (acc === null) || (acc >= 0.6);
-    var _lqGate = !!(_isLearnDay || (qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && inkRow && inkRow.done >= inkRow.tgt && _gateAcc));
+    /* V435（修 H1）：门必须与环/coach 同源 —— 学习日只有「完成快照」或 cw>=6 才亮 ✅
+       否则门 ✅学习12/12 与 coach「再做N题机判」打架（v434-b 报 8 态） */
+    var _cwGate = (((qa&&qa.c)||0) + ((qa&&qa.w)||0));
+    var _learnGateDone = !!(qa && quizRow && (qa.la||0) >= (quizRow.tgt||99) && _cwGate >= 6 && inkRow && inkRow.done >= inkRow.tgt && _gateAcc) || !!_passSnap;   /* V436: pass 快照也亮 ✅ */
+    var _lqGate = !!_learnGateDone;   /* V435c: 不能要求 _isLearnDay（la=12 但含额外机判时 _isLearnDay=false -> 门错亮✍️） */
     if (quizRow && _lqGate && !_isRecoveryDay(s) && !_isGradualDay(s)) {
       quizRow.learn = 1;
       quizRow.learnN = (qa ? (qa.la || 0) : 0);
@@ -2770,6 +2774,13 @@ function reqOf(s){
         var _cwSnap = (((qa && qa.c)||0) + ((qa && qa.w)||0));
         var _snapOK = quizOK && inkOK && (!_isLearnDay || _cwSnap >= 6);
         if (_snapOK) { localStorage.setItem('dsh.347.passday.v1', String(s)); _passSnap = true; }
+        /* V435（修 H2/H3）：**学习日完成快照** —— la>=tgt && cw>=6 && acc>=0.6 && inkOK
+           此前 C 完成 100% 但无完成态（青环/跑道part/passday=null），且加练被追扣 */
+        var _learnDone = false;
+        if (_isLearnDay && ((qa&&qa.la)||0) >= (quizRow ? (quizRow.tgt||12) : 12) && _cwSnap >= 6 && inkOK && _accOKforLP) {
+          localStorage.setItem('dsh.347.learndone.v1', String(s)); _learnDone = true;
+        } else if (localStorage.getItem('dsh.347.learndone.v1') === String(s)) { _learnDone = true; }
+        if (_learnDone) _passSnap = true;   /* 学习日完成也走完成态（环绿/跑道pass/aria完成） */
         else { _passSnap = (localStorage.getItem('dsh.347.passday.v1') === String(s)); }
       }
     } catch(e){}
@@ -2781,18 +2792,26 @@ function reqOf(s){
     /* V424 6: 有额外机判时**正确率必须 ≥60%**（否则 12 题 50% 也 100% = 假赢） */
     var _hasMachine = !!((qa && ((qa.c||0) + (qa.w||0)) > 0));
     var _accOKforLP = (!_hasMachine) || (acc !== null && acc >= 0.6);
-    /* V434（用户选 C）：学习日完成 = 学习配额满(50%) + 机判 6 题(50%) —— 不是「看答案 12 次就算完成」 */
-    var _cwN = (((qa && qa.c)||0) + ((qa && qa.w)||0));   /* V434b: qa 可能为 null（我漏守卫 -> Uncaught） */
-    if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) >= (quizRow.tgt||99)) {
-      var _lp = Math.min(100, Math.round(50 + Math.min(6, _cwN) / 6 * 50));   /* 学习满配额 50% + 机判 6 题补齐到 100% */
-      if (_cwN >= 6 && !_accOKforLP) _lp = Math.min(_lp, 75);   /* 机判够了但正确率<60% -> 最多 75%（诚实：做了但质量不够） */
-      /* V434d（用户选C）：学习日完成度 = _lp **直接覆盖**（此前用 > 比较，_qp 已给 100% 改不下来） */
-      if (inkOK) realPct = _lp;
+    /* V435（修 v434-b H4/H5）：学习日完成度 = **连续公式**
+       学习贡献 = min(1, la/tgt) * 50 ；机判贡献 = min(1, cw/6) * 50
+       修掉两处断裂：
+         H4 la=11=96% -> la=12=50%（-46pt 断崖）—— 现 la=11=46%、la=12=50%，连续
+         H5 la8+0机判=83% -> la8+6机判=66%（机判反向）—— 现 la8=33%、la8+6机判=83%，机判加分 */
+    var _cwN = (((qa && qa.c)||0) + ((qa && qa.w)||0));
+    if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) > 0) {
+      var _laN = ((qa&&qa.la)||0), _ltgt = Math.max(1, quizRow.tgt||12);
+      var _learnPart = Math.min(1, _laN / _ltgt) * 50;
+      var _machinePart = Math.min(1, _cwN / 6) * 50;
+      var _lp = Math.round(_learnPart + _machinePart);
+      if (_cwN >= 6 && !_accOKforLP) _lp = Math.min(_lp, 75);   /* 机判够6但正确率<60% -> 最多75（诚实） */
+      if (inkOK && _lp > realPct) realPct = Math.min(100, Math.max(realPct, _lp));
+      /* ⚠️ 只在「学习日身份成立」时用 _lp 约束上限（避免普通日被误伤） */
+      if (_isLearnDay && inkOK && realPct > _lp && !(quizOK && _cwN >= 6)) realPct = _lp;
     }   /* V418: 必须 inkOK + c+w<=6（与 _learnFull 对齐）—— 修「墨墨未满也100%」和「+7~+11 机判 100% 但说还差」 */
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
-    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay && !(quizOK && inkOK) && !_passSnap && !(_isLearnDay || (quizRow && inkOK && ((qa&&qa.la)||0) >= (quizRow.tgt||99)))) realPct = 66;
+    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay && !(quizOK && inkOK) && !_passSnap && !(((qa&&qa.la)||0) > 0) && !(_isLearnDay || (quizRow && inkOK && ((qa&&qa.la)||0) >= (quizRow.tgt||99)))) realPct = 66;   /* V435b: 有学习进度(la>0)不封顶66（否则 la8+6机判 83 被压回 66，修 H5） */
     /* V416 H5: 真实两项已达标(pass) -> 环一律 100%（此前报数已填但低时 67%/80% 与「已过线」同屏）*/
     if (_passSnap) realPct = 100;   /* V432 N4r: 快照生效 -> 完成度不撤销 */
     if (quizOK && inkOK) realPct = 100;   /* V413 H5: 真实两项已达标(pass)时不封顶（否则「已过线」与 66% 同屏） */   /* V406: 学习日不要求报数 -> 不封顶 */   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
@@ -2912,9 +2931,14 @@ function reqOf(s){
   if(_isDoneR || (typeof _gradDone !== 'undefined' && _gradDone)){ _vt += '（今天已完成，额外练习不计）'; }
   else if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
   else if(cur._learnOnly){ _vt += '（学习日出席，首遍不计正确率）'; }   /* V393 */   /* V362 */
+  else if(cur._passSnap){ _vt += '（今天已完成，额外练习不计）'; }
   else if(_lqFullA){
    /* V419: 学习配额已满 -> aria 说「课外练习」，不说还差 */
-   _vt += '（学习配额已满，课外练习 ' + (+(cur.quizRowDone||0)) + ' 题不计入）';
+   var _cwA = (+(cur.quizRowDone||0));
+   /* V437（修 v434-a）：用户选C后 6 题机判是**计入**的，不能说「课外练习不计入」 */
+   _vt += (_cwA >= 6)
+     ? '（学习配额已满 + 机判 ' + _cwA + ' 题 = 已完成' + (_cwA > 6 ? '，超出部分为额外练习' : '') + '）'
+     : '（学习配额已满，机判 ' + _cwA + '/6 题——再做 ' + (6 - _cwA) + ' 题就算完成）';
   } else if(cur.quizPartial && !cur.quizOK){
    var _need = Math.max(0, (cur.quizRowTgt||8) - Math.min(cur.quizRowTgt||8, cur.quizRowDone||0));
    /* V413 H1/H2: 题已做满(_need=0)但质量不达标 -> **不能说「还差0题」**，改成质量差距 */
@@ -2966,7 +2990,7 @@ function reqOf(s){
     /* V419: **学习配额已满** -> 无论之后再做多少机判，都是「今日完成 + 课外练习」，
        不再翻成「还差 N 题」（修 +7~+11 的文字假赢/假输，同时保持环 100% 单调） */
     var _ln = +(cur._learnN || 0), _ex = Math.max(0, +(cur.quizRowDone||0) - _ln);
-    var _base = '📖 <b>今天是学习日</b>：学习 <b>' + _ln + '</b> 题 = <b>今日答题完成</b>（首遍不计正确率、不进错题本）。';
+    var _base = '📖 <b>今天是学习日</b>：学习 <b>' + _ln + '</b> 题 + 机判 <b>' + (+(cur.quizRowDone||0)) + '</b> 题 = <b>今日完成</b>（首遍不计正确率、不进错题本）。';   /* V437③: 明说机判6题（用户选C口径） */
     var _inkN = +(cur.inkRowDone || 0), _inkT = +(cur.inkRowTgt || 120);
     var _inkNote = (cur.inkOK ? '<br>墨墨 <b>' + _inkN + '/' + _inkT + '</b> 也达标了。' : '<br><b style="color:#b45309">⚠️ 墨墨还差 ' + Math.max(0, _inkT - _inkN) + ' 词（' + _inkN + '/' + _inkT + '）才算完整</b>。');
     if (_ex > 0) return _base + '<br>另外做了 <b>' + _ex + '</b> 题机判 —— 算<b>课外练习，不计入完成度</b>，但都是赚的。' + _inkNote;
@@ -3051,9 +3075,11 @@ function reqOf(s){
     var _capped = _lt > 0 && _ln >= _lt;
     /* V338 2: 学习日**未达配额**不得说「今日答题完成」（修 8/12 仍宣称完成的 overclaim） */
     return _capped
-      ? ('📖 今天是<b>学习日</b>：学习 <b>'+_ln+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。' + (cur.inkOK ? '<br>墨墨 <b>' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '</b> 也达标了。' : '<br><b style="color:#b45309">⚠️ 墨墨还差 ' + Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0)) + ' 词（' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '）才算完整</b>。'))
+      ? ('📖 今天是<b>学习日</b>：学习 <b>'+_ln+'</b> 题 + 机判 <b>'+(cur.quizRowDone||0)+'</b> 题 = <b>今日完成</b>（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。' + (cur.inkOK ? '<br>墨墨 <b>' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '</b> 也达标了。' : '<br><b style="color:#b45309">⚠️ 墨墨还差 ' + Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0)) + ' 词（' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '）才算完整</b>。'))
       : ('📖 今天是<b>学习日</b>：已学习 <b>' + _ln + '/' + _lt + '</b> 题。<b>首遍学习不计正确率</b> —— 今天学多少算多少，不必赶配额。' + (cur.inkOK   ? '<br>墨墨 <b>' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '</b> 也达标了。'   : ((cur.inkRowDone||0) > 0 ? '' : '<br><b style="color:#b45309">墨墨 0 词 —— 想更完整就补一点</b>。')));   /* V433 部分学习日：中性进度，不说「还差 N 题」（低压日不该有配额压力） */
   })();   /* V232: 学习日不再劝「复盘空错题本」 */
+  /* V436（修 v434-a N4r 四链路）：**pass 快照优先** —— 今天已完成过，额外作答一律不改结论 */
+  else if(cur._passSnap) msg = '⭐ <b>今日已完成</b>（' + (cur._learnN > 0 ? '学习 ' + cur._learnN + ' 题 + ' : '') + '答题 ' + (cur.quizRowTgt||12) + ' 题 + 墨墨 ' + (cur.inkRowTgt||120) + ' 词）。<br>之后做的题只是<b>额外练习，不计入完成度</b> —— 不影响今天的结论。';
   else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满。'+(cur.wrongN===0? '今天这些多为<b>自评题</b>，不计入机器正确率；明天按 1–2 天回来做机器判分会自动把正确率拉回来 —— 今天已经够了，先休息。': ('正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+' 低于 60% ⇒ 不计入达标。先复盘<b>错题本 '+cur.wrongN+' 道</b>，再补正确率。'));  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
   else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（手动填 '+cur.selfHit+' 项，不计入）';
   else if(cur.pass) msg = '⭐ 已过线（答题'+cur.quizRowDone+'/'+cur.quizRowTgt+' 正确率'+Math.round((cur.acc||0)*100)+'% · 墨墨已达标 · <b>真实 2/2</b>；自报 '+cur.selfHit+' 项）。';
@@ -3135,7 +3161,7 @@ function reqOf(s){
    gh += '<button type="button" class="'+cls+'" data-gate="'+g2.k+'"'+(row.ro?' data-ro="1"':'')+
       ' aria-label="'+lbl+'"><span class="gi">'+(row.learn ? (row.learnAttend ? '✅' : '📖') : (row.ok?(row.ro?'✅':'☑'):g2.ico))+'</span><span class="gn">'+g2.nm+
       '</span><span class="gx">'+(row.learn
-        ? ('学习 '+(row.learnN||0)+'/'+row.tgt+(row.learnAttend ? '（首遍不计分）' : '（还差 '+Math.max(0,(row.tgt||0)-(row.learnN||0))+' 题）'))
+        ? ('学习 '+(row.learnN||0)+'/'+row.tgt+(row.learnAttend ? '（首遍不计分）' : '')   /* V437②: 部分学习日门去掉「还差 N 题」（低压日不该有配额压力，与 coach 中性文案同源） */)
         : (row.done+'/'+row.tgt+(row.ro?'':' <i class="mv-self">'+(row.legacy?'旧口径':(g2.k==='课'?'勾节':(g2.k==='政'?'填讲次':'手动填')))+'</i>')))+'</span></button>';
   }
   if(_isPastNow) gh = '';  // V62: 考后清空门
@@ -3147,6 +3173,8 @@ function reqOf(s){
       var _rkg = JSON.parse(localStorage.getItem('dsh.347.recovery.v1') || 'null');
       /* V409 P2-D: **只认今日 completed**（去掉 day+1 分支 —— 渐进日到达不是完成，否则 0/6 也显示 ✅） */
       if (_rkg && _rkg.completed && _rkg.day === T) { _isDoneG = true; }
+      /* V436: pass 快照也算完成 -> 跑道 pass */
+      try { if (cur && cur._passSnap) _isDoneG = true; } catch(e){}
       /* V429 A: **渐进日已完成(graddone)也算完成** -> 门/跑道同步（此前只认 recovery） */
       try { if (localStorage.getItem('dsh.347.graddone.v1') === String(T)) _isDoneG = true; } catch(e){}
     } catch(e){}
