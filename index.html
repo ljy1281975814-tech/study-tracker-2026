@@ -2760,10 +2760,20 @@ function reqOf(s){
   var _hasReal = (quizRow && quizRow.done > 0) || (inkRow && inkRow.done > 0); var _mpEff = (_mp >= 0 && _hasReal) ? (((_rr && parseInt(_rr.mo,10)>=80 && parseInt(_rr.do,10)>=60)) ? 1 : _mp) : -1;   /* V116(G14): 报数达标即满贡献 */   /* V116(G14): 报数达标即满贡献 */ var _denom = (_mpEff >= 0) ? 3 : 2;
   var _num = _qp + _ip + (_mpEff >= 0 ? _mpEff : 0);
   var realPct = realTotal ? Math.round(_num / _denom * 100) : 0;
+    /* V432 N4r: **pass 快照**（必须在下面所有守卫之前定义，否则 var 提升会误判）
+       达成过 -> 写当日标记；之后额外作答不撤销（修「12/12 100% -> 加做10错 -> 66%」）
+       ⚠️ 必须用 studyDay()：本函数是 dayOf(o,QD,s)，render 里的 T 在此不可见 */
+    var _passSnap = false;
+    try {
+      if (s === studyDay()) {
+        if (quizOK && inkOK) { localStorage.setItem('dsh.347.passday.v1', String(s)); _passSnap = true; }
+        else { _passSnap = (localStorage.getItem('dsh.347.passday.v1') === String(s)); }
+      }
+    } catch(e){}
     /* V421: 非 pass 时不得四舍五入成 100%（119/120 墨墨 -> 99.58 -> 100 是假赢） */
     /* V425: 学习配额已满 + 墨墨达标时**不降 99**（与 H4 一致；A 边界只管非学习日） */
     var _lqOK425 = !!(_isLearnDay || (quizRow && inkOK && ((qa&&qa.la)||0) >= (quizRow.tgt||99)));
-    if (realPct >= 100 && !(quizOK && inkOK) && !_lqOK425) realPct = 99;
+    if (realPct >= 100 && !(quizOK && inkOK) && !_lqOK425 && !_passSnap) realPct = 99;
     /* V416 H4: 学习日完成度取 max(学习日出席, 普通口径) —— 修 +4 机判断崖（学满12题后再练第4题不该从100%掉到66%）*/
     /* V424 6: 有额外机判时**正确率必须 ≥60%**（否则 12 题 50% 也 100% = 假赢） */
     var _hasMachine = !!((qa && ((qa.c||0) + (qa.w||0)) > 0));
@@ -2772,8 +2782,9 @@ function reqOf(s){
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
-    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay && !(quizOK && inkOK) && !(_isLearnDay || (quizRow && inkOK && ((qa&&qa.la)||0) >= (quizRow.tgt||99)))) realPct = 66;
+    if(_mp < 0 && realPct > 66 && !_isRecoveryDay(s) && !_isGradualDay(s) && !_isLearnDay && !(quizOK && inkOK) && !_passSnap && !(_isLearnDay || (quizRow && inkOK && ((qa&&qa.la)||0) >= (quizRow.tgt||99)))) realPct = 66;
     /* V416 H5: 真实两项已达标(pass) -> 环一律 100%（此前报数已填但低时 67%/80% 与「已过线」同屏）*/
+    if (_passSnap) realPct = 100;   /* V432 N4r: 快照生效 -> 完成度不撤销 */
     if (quizOK && inkOK) realPct = 100;   /* V413 H5: 真实两项已达标(pass)时不封顶（否则「已过线」与 66% 同屏） */   /* V406: 学习日不要求报数 -> 不封顶 */   /* V386: 渐进日也豁免 */   /* V357: 恢复日不封顶 */   /* R2: 无报数封顶66，防「不报数>报低分」 */  // V67: 3项均值(含默写)
   return { s:s, rq:rq, rows:rows, hit:hit2, need:need,
        quizAttend:quizAttend, quizOK:quizOK, quizPartial:quizPartial, reportOK: (_g6OnlyReport ? false : reportOK), reportPartial: (_g6OnlyReport ? false : reportPartial), inkOK:inkOK, inkPartial:inkPartial, selfHit:selfHit, realHit:realHit,
@@ -2781,7 +2792,7 @@ function reqOf(s){
        inkRowDone: inkRow ? inkRow.done : 0, inkRowTgt: inkRow ? inkRow.tgt : 0,  // V32: 供 coach 量化
        acc:acc, qualityOK:qualityOK, _learnDay: !!_isLearnDay, _learnN: qa ? (qa.la || 0) : 0, _learnOnly: _learnOnly,   /* V394 P1: 此前定义未带出 -> 学习日豁免全是死代码 */   /* V236 B: _learnN 真定义（此前未定义 -> 教练假分母） */
        // X3: pass = 真实部分全达标（答题质量 + 墨墨）
-       pass: rq.list.length>0 && quizOK && inkOK,
+       pass: rq.list.length>0 && quizOK && inkOK, _passSnap: _passSnap,
        next:next, extra:extra,
        pct: realPct,
        selfPct: 0 , wrongN: (function(){
@@ -2866,13 +2877,13 @@ function reqOf(s){
   } catch(e){}
   /* V362: 恢复日不要求报数 -> 视为已达标（修「重启完成却被 99% 琥珀+aria 报数未达标否定」） */
   var _effReportOK = cur.reportOK || _isRecoveryDay(T) || _isGradualDay(T) || _isDoneR || !!cur._learnDay;   /* V390/V399/V406: 学习日也不要求报数 -> 不封顶 66% */
-  if(_dispPct >= 100 && !cur.pass && !_isDoneR && !_gradDone && !cur._learnDay && !(cur.quizRowTgt && cur._learnN >= cur.quizRowTgt && cur.inkOK)) _dispPct = 99;  // V33/V399/V406/V416: 学习配额已满也不降 99（修 +4 机判断崖）
+  if(_dispPct >= 100 && !cur.pass && !cur._passSnap && !_isDoneR && !_gradDone && !cur._learnDay && !(cur.quizRowTgt && cur._learnN >= cur.quizRowTgt && cur.inkOK)) _dispPct = 99;   /* V432 N4r: pass 快照 -> 不降 99 */  // V33/V399/V406/V416: 学习配额已满也不降 99（修 +4 机判断崖）
   if(_dispPct >= 100 && cur.pass && !_effReportOK && !(cur.quizOK && cur.inkOK)) _dispPct = 99;  // V86 + V416 H5: pass 不降 99
   var _pctTxt = _isPastNow ? '—' : (_dispPct+'%');
   if(pEl.textContent !== _pctTxt) pEl.textContent = _pctTxt;
   var col = (cur.pass && _effReportOK) ? '#059669' : ((cur.inkOK || cur.inkPartial || cur.quizOK || cur.quizPartial || cur.reportPartial) ? '#b45309' : '#b91c1c'); // V76: 报数达标也算琥珀; V393 学习日环色 V392 学习日专用环色
   /* V396: 学习日专属环色 + 渐进半程中性色（**算完后覆盖**，不动嵌套三元式） */
-  if (_isDoneR || _gradDone) col = '#059669';   /* V399/V424: 恢复日或渐进日已完成 -> 环绿 */
+  if (_isDoneR || _gradDone || cur._passSnap) col = '#059669';   /* V432 N4r: pass 快照 -> 环绿 */   /* V399/V424: 恢复日或渐进日已完成 -> 环绿 */
   /* V400 C: 恢复日「重启中」(未完成且非已完成) -> 中性色，与渐进半程同标准（此前纯红 = 把首因体验渲染成失败） */
   if (!_isDoneR && _isRecoveryDay(T) && !cur.pass) col = '#0891b2';
   /* V423 ⑤: 任何有首遍学习的日子（含**部分配额**）都用中性学习色（此前部分时是失败红） */
