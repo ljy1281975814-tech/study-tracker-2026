@@ -3031,7 +3031,7 @@ function reqOf(s){
     /* V338 2: 学习日**未达配额**不得说「今日答题完成」（修 8/12 仍宣称完成的 overclaim） */
     return _capped
       ? ('📖 今天是<b>学习日</b>：学习 <b>'+_ln+'</b> 题 = 今日答题完成（首遍学习不计正确率、不进错题本）。今天可重练，明天做首次回忆。' + (cur.inkOK ? '<br>墨墨 <b>' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '</b> 也达标了。' : '<br><b style="color:#b45309">⚠️ 墨墨还差 ' + Math.max(0,(cur.inkRowTgt||120)-(cur.inkRowDone||0)) + ' 词（' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '）才算完整</b>。'))
-      : '📖 今天是<b>学习日</b>：已学习 <b>'+_ln+'/'+_lt+'</b> 题，还差 <b>'+(_lt-_ln)+'</b> 题。首遍学习不计正确率（所以环不亮是正常的），把配额学完今天就有交代。';
+      : ('📖 今天是<b>学习日</b>：已学习 <b>' + _ln + '/' + _lt + '</b> 题。<b>首遍学习不计正确率</b> —— 今天学多少算多少，不必赶配额。' + (cur.inkOK   ? '<br>墨墨 <b>' + (cur.inkRowDone||0) + '/' + (cur.inkRowTgt||120) + '</b> 也达标了。'   : ((cur.inkRowDone||0) > 0 ? '' : '<br><b style="color:#b45309">墨墨 0 词 —— 想更完整就补一点</b>。')));   /* V433 部分学习日：中性进度，不说「还差 N 题」（低压日不该有配额压力） */
   })();   /* V232: 学习日不再劝「复盘空错题本」 */
   else if(cur.quizAttend && !cur.qualityOK) msg = '⚠️ 答题 <b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> 次已做满。'+(cur.wrongN===0? '今天这些多为<b>自评题</b>，不计入机器正确率；明天按 1–2 天回来做机器判分会自动把正确率拉回来 —— 今天已经够了，先休息。': ('正确率 '+(cur.acc===null?'—':Math.round(cur.acc*100)+'%')+' 低于 60% ⇒ 不计入达标。先复盘<b>错题本 '+cur.wrongN+' 道</b>，再补正确率。'));  // FIX_20261116: quizOK 已蕴含 qualityOK，死分支改用 quizAttend
   else if(cur.quizOK && !cur.pass) msg = '⭐ 答题已达标（<b>'+cur.quizRowDone+'/'+cur.quizRowTgt+'</b> · 正确率 '+Math.round((cur.acc||0)*100)+'%）；真实达标 <b>1/2</b>，还差墨墨 '+((cur.inkRowTgt||120)-(cur.inkRowDone||0))+' 词即过线。（手动填 '+cur.selfHit+' 项，不计入）';
