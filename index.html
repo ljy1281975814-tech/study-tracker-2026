@@ -2766,7 +2766,10 @@ function reqOf(s){
     var _passSnap = false;
     try {
       if (s === studyDay()) {
-        if (quizOK && inkOK) { localStorage.setItem('dsh.347.passday.v1', String(s)); _passSnap = true; }
+        /* V434c（用户选C）：学习日的 pass 快照也要求机判≥6（否则纯学习12题就 100%，覆盖 C 判断） */
+        var _cwSnap = (((qa && qa.c)||0) + ((qa && qa.w)||0));
+        var _snapOK = quizOK && inkOK && (!_isLearnDay || _cwSnap >= 6);
+        if (_snapOK) { localStorage.setItem('dsh.347.passday.v1', String(s)); _passSnap = true; }
         else { _passSnap = (localStorage.getItem('dsh.347.passday.v1') === String(s)); }
       }
     } catch(e){}
@@ -2778,7 +2781,14 @@ function reqOf(s){
     /* V424 6: 有额外机判时**正确率必须 ≥60%**（否则 12 题 50% 也 100% = 假赢） */
     var _hasMachine = !!((qa && ((qa.c||0) + (qa.w||0)) > 0));
     var _accOKforLP = (!_hasMachine) || (acc !== null && acc >= 0.6);
-    if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) >= (quizRow.tgt||99) && inkOK && _accOKforLP) { var _lp = Math.min(100, Math.round((((qa&&qa.la)||0) / Math.max(1, quizRow.tgt)) * 100));   /* V419: 去掉 c+w<=6（改由 coach 文字桥接，恢复单调） */ if (_lp > realPct) realPct = _lp; }   /* V418: 必须 inkOK + c+w<=6（与 _learnFull 对齐）—— 修「墨墨未满也100%」和「+7~+11 机判 100% 但说还差」 */
+    /* V434（用户选 C）：学习日完成 = 学习配额满(50%) + 机判 6 题(50%) —— 不是「看答案 12 次就算完成」 */
+    var _cwN = (((qa && qa.c)||0) + ((qa && qa.w)||0));   /* V434b: qa 可能为 null（我漏守卫 -> Uncaught） */
+    if (quizRow && !_isRecoveryDay(s) && !_isGradualDay(s) && ((qa&&qa.la)||0) >= (quizRow.tgt||99)) {
+      var _lp = Math.min(100, Math.round(50 + Math.min(6, _cwN) / 6 * 50));   /* 学习满配额 50% + 机判 6 题补齐到 100% */
+      if (_cwN >= 6 && !_accOKforLP) _lp = Math.min(_lp, 75);   /* 机判够了但正确率<60% -> 最多 75%（诚实：做了但质量不够） */
+      /* V434d（用户选C）：学习日完成度 = _lp **直接覆盖**（此前用 > 比较，_qp 已给 100% 改不下来） */
+      if (inkOK) realPct = _lp;
+    }   /* V418: 必须 inkOK + c+w<=6（与 _learnFull 对齐）—— 修「墨墨未满也100%」和「+7~+11 机判 100% 但说还差」 */
     var _onlyReport = (_qp <= 0 && _ip <= 0 && _mp >= 0);   /* G6: 只有报数无真实门 */
     if(_onlyReport){ realPct = 0; }   /* V149(G6): 只填报数时下面 return 里 reportOK/reportPartial 强制 false */
     var _g6OnlyReport = _onlyReport;   /* V149: 供 return 用 */
@@ -2897,7 +2907,7 @@ function reqOf(s){
    svg.setAttribute('aria-valuenow', String(_dispPct));
    var _vt = '今日完成度 ' + _dispPct + '%';
   var _lqFullA = false;
-  try { _lqFullA = !!(!_isRecoveryDay(T) && !_isGradualDay(T) && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && cur.inkOK && (cur.acc === null || cur.acc >= 0.6)); } catch(e){}   /* V428 H3: 与 coach/环同源 */
+  try { _lqFullA = !!(!_isRecoveryDay(T) && !_isGradualDay(T) && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && (cur.quizRowDone||0) >= 6 && cur.inkOK && (cur.acc === null || cur.acc >= 0.6)); } catch(e){}   /* V434: 加 c+w>=6 与选C一致 */   /* V428 H3: 与 coach/环同源 */
   /* V428 H4: **完成态跨链路同源** —— 渐进日已完成(_gradDone)也算完成，aria 不再说正确率不足 */
   if(_isDoneR || (typeof _gradDone !== 'undefined' && _gradDone)){ _vt += '（今天已完成，额外练习不计）'; }
   else if(cur.pass){ _vt += _effReportOK ? '（已过线）' : '（已过线，但报数未达标）'; }
@@ -2927,7 +2937,7 @@ function reqOf(s){
   /* V420: **必须用 cur（render 内可见）**，qa/quizRow 是 dayOf 局部变量 -> 此前抛 ReferenceError 被吞 = 死代码 */
   var _lqFull = false;
   /* V428 H1: _lqFull 必须与环的 _lp 同源 —— 有额外机判时 acc 也要 >=60%（否则 coach 说完成而环 67%） */
-  try { _lqFull = !!(cur && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && cur.inkOK && (cur.acc === null || cur.acc >= 0.6) && !_isRecoveryDay(T) && !_isGradualDay(T)); } catch(e){}
+  try { _lqFull = !!(cur && (cur._learnN||0) > 0 && (cur.quizRowTgt||0) > 0 && (cur._learnN||0) >= cur.quizRowTgt && (cur.quizRowDone||0) >= 6 && cur.inkOK && (cur.acc === null || cur.acc >= 0.6) && !_isRecoveryDay(T) && !_isGradualDay(T)); } catch(e){}   /* V434: 加 c+w>=6 与选C一致 */
   /* V394 P2: 恢复日已 completed -> 后续再做题（可能答错）**不得回退**到「欢迎回来」 */
   var _isDoneRec = false;
   try {
@@ -3025,6 +3035,17 @@ function reqOf(s){
 
   else if(!cur.rq.list.length) msg = '<b>今天就一件事：先点亮第 1 格。</b>';
   else if(cur.pass && cur.hit === cur.rq.list.length) msg = '⭐ <b>真实项全达标</b> —— 收工是正收益。';
+  /* V434（用户选 C）：学习配额已满但机判不足 6 题 -> 明确告诉还差几题机判验证 */
+  else if(cur._learnN > 0 && cur.quizRowTgt > 0 && cur._learnN >= cur.quizRowTgt && ((cur.quizRowDone||0)) < 6 && !_isRecoveryDay(T) && !_isGradualDay(T)) msg = (function(){
+    var _need = 6 - (+(cur.quizRowDone||0));
+    var _inkT = +(cur.inkRowTgt||120), _inkN = +(cur.inkRowDone||0);
+    var _inkHint = cur.inkOK
+      ? '<br>墨墨 <b>' + _inkN + '/' + _inkT + '</b> 也达标了。'
+      : '<br><b style="color:#b45309">⚠️ 墨墨还差 ' + Math.max(0, _inkT - _inkN) + ' 词（' + _inkN + '/' + _inkT + '）才算完整</b>。';
+    return '📖 <b>学习配额已满</b>（学习 <b>' + cur._learnN + '</b> 题）。<br>'
+         + '再做 <b>' + _need + '</b> 题<b>机判验证</b>就算今天完成 —— 学完就练一遍，记得更牢。'
+         + _inkHint;
+  })();
   else if((cur._learnDay || cur.acc === null) && (cur._learnN||0) > 0) msg = (function(){
     var _ln = (cur._learnN||0), _lt = (cur.quizRowTgt||0);
     var _capped = _lt > 0 && _ln >= _lt;
